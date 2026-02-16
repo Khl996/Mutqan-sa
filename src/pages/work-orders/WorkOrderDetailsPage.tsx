@@ -1,0 +1,172 @@
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { supabase } from '@/lib/supabase'
+import { useWorkOrder, useWorkOrderLogs } from '@/hooks/useWorkOrders'
+import { useQueryClient } from '@tanstack/react-query'
+import { ErrorBoundary } from '@/components/ErrorBoundary' // Assuming we have one or will create simple wrapper
+import { toast } from 'sonner'
+
+// Import Components
+import WorkOrderHeader from '@/components/work-orders/WorkOrderHeader'
+import WorkOrderWorkflow from '@/components/work-orders/WorkOrderWorkflow'
+import WorkOrderInfo from '@/components/work-orders/WorkOrderInfo'
+import WorkOrderOperationsLog from '@/components/work-orders/WorkOrderOperationsLog'
+import WorkOrderQuickInfo from '@/components/work-orders/WorkOrderQuickInfo'
+import WorkOrderAssetLocation from '@/components/work-orders/WorkOrderAssetLocation'
+import WorkOrderActions from '@/components/work-orders/WorkOrderActions'
+import WorkOrderPrintView from '@/components/work-orders/WorkOrderPrintView'
+import { AlertTriangle } from 'lucide-react'
+import { useReactToPrint } from 'react-to-print'
+import { useRef } from 'react'
+
+// Simple Skeleton Loader
+const WorkOrderDetailsSkeleton = () => (
+    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8 animate-pulse">
+        <div className="h-24 bg-muted/20 rounded-xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+                <div className="h-40 bg-muted/20 rounded-xl" />
+                <div className="h-64 bg-muted/20 rounded-xl" />
+                <div className="h-96 bg-muted/20 rounded-xl" />
+            </div>
+            <div className="space-y-6">
+                <div className="h-40 bg-muted/20 rounded-xl" />
+                <div className="h-40 bg-muted/20 rounded-xl" />
+            </div>
+        </div>
+    </div>
+)
+
+export default function WorkOrderDetailsPage() {
+    const { id } = useParams<{ id: string }>()
+    const navigate = useNavigate()
+    const { t, i18n } = useTranslation()
+    const isRTL = i18n.language === 'ar'
+    const queryClient = useQueryClient()
+
+    // 1. Fetch Work Order Data
+    const { data: workOrder, isLoading: wLoading, error: wError, refetch: refetchWO } = useWorkOrder(id!)
+
+    // 2. Fetch Logs
+    const { data: logs, isLoading: lLoading, refetch: refetchLogs } = useWorkOrderLogs(id!)
+
+    // 3. Real-time Subscription
+    useEffect(() => {
+        if (!id) return
+
+        console.log('Setting up real-time subscription for work order:', id)
+        const channel = supabase
+            .channel(`work-order-${id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*', // Listen to all events (INSERT, UPDATE)
+                    schema: 'public',
+                    table: 'work_orders',
+                    filter: `id=eq.${id}`
+                },
+                (payload) => {
+                    console.log('Real-time update received:', payload)
+                    toast.info(isRTL ? 'تم تحديث حالة أمر العمل' : 'Work Order updated')
+                    refetchWO()
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'operation_logs',
+                    filter: `work_order_id=eq.${id}`
+                },
+                () => {
+                    console.log('New log entry received')
+                    refetchLogs()
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [id, refetchWO, refetchLogs, isRTL])
+
+    // Print logic
+    const componentRef = useRef<HTMLDivElement>(null)
+    const handlePrint = useReactToPrint({
+        contentRef: componentRef,
+        documentTitle: `WorkOrder-${workOrder?.code || 'Draft'}`,
+    })
+
+    // Loading State
+    if (wLoading || lLoading) return <WorkOrderDetailsSkeleton />
+
+    // Error State
+    if (wError || !workOrder) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
+                <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
+                <h2 className="text-2xl font-bold font-cairo mb-2">{isRTL ? 'لم يتم العثور على البلاغ' : 'Work Order Not Found'}</h2>
+                <p className="text-muted mb-6 font-cairo">
+                    {isRTL ? 'قد يكون تم حذف البلاغ أو ليس لديك صلاحية للوصول إليه.' : 'The work order may have been deleted or you do not have permission.'}
+                </p>
+                <button
+                    onClick={() => navigate('/work-orders')}
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-bold font-cairo hover:bg-primary/90"
+                >
+                    {isRTL ? 'العودة للقائمة' : 'Back to List'}
+                </button>
+            </div>
+        )
+    }
+
+    return (
+        <div className="max-w-7xl mx-auto pb-20 space-y-6">
+            <WorkOrderHeader workOrder={workOrder} isRTL={isRTL} onPrint={handlePrint} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Content Column (Left in LTR, Right in RTL) */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Workflow Stepper */}
+                    <WorkOrderWorkflow workOrder={workOrder} isRTL={isRTL} />
+
+                    {/* Basic Info */}
+                    <WorkOrderInfo workOrder={workOrder} isRTL={isRTL} />
+
+                    {/* Operations Log */}
+                    <WorkOrderOperationsLog logs={logs as any || []} isRTL={isRTL} />
+                </div>
+
+                {/* Sidebar Column */}
+                <div className="space-y-6">
+                    {/* Quick Info (People) */}
+                    <WorkOrderQuickInfo workOrder={workOrder} isRTL={isRTL} />
+
+                    {/* Location & Asset */}
+                    <WorkOrderAssetLocation workOrder={workOrder} isRTL={isRTL} />
+
+                    {/* Actions (Sticky or just stacked) */}
+                    <WorkOrderActions
+                        workOrder={workOrder}
+                        isRTL={isRTL}
+                        onActionCompleted={() => {
+                            refetchWO()
+                            refetchLogs()
+                            toast.success(isRTL ? 'تم تنفيذ الإجراء بنجاح' : 'Action completed successfully')
+                        }}
+                    />
+                </div>
+            </div>
+
+            {/* Hidden Print Component */}
+            <div style={{ display: 'none' }}>
+                <WorkOrderPrintView
+                    ref={componentRef}
+                    workOrder={workOrder}
+                    logs={logs || []}
+                />
+            </div>
+        </div>
+    )
+}

@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Mutqan Brand Colors */
+    --color-primary: #2E3A45;
+    --color-secondary: #3AAFA9;
+    --color-background: #E9EEF1;
+    --color-text-muted: #6C7A86;
+    
+    /* Status Colors */
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --color-info: #3B82F6;
+    
+    /* shadcn/ui variables */
+    --background: 210 20% 94%;
+    --foreground: 210 20% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 20% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 20% 20%;
+    --primary: 204 20% 23%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 178 48% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 15% 47%;
+    --muted-foreground: 210 15% 35%;
+    --accent: 178 48% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 15% 85%;
+    --input: 210 15% 85%;
+    --ring: 178 48% 45%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 210 20% 10%;
+    --foreground: 210 15% 90%;
+    --card: 210 20% 13%;
+    --card-foreground: 210 15% 90%;
+    --popover: 210 20% 13%;
+    --popover-foreground: 210 15% 90%;
+    --primary: 178 48% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 204 20% 35%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 15% 30%;
+    --muted-foreground: 210 15% 65%;
+    --accent: 178 48% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 15% 25%;
+    --input: 210 15% 25%;
+    --ring: 178 48% 45%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-cairo antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* RTL Support */
+  html[dir="rtl"] {
+    font-family: 'Cairo', sans-serif;
+  }
+
+  html[dir="ltr"] {
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted/50 rounded-full hover:bg-muted/70 transition-colors;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-secondary/30 text-primary;
+  }
+}
+
+@layer components {
+  /* Glass Effect */
+  .glass {
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md backdrop-saturate-150 border border-white/20;
+  }
+
+  .glass-card {
+    @apply glass rounded-lg shadow-glass;
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Smooth Card */
+  .smooth-card {
+    @apply bg-card rounded-lg shadow-card transition-all duration-300 hover:shadow-card-hover;
+  }
+
+  /* Sidebar Styles */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground 
+           transition-all duration-200 hover:bg-secondary/10 hover:text-secondary;
+  }
+
+  .sidebar-item.active {
+    @apply bg-secondary/15 text-secondary font-medium;
+  }
+
+  /* Button Variants */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 
+           transition-all duration-200 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 
+           transition-all duration-200 active:scale-95;
+  }
+
+  /* Input Styles */
+  .input-field {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 
+           text-sm ring-offset-background file:border-0 file:bg-transparent 
+           file:text-sm file:font-medium placeholder:text-muted-foreground 
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
+           focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
+           transition-all duration-200;
+  }
+
+  /* Status Badges */
+  .badge-success {
+    @apply bg-success/10 text-success border border-success/20;
+  }
+
+  .badge-warning {
+    @apply bg-warning/10 text-warning border border-warning/20;
+  }
+
+  .badge-error {
+    @apply bg-destructive/10 text-destructive border border-destructive/20;
+  }
+
+  .badge-info {
+    @apply bg-info/10 text-info border border-info/20;
+  }
+
+  /* Loading Skeleton */
+  .skeleton {
+    @apply relative overflow-hidden bg-muted/20 rounded;
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r 
+           from-transparent via-white/20 to-transparent animate-shimmer;
+    content: '';
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Text balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Fade edges */
+  .fade-edges {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+}

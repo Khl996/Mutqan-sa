@@ -1,0 +1,23 @@
+-- Expand profiles_role_check constraint to include all operational roles
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
+CHECK (role IN (
+  -- Platform Roles
+  'platform_owner', 
+  'platform_admin', 
+  
+  -- Tenant Management Roles
+  'tenant_admin', 
+  'facility_manager', 
+  
+  -- Operational Roles
+  'maintenance_manager',
+  'supervisor', 
+  'technician', 
+  'engineer',
+  'reporter',
+  
+  -- Base Role
+  'user'
+));
