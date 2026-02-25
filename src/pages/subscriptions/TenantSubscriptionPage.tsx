@@ -69,7 +69,8 @@ export default function TenantSubscriptionPage() {
 
     const currentPlan = subscription.plan
     const endDate = subscription.current_period_end ? new Date(subscription.current_period_end) : null
-    const daysRemaining = endDate ? Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
+    const daysRemaining = endDate ? Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 0
+    const isExpired = endDate ? endDate < new Date() : false
 
     // Handle Plan Selection / Payment
     const handleSubscribe = (plan: any) => {

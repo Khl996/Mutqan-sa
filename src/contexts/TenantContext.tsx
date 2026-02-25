@@ -11,6 +11,8 @@ export interface Tenant {
     is_active: boolean
     subscription_tier: string | null
     subscription_status: string | null
+    subscription_ends_at: string | null
+    trial_ends_at: string | null
     settings: Record<string, unknown> | null
 }
 

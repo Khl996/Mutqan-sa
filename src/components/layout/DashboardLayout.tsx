@@ -44,17 +44,26 @@ export default function DashboardLayout() {
 
     // Redirect logic for expired subscriptions
     if (currentTenant && !isPlatformUser) {
-        // Status checks
-        const isSubscriptionExpired =
+        // Check both the status field AND the actual period end date
+        const statusExpired =
             currentTenant.subscription_status === 'expired' ||
             currentTenant.subscription_status === 'suspended' ||
             currentTenant.subscription_status === 'cancelled'
+
+        // Also check if subscription period has actually ended (real-time check)
+        const endDateStr = currentTenant.subscription_ends_at || currentTenant.trial_ends_at
+        const subscriptionEndDate = endDateStr ? new Date(endDateStr) : null
+        const periodExpired = subscriptionEndDate ? subscriptionEndDate < new Date() : false
+
+        // Free plan check - if on free plan AND trial ended, treat as expired
+        const isFreePlanExpired = currentTenant.subscription_status === 'trial' && periodExpired
+
+        const isSubscriptionExpired = statusExpired || isFreePlanExpired
 
         if (isSubscriptionExpired) {
             // If admin, force redirect to subscription page (unless already there)
             if (isTenantAdmin) {
                 if (location.pathname !== '/subscription' && location.pathname !== '/settings/tenant') {
-                    // Allow access to tenant settings as well just in case
                     return <Navigate to="/subscription" replace />
                 }
             } else {

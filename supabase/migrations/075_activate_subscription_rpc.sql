@@ -66,7 +66,7 @@ BEGIN
 
     -- Update tenant status
     UPDATE tenants
-    SET status = 'active', updated_at = NOW()
+    SET subscription_status = 'active', updated_at = NOW()
     WHERE id = p_tenant_id;
 
     -- Log invoice (ignore errors)
