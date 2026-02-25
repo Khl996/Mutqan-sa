@@ -15,6 +15,7 @@ import AboutPage from '@/pages/site/AboutPage'
 import PrivacyPolicyPage from '@/pages/site/PrivacyPolicyPage'
 import TermsOfUsePage from '@/pages/site/TermsOfUsePage'
 import ContactPage from '@/pages/site/ContactPage'
+import PaymentCallbackPage from '@/pages/payment/PaymentCallbackPage'
 import PublicReportPage from '@/pages/public/PublicReportPage'
 
 // Auth Pages
@@ -121,6 +122,7 @@ function AppRoutes() {
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route path="/terms" element={<TermsOfUsePage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/payment/callback" element={<PaymentCallbackPage />} />
 
             {/* Auth Routes */}
             <Route element={<AuthLayout />}>

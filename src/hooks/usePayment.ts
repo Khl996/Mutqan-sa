@@ -1,67 +1,103 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
-import { supabase } from '@/lib/supabase'
-
-// Define the payment provider types here (e.g., 'moyasar', 'stripe', 'checkout')
-// Currently set to 'manual' or 'test' until gateway is approved
-type PaymentProvider = 'moyasar' | 'stripe' | 'manual'
 
 interface PaymentRequest {
     planId: string
+    planName: string
     billingCycle: 'monthly' | 'yearly'
     amount: number
     currency: string
     tenantId: string
+    customerEmail?: string
+    customerName?: string
+    customerPhone?: string
+}
+
+interface VerifyPaymentResult {
+    success: boolean
+    status: string
+    message: string
+    subscription?: {
+        plan_id: string
+        billing_cycle: string
+        period_end: string
+    }
 }
 
 export function usePayment() {
-    const { t, i18n } = useTranslation()
+    const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const [isProcessing, setIsProcessing] = useState(false)
 
-    // specific gateway config (to be filled later)
-    // const MOYASAR_API_KEY = import.meta.env.VITE_MOYASAR_KEY
-
+    /**
+     * Step 1: Create a charge and redirect user to Tap payment page
+     */
     const initiatePayment = async (request: PaymentRequest) => {
         setIsProcessing(true)
         try {
-            console.log('🚀 Initiating Payment:', request)
+            const response = await fetch('/api/create-charge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request),
+            })
 
-            // TODO: INTEGRATION POINT
-            // 1. Create an order/invoice record in your DB (optional but recommended)
-            // 2. Call the Payment Gateway API
-            //    - If using Redirect method (e.g. Stripe Checkout, Moyasar Hosted):
-            //      window.location.href = paymentUrl;
-            //    - If using Custom UI:
-            //      Perform API call and handle 3DSecure
+            const data = await response.json()
 
-            // SIMULATION for now
-            await new Promise(resolve => setTimeout(resolve, 1500))
+            if (!response.ok) {
+                throw new Error(data.error || 'Payment creation failed')
+            }
 
-            // Mock success based on gateway
-            // In a real flow, this often happens via Webhook or Redirect Callback
+            // Redirect user to Tap payment page
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url
+            } else {
+                throw new Error('No redirect URL received')
+            }
 
-            // For now, we just show a message that integration is pending
-            toast.info(isRTL
-                ? 'جاري تجهيز بوابة الدفع (سيتم تفعيلها قريباً)'
-                : 'Payment Gateway is being set up (Coming Soon)'
-            )
-
-            // IF SUCCESSFUL (Mock logic for later)
-            // await updateSubscription(request) 
-
-        } catch (error) {
+        } catch (error: any) {
             console.error('Payment Error:', error)
-            toast.error(isRTL ? 'حدث خطأ في عملية الدفع' : 'Payment processing failed')
-        } finally {
+            toast.error(
+                isRTL
+                    ? 'حدث خطأ في إنشاء عملية الدفع. يرجى المحاولة مرة أخرى.'
+                    : 'Failed to create payment. Please try again.'
+            )
             setIsProcessing(false)
+        }
+    }
+
+    /**
+     * Step 2: Verify payment after redirect back from Tap
+     */
+    const verifyPayment = async (tapId: string): Promise<VerifyPaymentResult> => {
+        try {
+            const response = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tap_id: tapId }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Verification failed')
+            }
+
+            return data
+
+        } catch (error: any) {
+            console.error('Verify Error:', error)
+            return {
+                success: false,
+                status: 'ERROR',
+                message: error.message || 'Verification failed',
+            }
         }
     }
 
     return {
         initiatePayment,
-        isProcessing
+        verifyPayment,
+        isProcessing,
     }
 }

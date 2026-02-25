@@ -80,9 +80,12 @@ export default function TenantSubscriptionPage() {
         initiatePayment({
             tenantId: profile.tenant_id,
             planId: plan.id,
+            planName: isRTL ? (plan.name_ar || plan.name) : plan.name,
             billingCycle,
             amount: price,
-            currency: plan.currency
+            currency: plan.currency,
+            customerEmail: user?.email || '',
+            customerName: profile?.full_name || '',
         })
     }
 
