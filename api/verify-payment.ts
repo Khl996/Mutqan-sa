@@ -73,7 +73,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // 4. Update subscription in Supabase (using service role to bypass RLS)
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false,
+            },
+        })
 
         const now = new Date()
         let endDate: Date
