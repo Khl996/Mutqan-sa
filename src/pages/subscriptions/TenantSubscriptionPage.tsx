@@ -231,9 +231,16 @@ export default function TenantSubscriptionPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {plans?.map((plan) => {
+                    {plans?.filter((plan) => {
+                        // Hide free plan if user is on a paid plan or has expired (was on a paid plan before)
+                        if (plan.code === 'free' && subscription.status !== 'trial') return false
+                        return true
+                    }).map((plan) => {
                         const isCurrent = plan.id === currentPlan?.id
                         const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly
+                        const currentOrder = currentPlan?.display_order || 0
+                        const isUpgrade = plan.display_order > currentOrder
+                        const isDowngrade = plan.display_order < currentOrder
 
                         return (
                             <div
@@ -278,16 +285,22 @@ export default function TenantSubscriptionPage() {
 
                                 <button
                                     onClick={() => handleSubscribe(plan)}
-                                    disabled={isCurrent || isProcessing}
+                                    disabled={isCurrent || isProcessing || isDowngrade}
                                     className={cn(
                                         "w-full h-10 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2",
                                         isCurrent
                                             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                            : "bg-secondary text-white hover:bg-secondary/90"
+                                            : isDowngrade
+                                                ? "bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-200"
+                                                : "bg-secondary text-white hover:bg-secondary/90"
                                     )}
                                 >
-                                    {isProcessing && !isCurrent ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                    {isCurrent ? (isRTL ? 'مفعل' : 'Active') : (isRTL ? 'ترقية' : 'Upgrade')}
+                                    {isProcessing && isUpgrade ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    {isCurrent
+                                        ? (isRTL ? 'مفعل' : 'Active')
+                                        : isUpgrade
+                                            ? (isRTL ? 'ترقية' : 'Upgrade')
+                                            : (isRTL ? 'خطة أقل' : 'Lower Plan')}
                                 </button>
                             </div>
                         )
