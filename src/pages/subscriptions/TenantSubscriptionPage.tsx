@@ -17,7 +17,7 @@ import {
     Loader2
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTenantSubscription, useSubscriptionPlans, useCancelSubscription, useResumeSubscription } from '@/hooks/useSubscription'
+import { useTenantSubscription, useSubscriptionPlans } from '@/hooks/useSubscription'
 import { usePayment } from '@/hooks/usePayment'
 import { cn } from '@/lib/utils'
 
@@ -25,20 +25,7 @@ export default function TenantSubscriptionPage() {
     const { t, i18n } = useTranslation()
     const { user, profile } = useAuth()
     const { initiatePayment, isProcessing } = usePayment()
-    const cancelSubscription = useCancelSubscription()
-    const resumeSubscription = useResumeSubscription()
 
-    const handleCancelSubscription = () => {
-        if (!profile?.tenant_id) return
-        if (confirm(isRTL ? 'هل أنت متأكد من إلغاء التجديد التلقائي؟ ستستمر صلاحية اشتراكك حتى نهاية الفترة الحالية ولن يتم خصم أي مبالغ مستقبلاً.' : 'Are you sure you want to cancel auto-renewal? Your subscription will remain active until the end of the current period.')) {
-            cancelSubscription.mutate(profile.tenant_id)
-        }
-    }
-
-    const handleResumeSubscription = () => {
-        if (!profile?.tenant_id) return
-        resumeSubscription.mutate(profile.tenant_id)
-    }
 
     const isRTL = i18n.language === 'ar'
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
@@ -171,52 +158,7 @@ export default function TenantSubscriptionPage() {
                     </div>
                 </div>
 
-                {/* Apple-style Cancellation Status */}
-                {subscription.cancel_at_period_end && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-6 p-4 bg-orange-50/50 backdrop-blur-sm border border-orange-100 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm"
-                    >
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-orange-100 rounded-full text-orange-600">
-                                <AlertCircle className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-orange-900 font-cairo">
-                                    {isRTL ? 'إيقاف التجديد التلقائي' : 'Auto-renewal is Off'}
-                                </h3>
-                                <p className="text-orange-700/80 text-sm font-cairo mt-1 max-w-lg">
-                                    {isRTL
-                                        ? 'سينتهي اشتراكك في التاريخ الموضح أعلاه، وستحتفظ بصلاحياتك الكاملة حتى ذلك الحين.'
-                                        : 'Your subscription will end on the date shown above. You retain full access until then.'}
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleResumeSubscription}
-                            disabled={resumeSubscription.isPending}
-                            className="px-6 py-2 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 rounded-xl font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                        >
-                            {resumeSubscription.isPending && <Loader2 className="w-4 h-4 animate-spin inline-block me-2" />}
-                            {isRTL ? 'استئناف الاشتراك' : 'Resume Subscription'}
-                        </button>
-                    </motion.div>
-                )}
 
-                {!subscription.cancel_at_period_end && subscription.status === 'active' && (
-                    <div className="mt-4 flex justify-end px-2">
-                        <button
-                            onClick={handleCancelSubscription}
-                            disabled={cancelSubscription.isPending}
-                            className="text-sm text-gray-500 hover:text-red-600 transition-colors font-medium flex items-center gap-1 group"
-                        >
-                            <span className="group-hover:underline decoration-dotted underline-offset-4">
-                                {cancelSubscription.isPending ? (isRTL ? 'جاري الإلغاء...' : 'Cancelling...') : (isRTL ? 'إلغاء التجديد التلقائي' : 'Cancel Auto-renewal')}
-                            </span>
-                        </button>
-                    </div>
-                )}
 
                 {/* Progress Bar for Trial */}
                 {subscription.status === 'trial' && (
