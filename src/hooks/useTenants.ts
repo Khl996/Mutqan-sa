@@ -158,7 +158,7 @@ export function useTenantStats() {
                 return { total: 0, active: 0, inactive: 0, byTier: {} }
             }
 
-            const response = await fetch(`${supabaseUrl}/rest/v1/tenants?select=id,is_active,subscription_status`, {
+            const response = await fetch(`${supabaseUrl}/rest/v1/tenants?select=id,is_active,subscription_status,subscription_tier`, {
                 headers: {
                     'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
                     'Authorization': `Bearer ${accessToken}`
@@ -183,7 +183,8 @@ export function useTenantStats() {
                 if (t.is_active) stats.active++
                 else stats.inactive++
 
-                const tier = t.subscription_status || 'trial'
+                // Use subscription_tier (plan name) for distribution, not subscription_status
+                const tier = t.subscription_tier || 'free'
                 stats.byTier[tier] = (stats.byTier[tier] || 0) + 1
             })
 

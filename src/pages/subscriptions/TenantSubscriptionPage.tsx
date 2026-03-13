@@ -19,12 +19,14 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenantSubscription, useSubscriptionPlans } from '@/hooks/useSubscription'
 import { usePayment } from '@/hooks/usePayment'
+import { useTenantUsage } from '@/hooks/useSubscription'
 import { cn } from '@/lib/utils'
 
 export default function TenantSubscriptionPage() {
     const { t, i18n } = useTranslation()
     const { user, profile } = useAuth()
     const { initiatePayment, isProcessing } = usePayment()
+    const { data: usage } = useTenantUsage(profile?.tenant_id || '')
 
 
     const isRTL = i18n.language === 'ar'
@@ -77,32 +79,32 @@ export default function TenantSubscriptionPage() {
         })
     }
 
-    // Calculate usage percentage (mocked for now, can be real later)
+    // Real usage statistics from database
     const usageStats = [
         {
             label: isRTL ? 'المستخدمين' : 'Users',
-            current: 2,
+            current: usage?.users_count || 0,
             max: currentPlan?.max_users || 0,
             icon: Users,
             color: 'bg-blue-500'
         },
         {
             label: isRTL ? 'المباني' : 'Buildings',
-            current: 1,
+            current: usage?.buildings_count || 0,
             max: currentPlan?.max_buildings || 0,
             icon: Building2,
             color: 'bg-green-500'
         },
         {
             label: isRTL ? 'الأصول' : 'Assets',
-            current: 15,
+            current: usage?.assets_count || 0,
             max: currentPlan?.max_assets || 0,
             icon: Database,
             color: 'bg-purple-500'
         },
         {
             label: isRTL ? 'أوامر العمل' : 'Work Orders',
-            current: 8,
+            current: usage?.work_orders_this_month || 0,
             max: currentPlan?.max_work_orders_monthly || 0,
             icon: FileText,
             color: 'bg-orange-500'

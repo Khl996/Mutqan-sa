@@ -185,11 +185,19 @@ export function useIssueTypes() {
 
 // Get Work Order Stats
 export function useWorkOrderStats() {
+    const tenantId = useCurrentTenantId()
+
     return useQuery({
-        queryKey: workOrdersKeys.stats(),
+        queryKey: [...workOrdersKeys.stats(), tenantId],
         queryFn: async () => {
-            const { data, error } = await (supabase.from('work_orders') as any)
+            let query = (supabase.from('work_orders') as any)
                 .select('status, priority')
+
+            if (tenantId) {
+                query = query.eq('tenant_id', tenantId)
+            }
+
+            const { data, error } = await query
 
             if (error) throw error
 

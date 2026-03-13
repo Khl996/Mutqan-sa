@@ -265,7 +265,7 @@ export function useUpdateSubscription() {
                 .update({
                     subscription_tier: plan.code,
                     subscription_status: 'active',
-                    subscription_expires_at: periodEnd.toISOString(),
+                    subscription_ends_at: periodEnd.toISOString(),
                     max_users: plan.max_users,
                     max_buildings: plan.max_buildings,
                     updated_at: now.toISOString(),

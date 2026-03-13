@@ -5,8 +5,8 @@ import PlatformSidebar from './PlatformSidebar'
 import PlatformHeader from './PlatformHeader'
 import { cn } from '@/lib/utils'
 
-// Platform roles
-const PLATFORM_ROLES = ['platform_owner', 'platform_admin', 'platform_support']
+// Platform roles — must match all platform_* roles in DB (068_add_tenant_owner_role.sql)
+const PLATFORM_ROLES = ['platform_owner', 'platform_admin', 'platform_support', 'platform_finance', 'platform_hr']
 
 type AccessState = 'loading' | 'authenticated' | 'denied' | 'not-logged-in'
 

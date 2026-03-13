@@ -190,8 +190,8 @@ function AppRoutes() {
                     <Route path="/admin" element={<AdminPage />} />
                 </Route>
 
-                {/* Tenant Admin Only Routes */}
-                <Route element={<ProtectedRoute allowedRoles={['tenant_admin']} />}>
+                {/* Tenant Admin/Owner Routes */}
+                <Route element={<ProtectedRoute allowedRoles={['tenant_admin', 'tenant_owner']} />}>
                     <Route path="/subscription" element={<TenantSubscriptionPage />} />
                 </Route>
             </Route>
