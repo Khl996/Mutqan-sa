@@ -98,7 +98,7 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
                 const issueNameAr = selectedIssueType.name_ar?.toLowerCase() || ''
 
                 // Find matching specialization
-                let targetSpec = issueTypeToSpecialization[issueCode] ||
+                const targetSpec = issueTypeToSpecialization[issueCode] ||
                     issueTypeToSpecialization[issueName] ||
                     issueTypeToSpecialization[issueNameAr]
 

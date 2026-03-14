@@ -20,7 +20,7 @@ interface WorkOrderOperationsLogProps {
 }
 
 export default function WorkOrderOperationsLog({ logs, isRTL }: WorkOrderOperationsLogProps) {
-    const { } = useTranslation()
+    useTranslation()
 
     if (!logs || logs.length === 0) {
         return (

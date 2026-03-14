@@ -36,7 +36,7 @@ function formatTimeAgo(dateString: string, locale: string) {
 
 export default function DashboardPage() {
     const { t, i18n } = useTranslation()
-    const { } = useAuth()
+    useAuth()
     const { data: statsData, isLoading } = useDashboardStats()
 
     // Check dashboard features

@@ -108,7 +108,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (rpcError) {
             console.error('Webhook: RPC error:', rpcError)
-            return res.status(200).json({ received: true, processed: false, reason: 'rpc_error' })
+            // Return 500 so Tap retries — this is likely a transient DB/network error
+            return res.status(500).json({ received: true, processed: false, reason: 'rpc_error' })
         }
 
         console.log(`Webhook: Subscription activated for tenant ${tenantId}, plan ${plan.code}`)
@@ -122,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     } catch (error: any) {
         console.error('Webhook Error:', error?.message || error)
-        // Still return 200 to prevent Tap from retrying on server errors
-        return res.status(200).json({ received: true, processed: false, reason: 'internal_error' })
+        // Return 500 so Tap retries — transient server errors should be retried
+        return res.status(500).json({ received: true, processed: false, reason: 'internal_error' })
     }
 }

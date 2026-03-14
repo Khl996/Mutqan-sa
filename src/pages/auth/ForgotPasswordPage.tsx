@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
                     // But here we rely on standard error catching
                     if (msg.includes('Invalid OTP')) msg = isRTL ? 'رمز التحقق غير صحيح أو منتهي' : 'Invalid or expired OTP'
                     else msg = isRTL ? 'فشل تحديث كلمة المرور' : 'Failed to update password'
-                } catch { }
+                } catch { /* JSON parsing may fail, use original msg */ }
                 toast.error(msg)
                 console.error(error)
             } else {

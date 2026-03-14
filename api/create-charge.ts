@@ -36,11 +36,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // =====================================================
-        // SERVER-SIDE PRICE LOOKUP — Never trust client amount
+        // AUTH CHECK — Verify caller is admin/owner of this tenant
         // =====================================================
+        const authHeader = req.headers.authorization
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Authentication required' })
+        }
+
+        const userToken = authHeader.replace('Bearer ', '')
+        const { createClient: createUserClient } = await import('@supabase/supabase-js')
+        const userSupabase = createUserClient(SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY!, {
+            global: { headers: { Authorization: `Bearer ${userToken}` } },
+            auth: { autoRefreshToken: false, persistSession: false },
+        })
+
+        const { data: { user }, error: authError } = await userSupabase.auth.getUser()
+        if (authError || !user) {
+            return res.status(401).json({ error: 'Invalid or expired token' })
+        }
+
+        // Verify user belongs to this tenant and has admin/owner role
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
             auth: { autoRefreshToken: false, persistSession: false },
         })
+
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role, tenant_id')
+            .eq('id', user.id)
+            .single()
+
+        if (profileError || !profile) {
+            return res.status(403).json({ error: 'User profile not found' })
+        }
+
+        if (profile.tenant_id !== tenantId) {
+            return res.status(403).json({ error: 'You are not authorized to manage this tenant' })
+        }
+
+        if (!['tenant_admin', 'tenant_owner'].includes(profile.role)) {
+            return res.status(403).json({ error: 'Only tenant administrators can initiate payments' })
+        }
+
+        // =====================================================
+        // SERVER-SIDE PRICE LOOKUP — Never trust client amount
+        // (supabase service client already created in auth check above)
+        // =====================================================
 
         const { data: plan, error: planError } = await supabase
             .from('subscription_plans')

@@ -161,7 +161,7 @@ export const generateInvoicePDF = async (invoice: PlatformInvoice, tenantName: s
 
     // -- 5. الإجماليات (Totals) --
     // @ts-expect-error - jspdf-autotable extends jsPDF prototype
-    let finalY = doc.lastAutoTable.finalY + 10;
+    const finalY = doc.lastAutoTable.finalY + 10;
 
     doc.setFontSize(10);
     if (!fontBase64) doc.setFont("helvetica", "normal");
