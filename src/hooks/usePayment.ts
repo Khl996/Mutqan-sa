@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { supabase } from '@/lib/supabase'
 
 interface PaymentRequest {
     planId: string
@@ -36,9 +37,18 @@ export function usePayment() {
     const initiatePayment = async (request: PaymentRequest) => {
         setIsProcessing(true)
         try {
+            // Get current session token for auth
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.access_token) {
+                throw new Error(isRTL ? 'يرجى تسجيل الدخول أولاً' : 'Please log in first')
+            }
+
             const response = await fetch('/api/create-charge', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
                 body: JSON.stringify(request),
             })
 

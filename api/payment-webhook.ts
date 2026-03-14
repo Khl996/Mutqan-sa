@@ -47,7 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!tapResponse.ok) {
             console.error('Webhook: Tap API error:', charge)
-            return res.status(200).json({ received: true, processed: false, reason: 'tap_api_error' })
+            // Return 500 — Tap API failure is likely transient, retry will help
+            return res.status(500).json({ received: true, processed: false, reason: 'tap_api_error' })
         }
 
         // 2. Only process successful payments
@@ -81,7 +82,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (planError || !plan) {
             console.error('Webhook: Plan lookup failed:', planError)
-            return res.status(200).json({ received: true, processed: false, reason: 'invalid_plan' })
+            // Return 500 — DB lookup failure is likely transient, retry will help
+            return res.status(500).json({ received: true, processed: false, reason: 'plan_lookup_error' })
         }
 
         const expectedAmount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly
