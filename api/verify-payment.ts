@@ -69,7 +69,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             })
         }
 
-        // 4. Activate subscription via RPC (bypasses RLS with SECURITY DEFINER)
+        // 4. SERVER-SIDE PRICE VERIFICATION
+        //    Re-verify the amount against the actual plan price from DB
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
             auth: {
                 autoRefreshToken: false,
@@ -77,13 +78,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
         })
 
+        const { data: plan, error: planError } = await supabase
+            .from('subscription_plans')
+            .select('id, code, price_monthly, price_yearly')
+            .eq('id', planId)
+            .single()
+
+        if (planError || !plan) {
+            console.error('Plan lookup failed:', planError)
+            return res.status(400).json({ error: 'Invalid plan in payment metadata' })
+        }
+
+        // Verify the paid amount matches the expected price
+        const expectedAmount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly
+        const paidAmount = charge.amount
+
+        if (Math.abs(paidAmount - expectedAmount) > 0.01) {
+            console.error(`Amount mismatch! Paid: ${paidAmount}, Expected: ${expectedAmount} for plan ${plan.code} (${billingCycle})`)
+            return res.status(400).json({
+                error: 'Payment amount does not match plan price',
+                details: `Expected ${expectedAmount} ${charge.currency}, got ${paidAmount}`,
+            })
+        }
+
+        // 5. Activate subscription via RPC (service_role only)
         const { data: rpcResult, error: rpcError } = await supabase.rpc(
             'activate_subscription_after_payment',
             {
                 p_tenant_id: tenantId,
                 p_plan_id: planId,
                 p_billing_cycle: billingCycle,
-                p_amount: charge.amount,
+                p_amount: paidAmount,
                 p_currency: charge.currency || 'SAR',
                 p_payment_reference: charge.id,
                 p_plan_name: planName,
@@ -95,6 +120,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({
                 error: 'Failed to activate subscription',
                 details: rpcError.message,
+            })
+        }
+
+        // Check if RPC returned an error response
+        if (rpcResult && !rpcResult.success) {
+            // Could be idempotency (duplicate) — not an error
+            if (rpcResult.duplicate) {
+                return res.status(200).json({
+                    success: true,
+                    status: 'CAPTURED',
+                    message: 'Payment already processed (duplicate)',
+                    subscription: rpcResult,
+                })
+            }
+            return res.status(400).json({
+                error: rpcResult.error || 'Subscription activation failed',
             })
         }
 

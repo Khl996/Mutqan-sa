@@ -71,8 +71,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     // Tenant admin items - NOT platform items (always visible)
     const adminItems = [
         { icon: Settings, label: t('sidebar.settings'), href: '/settings', permission: 'settings.view' },
-        // Subscription - Only for Tenant Admin
-        ...(profile?.role === 'tenant_admin' ? [{
+        // Subscription - For Tenant Admin and Owner
+        ...(['tenant_admin', 'tenant_owner'].includes(profile?.role || '') ? [{
             icon: CreditCard,
             label: isRTL ? 'الاشتراك' : 'Subscription',
             href: '/subscription',

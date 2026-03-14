@@ -83,9 +83,8 @@ export default function AdminPage() {
             ])
 
             // Calculate Low Stock from the data fetch (last item)
-            // @ts-ignore
+            // @ts-expect-error - lowStockCount is the full response from last query
             const inventoryData = lowStockCount?.data || [] // lowStockCount here is actually the full response from the last query
-            // @ts-ignore
             const actualLowStock = inventoryData.filter((i: any) => i.quantity <= i.min_quantity && i.quantity > 0).length
 
             // Fetch Users by Role distribution

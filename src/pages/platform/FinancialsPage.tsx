@@ -43,7 +43,7 @@ export default function FinancialsPage() {
         const toastId = toast.loading(isRTL ? 'جاري تحضير الفاتورة...' : 'Generating Invoice...');
         try {
             const tenantName = isRTL ? invoice.tenant?.name_ar || invoice.tenant?.name : invoice.tenant?.name
-            // @ts-ignore - address is fetched but typed loosely in hook return
+            // @ts-expect-error - address is fetched but typed loosely in hook return
             const tenantAddress = invoice.tenant?.address
             await generateInvoicePDF(invoice, tenantName || 'Unknown Tenant', tenantAddress)
             toast.dismiss(toastId);

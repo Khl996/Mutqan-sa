@@ -1,7 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
 const BASE_URL = process.env.VITE_APP_URL || 'https://mutqan-sa.com'
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Only allow POST
@@ -11,23 +14,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         const {
-            amount,
-            currency = 'SAR',
             planId,
-            planName,
-            billingCycle,
+            billingCycle = 'yearly',
             tenantId,
             customerEmail,
             customerName,
             customerPhone
         } = req.body
 
-        // Validate required fields
-        if (!amount || !planId || !tenantId) {
-            return res.status(400).json({ error: 'Missing required fields: amount, planId, tenantId' })
+        // Validate required fields (amount is NO LONGER accepted from client)
+        if (!planId || !tenantId) {
+            return res.status(400).json({ error: 'Missing required fields: planId, tenantId' })
         }
 
-        // Create charge via Tap API
+        if (!TAP_SECRET_KEY) {
+            return res.status(500).json({ error: 'Payment configuration error (TAP key missing)' })
+        }
+
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+            return res.status(500).json({ error: 'Database configuration error' })
+        }
+
+        // =====================================================
+        // SERVER-SIDE PRICE LOOKUP — Never trust client amount
+        // =====================================================
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: { autoRefreshToken: false, persistSession: false },
+        })
+
+        const { data: plan, error: planError } = await supabase
+            .from('subscription_plans')
+            .select('id, code, name, name_ar, price_monthly, price_yearly, is_active')
+            .eq('id', planId)
+            .single()
+
+        if (planError || !plan) {
+            return res.status(400).json({ error: 'Invalid plan ID' })
+        }
+
+        if (!plan.is_active) {
+            return res.status(400).json({ error: 'This plan is not currently available' })
+        }
+
+        // Determine price from DB (not from client!)
+        const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly
+        const currency = 'SAR'
+        const planName = plan.name
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ error: 'This plan has no price configured for the selected billing cycle' })
+        }
+
+        // =====================================================
+        // Verify tenant exists
+        // =====================================================
+        const { data: tenant, error: tenantError } = await supabase
+            .from('tenants')
+            .select('id, name')
+            .eq('id', tenantId)
+            .single()
+
+        if (tenantError || !tenant) {
+            return res.status(400).json({ error: 'Invalid tenant ID' })
+        }
+
+        // =====================================================
+        // Create charge via Tap API with server-verified data
+        // =====================================================
         const response = await fetch('https://api.tap.company/v2/charges', {
             method: 'POST',
             headers: {
@@ -45,8 +98,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 metadata: {
                     plan_id: planId,
                     plan_name: planName,
+                    plan_code: plan.code,
                     billing_cycle: billingCycle,
                     tenant_id: tenantId,
+                    // Store server-verified amount in metadata for double-check in verify
+                    verified_amount: amount,
                 },
                 receipt: {
                     email: true,
