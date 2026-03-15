@@ -17,7 +17,7 @@ export function usePermission() {
     return {
         can,
         role,
-        isManager: ['platform_owner', 'platform_admin', 'tenant_admin', 'facility_manager', 'maintenance_manager'].includes(profile?.role || ''),
-        isAdmin: ['platform_owner', 'platform_admin', 'tenant_admin'].includes(profile?.role || '')
+        isManager: ['platform_owner', 'platform_admin', 'tenant_admin', 'tenant_owner', 'facility_manager', 'maintenance_manager'].includes(profile?.role || ''),
+        isAdmin: ['platform_owner', 'platform_admin', 'tenant_admin', 'tenant_owner'].includes(profile?.role || '')
     }
 }

@@ -6,6 +6,17 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Hash OTP using SHA-256 (must match send-otp function)
+async function hashOTP(otp: string): Promise<string> {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(otp)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+const MAX_ATTEMPTS = 5
+
 Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
@@ -18,37 +29,54 @@ Deno.serve(async (req) => {
             throw new Error('Missing required fields')
         }
 
+        if (newPassword.length < 6) {
+            throw new Error('Password must be at least 6 characters')
+        }
+
         const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
             { auth: { autoRefreshToken: false, persistSession: false } }
         )
 
-        // 1. Verify OTP
+        // 1. Find OTP record
         const { data: otpData, error: otpError } = await supabaseAdmin
             .from('password_reset_otps')
-            .select('*')
+            .select('id, otp_hash, expires_at, attempts')
             .eq('email', email)
             .single()
 
         if (otpError || !otpData) {
-            throw new Error('Invalid OTP or Token not found')
+            throw new Error('No OTP found. Please request a new one.')
         }
 
+        // 2. Check expiry
         if (new Date(otpData.expires_at) < new Date()) {
             await supabaseAdmin.from('password_reset_otps').delete().eq('id', otpData.id)
-            throw new Error('OTP Expired')
+            throw new Error('OTP expired. Please request a new one.')
         }
 
-        // Hash check if needed, but here assuming plain comparison for simplicity as per otpService logic
-        // In otpService we stored it directly. In prod use hashing.
-        if (otpData.otp_hash !== otp) {
-            await supabaseAdmin.from('password_reset_otps').update({ attempts: (otpData.attempts || 0) + 1 }).eq('id', otpData.id)
-            throw new Error('Invalid OTP')
+        // 3. Check max attempts
+        if (otpData.attempts >= MAX_ATTEMPTS) {
+            await supabaseAdmin.from('password_reset_otps').delete().eq('id', otpData.id)
+            throw new Error('Too many attempts. Please request a new OTP.')
         }
 
-        // 2. Get User ID
-        // We trust that profiles table has the correct email-id mapping
+        // 4. Verify OTP by comparing HASH (never compare raw)
+        const inputHash = await hashOTP(otp)
+
+        if (otpData.otp_hash !== inputHash) {
+            // Increment attempts
+            await supabaseAdmin
+                .from('password_reset_otps')
+                .update({ attempts: (otpData.attempts || 0) + 1 })
+                .eq('id', otpData.id)
+
+            const remaining = MAX_ATTEMPTS - (otpData.attempts + 1)
+            throw new Error(`Invalid OTP. ${remaining} attempts remaining.`)
+        }
+
+        // 5. Get User ID from profiles
         const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('id')
@@ -56,13 +84,10 @@ Deno.serve(async (req) => {
             .single()
 
         if (profileError || !profile) {
-            // Fallback: try to list users? Or just fail. 
-            // If no profile, they shouldn't be resetting password usually? 
-            // Or they might have deleted profile but kept auth? Unlikely in this app.
             throw new Error('User not found')
         }
 
-        // 3. Update Password
+        // 6. Update Password
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             profile.id,
             { password: newPassword }
@@ -73,7 +98,7 @@ Deno.serve(async (req) => {
             throw new Error('Failed to update password')
         }
 
-        // 4. Delete OTP
+        // 7. Delete OTP after successful reset
         await supabaseAdmin.from('password_reset_otps').delete().eq('id', otpData.id)
 
         return new Response(JSON.stringify({ success: true }), {

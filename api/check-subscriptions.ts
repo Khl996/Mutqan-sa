@@ -6,9 +6,17 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const CRON_SECRET = process.env.CRON_SECRET
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Verify cron secret to prevent unauthorized access
+    // =====================================================
+    // FAIL-CLOSED: Always require CRON_SECRET
+    // If CRON_SECRET is not set, reject ALL requests
+    // =====================================================
+    if (!CRON_SECRET) {
+        console.error('CRON_SECRET is not configured — blocking request')
+        return res.status(500).json({ error: 'Server misconfiguration: CRON_SECRET not set' })
+    }
+
     const authHeader = req.headers.authorization
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
         return res.status(401).json({ error: 'Unauthorized' })
     }
 
@@ -28,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // 1. Find active subscriptions past their period end
         const { data: expiredSubs, error } = await supabase
             .from('tenant_subscriptions')
-            .select('id, tenant_id, cancel_at_period_end, billing_cycle')
+            .select('id, tenant_id, plan_id, cancel_at_period_end, billing_cycle')
             .in('status', ['active', 'trial'])
             .lt('current_period_end', now)
 
@@ -42,33 +50,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         for (const sub of expiredSubs) {
-            if (sub.cancel_at_period_end) {
-                // User wanted to cancel - mark as cancelled
-                await supabase
-                    .from('tenant_subscriptions')
-                    .update({ status: 'cancelled', cancelled_at: now, updated_at: now })
-                    .eq('id', sub.id)
+            const newStatus = sub.cancel_at_period_end ? 'cancelled' : 'expired'
 
-                await supabase
-                    .from('tenants')
-                    .update({ subscription_status: 'cancelled', updated_at: now })
-                    .eq('id', sub.tenant_id)
-
-                cancelled++
-            } else {
-                // Auto-renew not implemented yet - mark as expired
-                await supabase
-                    .from('tenant_subscriptions')
-                    .update({ status: 'expired', updated_at: now })
-                    .eq('id', sub.id)
-
-                await supabase
-                    .from('tenants')
-                    .update({ subscription_status: 'expired', updated_at: now })
-                    .eq('id', sub.tenant_id)
-
-                expired++
+            // Update tenant_subscriptions
+            const subUpdate: Record<string, unknown> = {
+                status: newStatus,
+                updated_at: now,
             }
+            if (newStatus === 'cancelled') {
+                subUpdate.cancelled_at = now
+            }
+            await supabase
+                .from('tenant_subscriptions')
+                .update(subUpdate)
+                .eq('id', sub.id)
+
+            // =====================================================
+            // Update ALL related fields on tenants table consistently
+            // This prevents drift between subscription status sources
+            // =====================================================
+            await supabase
+                .from('tenants')
+                .update({
+                    subscription_status: newStatus,
+                    subscription_tier: newStatus === 'cancelled' ? 'free' : undefined,
+                    updated_at: now,
+                })
+                .eq('id', sub.tenant_id)
+
+            if (newStatus === 'cancelled') cancelled++
+            else expired++
         }
 
         console.log(`Cron completed: ${cancelled} cancelled, ${expired} expired`)
@@ -79,8 +90,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             expired,
         })
 
-    } catch (error: any) {
-        console.error('Cron error:', error?.message)
-        return res.status(500).json({ error: 'Cron job failed', details: error?.message })
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : 'Unknown error'
+        console.error('Cron error:', msg)
+        return res.status(500).json({ error: 'Cron job failed', details: msg })
     }
 }

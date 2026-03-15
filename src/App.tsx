@@ -54,6 +54,7 @@ import FinancialsPage from '@/pages/platform/FinancialsPage'
 import AuditLogsPage from '@/pages/platform/AuditLogsPage'
 import PlatformReportsPage from '@/pages/platform/PlatformReportsPage'
 import AnnouncementsPage from '@/pages/platform/AnnouncementsPage'
+import PlatformSettingsPage from '@/pages/platform/PlatformSettingsPage'
 
 // Contexts
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
@@ -141,7 +142,7 @@ function AppRoutes() {
                 <Route path="logs" element={<AuditLogsPage />} />
                 <Route path="reports" element={<PlatformReportsPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="settings" element={<PlatformSettingsPage />} />
             </Route>
 
             {/* Tenant Dashboard Routes */}

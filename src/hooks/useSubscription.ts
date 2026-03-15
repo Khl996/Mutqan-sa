@@ -219,59 +219,14 @@ export function useUpdateSubscription() {
             planId: string
             billingCycle: 'monthly' | 'yearly'
         }) => {
-            // Get plan details
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: plan } = await supabase
-                .from('subscription_plans')
-                .select('*')
-                .eq('id', planId)
-                .single() as any
-
-            if (!plan) throw new Error('Plan not found')
-
-            const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly
-            const now = new Date()
-            const periodEnd = new Date(now)
-
-            if (billingCycle === 'yearly') {
-                periodEnd.setFullYear(periodEnd.getFullYear() + 1)
-            } else {
-                periodEnd.setMonth(periodEnd.getMonth() + 1)
-            }
-
-            // Upsert subscription
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error } = await (supabase
-                .from('tenant_subscriptions')
-                .upsert({
-                    tenant_id: tenantId,
-                    plan_id: planId,
-                    status: 'active',
-                    billing_cycle: billingCycle,
-                    current_period_start: now.toISOString(),
-                    current_period_end: periodEnd.toISOString(),
-                    amount,
-                    currency: plan.currency,
-                    updated_at: now.toISOString(),
-                }, { onConflict: 'tenant_id' }) as any)
-                .select()
-                .single()
+            const { data, error } = await supabase.rpc('admin_update_subscription', {
+                p_tenant_id: tenantId,
+                p_plan_id: planId,
+                p_billing_cycle: billingCycle,
+                p_status: 'active'
+            } as any)
 
             if (error) throw error
-
-            // Update tenant's subscription info
-            await (supabase
-                .from('tenants')
-                .update({
-                    subscription_tier: plan.code,
-                    subscription_status: 'active',
-                    subscription_ends_at: periodEnd.toISOString(),
-                    max_users: plan.max_users,
-                    max_buildings: plan.max_buildings,
-                    updated_at: now.toISOString(),
-                }) as any)
-                .eq('id', tenantId)
-
             return data
         },
         onSuccess: (_, variables) => {

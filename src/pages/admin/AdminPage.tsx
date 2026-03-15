@@ -35,6 +35,7 @@ export default function AdminPage() {
     const isAdmin = profileData?.role === 'platform_owner' ||
         profileData?.role === 'platform_admin' ||
         profileData?.role === 'tenant_admin' ||
+        profileData?.role === 'tenant_owner' ||
         profileData?.is_super_admin
 
     // Fetch tenant-scoped stats
