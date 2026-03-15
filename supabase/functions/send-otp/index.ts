@@ -50,6 +50,49 @@ Deno.serve(async (req) => {
             { auth: { autoRefreshToken: false, persistSession: false } }
         )
 
+        // Extract Client IP
+        const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+            req.headers.get('x-real-ip') ||
+            'unknown'
+
+        // =====================================================
+        // GLOBAL IP RATE LIMITING (Prevent mass spamming)
+        // =====================================================
+        if (clientIP !== 'unknown') {
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+
+            const { count: ipRequestsCount } = await supabaseAdmin
+                .from('platform_audit_logs')
+                .select('*', { count: 'exact', head: true })
+                .eq('action_type', 'otp_request')
+                .eq('ip_address', clientIP)
+                .gte('created_at', oneHourAgo)
+
+            // Max 5 OTP requests per hour per IP
+            if (ipRequestsCount !== null && ipRequestsCount >= 5) {
+                return new Response(JSON.stringify({
+                    error: isRTL
+                        ? 'لقد تجاوزت الحد المسموح من المحاولات. يرجى المحاولة لاحقاً.'
+                        : 'Too many requests from this IP. Please try again later.'
+                }), {
+                    status: 429,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                })
+            }
+        }
+
+        // Record Audit Log for tracking IP requests *first* 
+        // (Log all attempts to prevent blind enumeration + rate limit valid/invalid alike)
+        await supabaseAdmin
+            .from('platform_audit_logs')
+            .insert({
+                action: 'Requested Password Reset OTP',
+                action_type: 'otp_request',
+                target_type: 'email',
+                target_id: email,
+                ip_address: clientIP !== 'unknown' ? clientIP : null
+            })
+
         // =====================================================
         // CHECK IF EMAIL EXISTS (Prevent Abuse & Enumeration)
         // =====================================================
