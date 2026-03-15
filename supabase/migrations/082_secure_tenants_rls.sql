@@ -34,6 +34,11 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Step 3: Create Secure Policies
+DROP POLICY IF EXISTS "tenants_select_secure" ON tenants;
+DROP POLICY IF EXISTS "tenants_insert_secure" ON tenants;
+DROP POLICY IF EXISTS "tenants_update_secure" ON tenants;
+DROP POLICY IF EXISTS "tenants_delete_secure" ON tenants;
+
 -- SELECT: Users can see their own tenant, OR platform admins see all
 CREATE POLICY "tenants_select_secure" ON tenants FOR SELECT TO authenticated USING (
     EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.tenant_id = tenants.id)
