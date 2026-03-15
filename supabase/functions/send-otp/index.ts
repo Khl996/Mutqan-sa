@@ -51,7 +51,30 @@ Deno.serve(async (req) => {
         )
 
         // =====================================================
-        // RATE LIMITING: Max 3 OTP requests per hour per email
+        // CHECK IF EMAIL EXISTS (Prevent Abuse & Enumeration)
+        // =====================================================
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .single()
+
+        if (!profile) {
+            // Act like it succeeded to prevent email enumeration,
+            // but don't actually send anything or store OTP.
+            return new Response(JSON.stringify({
+                success: true,
+                message: isRTL
+                    ? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني'
+                    : 'OTP sent to your email'
+            }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200,
+            })
+        }
+
+        // =====================================================
+        // RATE LIMITING: Max 1 OTP per 2 minutes per email
         // =====================================================
         const { data: existingOTP } = await supabaseAdmin
             .from('password_reset_otps')

@@ -78,23 +78,24 @@ BEGIN
         updated_at = v_now
     WHERE id = p_tenant_id;
 
-    -- 6. Log Audit Event
-    INSERT INTO audit_logs (
-        tenant_id, user_id, action, entity_type, entity_id, new_values
+    -- 6. Log Audit Event into platform_audit_logs
+    INSERT INTO platform_audit_logs (
+        user_id, action, action_type, target_type, target_id, new_values, metadata
     )
     VALUES (
-        p_tenant_id,
         auth.uid(),
-        'UPDATE',
+        'Updated Subscripton for Tenant ' || p_tenant_id,
+        'update',
         'subscription',
-        v_subscription_id,
+        v_subscription_id::TEXT,
         jsonb_build_object(
             'plan_id', p_plan_id,
             'plan_code', v_plan.code,
             'status', p_status,
             'billing_cycle', p_billing_cycle,
             'period_end', v_period_end
-        )
+        ),
+        jsonb_build_object('tenant_id', p_tenant_id)
     );
 
     v_result := jsonb_build_object(
