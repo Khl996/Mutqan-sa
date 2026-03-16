@@ -31,26 +31,49 @@ export async function sendPasswordResetOTP(email: string, isRTL: boolean = false
         if (error) {
             console.error('Send OTP Edge Function error:', error)
 
+            // Supabase functions may put the custom JSON body in error.context or error.message
+            let errorMsg = error.message;
+            if (error.context && typeof error.context.json === 'function') {
+                try {
+                    const errBody = await error.context.json();
+                    if (errBody && errBody.error) errorMsg = errBody.error;
+                } catch (e) {
+                    // ignore
+                }
+            } else if (error.message && error.message.includes('{')) {
+                try {
+                    const parsed = JSON.parse(error.message.substring(error.message.indexOf('{')));
+                    if (parsed.error) errorMsg = parsed.error;
+                } catch (e) { }
+            }
+
             // Check for rate limiting
-            if (error.message?.includes('429') || error.message?.includes('wait')) {
+            if (errorMsg?.includes('429') || errorMsg?.includes('wait') || error.message?.includes('429')) {
                 return {
                     success: false,
                     message: isRTL
-                        ? 'يرجى الانتظار قبل طلب رمز جديد'
-                        : 'Please wait before requesting a new code',
+                        ? 'يرجى الانتظار 3 دقائق قبل طلب رمز جديد'
+                        : 'Please wait 3 minutes before requesting a new code',
                     error: 'RATE_LIMITED'
                 }
             }
 
             return {
                 success: false,
-                message: isRTL ? 'فشل في إرسال رمز التحقق' : 'Failed to send OTP',
-                error: error.message || 'SEND_FAILED'
+                message: errorMsg || (isRTL ? 'فشل في إرسال رمز التحقق' : 'Failed to send OTP'),
+                error: 'SEND_FAILED'
             }
         }
 
         // Edge function returns { success, message } or { error }
         if (data?.error) {
+            if (data.error.includes('wait') || data.error.includes('تجاوزت') || data.error.includes('الانتظار')) {
+                return {
+                    success: false,
+                    message: data.error,
+                    error: 'RATE_LIMITED'
+                }
+            }
             return {
                 success: false,
                 message: data.error,

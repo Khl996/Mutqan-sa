@@ -72,7 +72,6 @@ BEGIN
     UPDATE tenants
     SET 
         subscription_status = p_status,
-        subscription_tier = v_plan.code,
         subscription_ends_at = v_period_end,
         plan_id = p_plan_id,
         updated_at = v_now
