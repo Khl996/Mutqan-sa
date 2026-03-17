@@ -86,7 +86,7 @@ BEGIN
         'Updated Subscripton for Tenant ' || p_tenant_id,
         'update',
         'subscription',
-        v_subscription_id::TEXT,
+        v_subscription_id,
         jsonb_build_object(
             'plan_id', p_plan_id,
             'plan_code', v_plan.code,
