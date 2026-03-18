@@ -56,18 +56,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // Verify user belongs to this tenant and has admin/owner role
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-            auth: { autoRefreshToken: false, persistSession: false },
-        })
-
-        const { data: profile, error: profileError } = await supabase
+        // We use userSupabase because RLS allows the user to read their own profile natively
+        const { data: profile, error: profileError } = await userSupabase
             .from('profiles')
             .select('role, tenant_id')
             .eq('id', user.id)
             .single()
 
         if (profileError || !profile) {
-            return res.status(403).json({ error: 'User profile not found' })
+            console.error('Profile fetch error:', profileError, 'User:', user.id)
+            return res.status(403).json({
+                error: 'User profile not found',
+                details: profileError?.message || 'Row not found'
+            })
         }
 
         if (profile.tenant_id !== tenantId) {
@@ -80,17 +81,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // =====================================================
         // SERVER-SIDE PRICE LOOKUP — Never trust client amount
-        // (supabase service client already created in auth check above)
+        // We use userSupabase so it respects RLS automatically
         // =====================================================
 
-        const { data: plan, error: planError } = await supabase
+        const { data: plan, error: planError } = await userSupabase
             .from('subscription_plans')
             .select('id, code, name, name_ar, price_monthly, price_yearly, is_active')
             .eq('id', planId)
             .single()
 
         if (planError || !plan) {
-            return res.status(400).json({ error: 'Invalid plan ID' })
+            console.error('Plan fetch error:', planError, 'Plan ID:', planId)
+            return res.status(400).json({ error: 'Invalid subscription plan selected' })
         }
 
         if (!plan.is_active) {
@@ -109,14 +111,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // =====================================================
         // Verify tenant exists
         // =====================================================
-        const { data: tenant, error: tenantError } = await supabase
+        const { data: tenant, error: tenantError } = await userSupabase
             .from('tenants')
             .select('id, name')
             .eq('id', tenantId)
             .single()
 
         if (tenantError || !tenant) {
-            return res.status(400).json({ error: 'Invalid tenant ID' })
+            console.error('Tenant fetch error:', tenantError, 'Tenant ID:', tenantId)
+            return res.status(400).json({ error: 'Invalid tenant ID or you lack permissions' })
         }
 
         // =====================================================
