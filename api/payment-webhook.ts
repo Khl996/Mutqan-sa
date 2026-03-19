@@ -7,21 +7,17 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 /**
  * Payment Webhook Handler
- * 
+ *
  * Called by Tap Payments when a charge status changes.
- * This is the RELIABLE path for activating subscriptions,
+ * This is the reliable path for activating subscriptions,
  * as it doesn't depend on the user's browser redirect.
- * 
- * Flow: Tap → POST /api/payment-webhook → verify charge → activate subscription
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Tap sends POST for webhooks
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' })
     }
 
     try {
-        // Tap sends the charge ID in the body
         const chargeId = req.body?.id || req.body?.tap_id
 
         if (!chargeId) {
@@ -47,7 +43,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!tapResponse.ok) {
             console.error('Webhook: Tap API error:', charge)
-            // Return 500 — Tap API failure is likely transient, retry will help
             return res.status(500).json({ received: true, processed: false, reason: 'tap_api_error' })
         }
 
@@ -60,11 +55,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // 3. Extract and validate metadata
         const metadata = charge.metadata || {}
         const tenantId = metadata.tenant_id
-        const planId = metadata.plan_id
+        const rawPlanId = metadata.plan_id
+        const planCode = metadata.plan_code
+        const planId = typeof rawPlanId === 'string' ? rawPlanId.trim() : rawPlanId
         const billingCycle = metadata.billing_cycle || 'yearly'
         const planName = metadata.plan_name || 'Subscription'
 
-        if (!tenantId || !planId) {
+        if (!tenantId || (!planId && !planCode)) {
             console.error('Webhook: Missing metadata:', metadata)
             return res.status(200).json({ received: true, processed: false, reason: 'missing_metadata' })
         }
@@ -74,15 +71,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             auth: { autoRefreshToken: false, persistSession: false },
         })
 
-        const { data: plan, error: planError } = await supabase
-            .from('subscription_plans')
-            .select('id, code, price_monthly, price_yearly')
-            .eq('id', planId)
-            .single()
+        let plan = null
+        let planLookupError = null
 
-        if (planError || !plan) {
-            console.error('Webhook: Plan lookup failed:', planError)
-            // Return 500 — DB lookup failure is likely transient, retry will help
+        if (planId) {
+            const { data, error } = await supabase
+                .from('subscription_plans')
+                .select('id, code, price_monthly, price_yearly')
+                .eq('id', planId)
+                .maybeSingle()
+
+            plan = data
+            planLookupError = error
+        }
+
+        if (!plan && planCode) {
+            const { data, error } = await supabase
+                .from('subscription_plans')
+                .select('id, code, price_monthly, price_yearly')
+                .eq('code', planCode)
+                .maybeSingle()
+
+            if (data) {
+                plan = data
+                planLookupError = null
+            } else if (!planLookupError) {
+                planLookupError = error
+            }
+        }
+
+        if (!plan) {
+            console.error('Webhook: Plan lookup failed:', {
+                error: planLookupError,
+                planId,
+                planCode,
+                metadata,
+            })
             return res.status(500).json({ received: true, processed: false, reason: 'plan_lookup_error' })
         }
 
@@ -94,12 +118,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ received: true, processed: false, reason: 'amount_mismatch' })
         }
 
-        // 5. Activate subscription (idempotent — safe to call multiple times)
+        // 5. Activate subscription (idempotent - safe to call multiple times)
         const { data: rpcResult, error: rpcError } = await supabase.rpc(
             'activate_subscription_after_payment',
             {
                 p_tenant_id: tenantId,
-                p_plan_id: planId,
+                p_plan_id: plan.id,
                 p_billing_cycle: billingCycle,
                 p_amount: paidAmount,
                 p_currency: charge.currency || 'SAR',
@@ -110,22 +134,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (rpcError) {
             console.error('Webhook: RPC error:', rpcError)
-            // Return 500 so Tap retries — this is likely a transient DB/network error
             return res.status(500).json({ received: true, processed: false, reason: 'rpc_error' })
         }
 
         console.log(`Webhook: Subscription activated for tenant ${tenantId}, plan ${plan.code}`)
 
-        // Always return 200 to Tap so they don't retry endlessly
         return res.status(200).json({
             received: true,
             processed: true,
             subscription: rpcResult,
         })
-
     } catch (error: any) {
         console.error('Webhook Error:', error?.message || error)
-        // Return 500 so Tap retries — transient server errors should be retried
         return res.status(500).json({ received: true, processed: false, reason: 'internal_error' })
     }
 }

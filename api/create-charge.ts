@@ -160,9 +160,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         number: customerPhone,
                     } : undefined,
                 },
-                merchant: {
-                    id: '',  // Tap will use the default merchant from the API key
-                },
                 source: {
                     id: 'src_all',  // Allow all payment methods
                 },

@@ -58,11 +58,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // 3. Extract metadata from the charge
         const metadata = charge.metadata || {}
         const tenantId = metadata.tenant_id
-        const planId = metadata.plan_id
+        const rawPlanId = metadata.plan_id
+        const planCode = metadata.plan_code
+        const planId = typeof rawPlanId === 'string' ? rawPlanId.trim() : rawPlanId
         const billingCycle = metadata.billing_cycle || 'yearly'
         const planName = metadata.plan_name || 'Subscription'
 
-        if (!tenantId || !planId) {
+        if (!tenantId || (!planId && !planCode)) {
             console.error('Missing payment metadata:', metadata)
             return res.status(400).json({
                 error: 'Missing tenant or plan information in payment metadata',
@@ -78,14 +80,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
         })
 
-        const { data: plan, error: planError } = await supabase
-            .from('subscription_plans')
-            .select('id, code, price_monthly, price_yearly')
-            .eq('id', planId)
-            .single()
+        let plan = null
+        let planLookupError = null
 
-        if (planError || !plan) {
-            console.error('Plan lookup failed:', planError)
+        if (planId) {
+            const { data, error } = await supabase
+                .from('subscription_plans')
+                .select('id, code, price_monthly, price_yearly')
+                .eq('id', planId)
+                .maybeSingle()
+
+            plan = data
+            planLookupError = error
+        }
+
+        // Fall back to plan_code in case the gateway returns an unusable plan_id.
+        if (!plan && planCode) {
+            const { data, error } = await supabase
+                .from('subscription_plans')
+                .select('id, code, price_monthly, price_yearly')
+                .eq('code', planCode)
+                .maybeSingle()
+
+            if (data) {
+                plan = data
+                planLookupError = null
+            } else if (!planLookupError) {
+                planLookupError = error
+            }
+        }
+
+        if (!plan) {
+            console.error('Plan lookup failed:', {
+                error: planLookupError,
+                planId,
+                planCode,
+                metadata,
+            })
             return res.status(400).json({ error: 'Invalid plan in payment metadata' })
         }
 
@@ -106,7 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             'activate_subscription_after_payment',
             {
                 p_tenant_id: tenantId,
-                p_plan_id: planId,
+                p_plan_id: plan.id,
                 p_billing_cycle: billingCycle,
                 p_amount: paidAmount,
                 p_currency: charge.currency || 'SAR',
