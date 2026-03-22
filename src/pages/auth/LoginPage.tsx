@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
+import { isPlatformRole } from '@/config/roles'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function LoginPage() {
     const { t, i18n } = useTranslation()
-    const { signIn } = useAuth()
+    const { signIn, profile, isAuthenticated } = useAuth()
     const navigate = useNavigate()
 
     const [email, setEmail] = useState('')
@@ -16,8 +17,23 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
+    // Track that we just signed in and are waiting for profile to load
+    const [pendingRedirect, setPendingRedirect] = useState(false)
 
     const isRTL = i18n.language === 'ar'
+
+    // Redirect once profile is ready after sign-in
+    useEffect(() => {
+        if (!pendingRedirect || !isAuthenticated || !profile) return
+
+        // Profile is now loaded — route based on role
+        if (isPlatformRole(profile.role)) {
+            navigate('/platform', { replace: true })
+        } else {
+            navigate('/dashboard', { replace: true })
+        }
+        setPendingRedirect(false)
+    }, [pendingRedirect, isAuthenticated, profile, navigate])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -34,51 +50,16 @@ export default function LoginPage() {
 
             if (error) {
                 toast.error(t('auth.invalidCredentials'))
+                setIsLoading(false)
             } else {
                 toast.success(t('common.success'))
-
-                // Role check logic matching previous implementation
-                try {
-                    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-                    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-                    await new Promise(r => setTimeout(r, 100))
-                    const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
-                    const storedSession = localStorage.getItem(storageKey)
-
-                    if (storedSession) {
-                        const sessionData = JSON.parse(storedSession)
-                        const accessToken = sessionData.access_token
-                        const userId = sessionData.user.id
-
-                        const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=role`, {
-                            headers: {
-                                'apikey': supabaseAnonKey,
-                                'Authorization': `Bearer ${accessToken}`,
-                                'Content-Type': 'application/json'
-                            }
-                        })
-
-                        if (response.ok) {
-                            const profiles = await response.json()
-                            if (profiles && profiles.length > 0) {
-                                const role = profiles[0].role
-                                if (role === 'platform_owner' || role.startsWith('platform_')) {
-                                    navigate('/platform', { replace: true })
-                                    return
-                                }
-                            }
-                        }
-                    }
-                } catch (err) {
-                    console.error('Role check error:', err)
-                }
-
-                navigate('/dashboard', { replace: true })
+                // Signal that we should redirect once profile loads
+                setPendingRedirect(true)
+                // Keep isLoading=true so the button stays disabled until redirect
             }
         } catch (error) {
             console.error(error)
             toast.error(t('common.error'))
-        } finally {
             setIsLoading(false)
         }
     }

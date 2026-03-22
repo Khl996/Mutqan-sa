@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { hasPermission, Permission, Role } from '@/config/permissions'
+import { isPlatformRole } from '@/config/roles'
 
 export function usePermission() {
     const { profile } = useAuth()
@@ -13,11 +14,12 @@ export function usePermission() {
     }
 
     const role = (profile?.role as Role) || null
+    const userRole = profile?.role || ''
 
     return {
         can,
         role,
-        isManager: ['platform_owner', 'platform_admin', 'tenant_admin', 'tenant_owner', 'facility_manager', 'maintenance_manager'].includes(profile?.role || ''),
-        isAdmin: ['platform_owner', 'platform_admin', 'tenant_admin', 'tenant_owner'].includes(profile?.role || '')
+        isManager: isPlatformRole(userRole) || ['tenant_admin', 'tenant_owner', 'facility_manager', 'maintenance_manager'].includes(userRole),
+        isAdmin: isPlatformRole(userRole) || ['tenant_admin', 'tenant_owner'].includes(userRole)
     }
 }

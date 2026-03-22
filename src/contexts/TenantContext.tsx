@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
+import { isPlatformRole } from '@/config/roles'
 
 // Tenant Type
 export interface Tenant {
@@ -38,8 +39,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profileData = profile as any
 
-    // Check if user is a platform-level user (dynamic check for any role starting with platform_)
-    const isPlatformUser = profileData?.role === 'platform_owner' || profileData?.role?.startsWith('platform_') || profileData?.is_super_admin
+    // Check if user is a platform-level user using centralized role check
+    const isPlatformUser = isPlatformRole(profileData?.role) || profileData?.is_super_admin
 
     // Fetch tenant data
     useEffect(() => {

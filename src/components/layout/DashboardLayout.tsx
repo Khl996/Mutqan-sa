@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { useTranslation } from 'react-i18next'
 import { useTenantDisplaySettings } from '@/hooks/useTenantDisplaySettings'
+import { isPlatformRole } from '@/config/roles'
 import ServiceSuspended from '@/components/ServiceSuspended'
 import Sidebar from './Sidebar'
 import Header from './Header'
@@ -37,6 +38,12 @@ export default function DashboardLayout() {
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />
+    }
+
+    // Guard: platform users without a selected tenant must go to /platform
+    if (isPlatformRole(profile?.role) && !currentTenant) {
+        console.log('⛔ DashboardLayout: platform user without tenant → redirect to /platform')
+        return <Navigate to="/platform" replace />
     }
 
     // Check for subscription status

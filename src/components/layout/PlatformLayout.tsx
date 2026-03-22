@@ -4,9 +4,7 @@ import { useTranslation } from 'react-i18next'
 import PlatformSidebar from './PlatformSidebar'
 import PlatformHeader from './PlatformHeader'
 import { cn } from '@/lib/utils'
-
-// Platform roles — must match all platform_* roles in DB (068_add_tenant_owner_role.sql)
-const PLATFORM_ROLES = ['platform_owner', 'platform_admin', 'platform_support', 'platform_finance', 'platform_hr']
+import { PLATFORM_ROLES } from '@/config/roles'
 
 type AccessState = 'loading' | 'authenticated' | 'denied' | 'not-logged-in'
 
@@ -112,7 +110,7 @@ export default function PlatformLayout() {
                 return
             }
 
-            const hasPlatformAccess = PLATFORM_ROLES.includes(profile.role) || profile.is_super_admin
+            const hasPlatformAccess = (PLATFORM_ROLES as readonly string[]).includes(profile.role) || profile.is_super_admin
             console.log('✅ Profile:', profile.role, 'Platform access:', hasPlatformAccess)
 
             if (!cancelled) {

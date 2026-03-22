@@ -77,19 +77,34 @@ Deno.serve(async (req) => {
         }
 
         // 5. Get User ID from profiles
-        const { data: profile, error: profileError } = await supabaseAdmin
+        const { data: profileRow, error: profileError } = await supabaseAdmin
             .from('profiles')
-            .select('id')
+            .select('id, email')
             .eq('email', email)
             .single()
 
-        if (profileError || !profile) {
+        if (profileError || !profileRow) {
             throw new Error('User not found')
+        }
+
+        // 5b. Verify auth.users record exists and matches
+        //     Prevents silent success when profiles is out of sync with auth
+        const { data: authUser, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(profileRow.id)
+
+        if (authUserError || !authUser?.user) {
+            console.error('Auth/profiles mismatch: profile exists but auth user missing for', email)
+            throw new Error('Account sync error. Please contact support.')
+        }
+
+        // Double-check email matches (case-insensitive)
+        if (authUser.user.email?.toLowerCase() !== email.toLowerCase()) {
+            console.error('Auth/profiles email mismatch:', authUser.user.email, '!=', email)
+            throw new Error('Account sync error. Please contact support.')
         }
 
         // 6. Update Password
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-            profile.id,
+            profileRow.id,
             { password: newPassword }
         )
 
