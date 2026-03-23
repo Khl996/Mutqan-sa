@@ -193,55 +193,65 @@ export function useTenantStats() {
     })
 }
 
-// Create Tenant
+// Create Tenant via unified provision_tenant RPC
 export function useCreateTenant() {
     const queryClient = useQueryClient()
 
     return useMutation({
         mutationFn: async (input: CreateTenantInput) => {
-            console.log('📝 Creating tenant...', input)
+            console.log('📝 Creating tenant via provision_tenant RPC...', input)
 
-            // 1. Separate admin details from tenant data
-            // This prevents "unknown column" errors from Supabase
-            const { admin_name, admin_email, admin_password, ...tenantData } = input
+            const { admin_name, admin_email, admin_password, ...tenantFields } = input
 
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
             const accessToken = getAccessToken()
 
             if (!accessToken) {
                 throw new Error('Not authenticated - no access token found')
             }
 
-            // 2. Create the Tenant
-            const response = await fetch(`${supabaseUrl}/rest/v1/tenants`, {
+            // 1. Call the unified provision_tenant RPC
+            const rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/provision_tenant`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    'apikey': supabaseAnonKey,
                     'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
                 },
-                body: JSON.stringify(tenantData) // Send ONLY tenant fields
+                body: JSON.stringify({
+                    p_name: tenantFields.name,
+                    p_name_ar: tenantFields.name_ar || null,
+                    p_slug: tenantFields.slug || null,
+                    p_email: tenantFields.email || null,
+                    p_phone: tenantFields.phone || null,
+                    p_address: tenantFields.address || null,
+                    p_timezone: tenantFields.timezone || 'Asia/Riyadh',
+                    p_plan_code: 'free_trial',
+                    p_trial_days: 14,
+                    p_assign_caller_as_admin: false,  // platform admin is NOT the tenant admin
+                })
             })
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                console.error('❌ Insert error:', errorData)
-                throw new Error(errorData.message || `HTTP ${response.status}`)
+            if (!rpcResponse.ok) {
+                const errorData = await rpcResponse.json().catch(() => ({}))
+                console.error('❌ provision_tenant RPC error:', errorData)
+                throw new Error(errorData.message || errorData.error || `HTTP ${rpcResponse.status}`)
             }
 
-            const data = await response.json()
-            const newTenant = (Array.isArray(data) ? data[0] : data) as Tenant
-            console.log('✅ Tenant created:', newTenant.id)
+            const rpcResult = await rpcResponse.json()
+            console.log('✅ Tenant provisioned:', rpcResult)
 
-            // 3. Create the Admin User (if provided)
-            if (admin_email && admin_password) {
+            const newTenantId = rpcResult.tenant_id
+
+            // 2. Create the Admin User (if provided) — requires auth.signUp
+            if (admin_email && admin_password && newTenantId) {
                 console.log('👤 Creating tenant admin user...')
 
                 const authResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
                     method: 'POST',
                     headers: {
-                        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                        'apikey': supabaseAnonKey,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
@@ -250,7 +260,7 @@ export function useCreateTenant() {
                         data: {
                             full_name: admin_name || 'Admin',
                             role: 'tenant_admin',
-                            tenant_id: newTenant.id // Link user to the new tenant!
+                            tenant_id: newTenantId
                         }
                     })
                 })
@@ -258,14 +268,30 @@ export function useCreateTenant() {
                 if (!authResponse.ok) {
                     const authError = await authResponse.json().catch(() => ({}))
                     console.error('❌ Failed to create admin user:', authError)
-                    // We don't throw here to avoid failing the whole tenant creation (tenant is already created)
-                    // But checking console is wise.
+                    // Don't throw — tenant is already created
                 } else {
                     console.log('✅ Tenant admin created successfully')
                 }
             }
 
-            return newTenant
+            // 3. Fetch the newly created tenant to return full object
+            const tenantResponse = await fetch(
+                `${supabaseUrl}/rest/v1/tenants?id=eq.${newTenantId}&select=*`,
+                {
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${accessToken}`,
+                    }
+                }
+            )
+
+            if (tenantResponse.ok) {
+                const tenantData = await tenantResponse.json()
+                return (Array.isArray(tenantData) ? tenantData[0] : tenantData) as Tenant
+            }
+
+            // Fallback: return minimal object
+            return { id: newTenantId, slug: rpcResult.slug, name: input.name } as Tenant
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: tenantsKeys.list() })
