@@ -60,75 +60,7 @@ export const subscriptionKeys = {
     usage: (tenantId: string) => [...subscriptionKeys.all, 'usage', tenantId] as const,
 }
 
-// Default Plans (can be seeded in DB)
-export const DEFAULT_PLANS: Partial<SubscriptionPlan>[] = [
-    {
-        code: 'free',
-        name: 'Free',
-        name_ar: 'مجاني',
-        description: 'For small teams getting started',
-        description_ar: 'للفرق الصغيرة في البداية',
-        price_monthly: 0,
-        price_yearly: 0,
-        currency: 'SAR',
-        max_users: 3,
-        max_buildings: 1,
-        max_assets: 50,
-        max_work_orders_monthly: 50,
-        features: ['basic_reporting', 'email_support'],
-        display_order: 1,
-    },
-    {
-        code: 'basic',
-        name: 'Basic',
-        name_ar: 'أساسي',
-        description: 'For growing organizations',
-        description_ar: 'للمنظمات النامية',
-        price_monthly: 299,
-        price_yearly: 2990,
-        currency: 'SAR',
-        max_users: 10,
-        max_buildings: 3,
-        max_assets: 200,
-        max_work_orders_monthly: 200,
-        features: ['basic_reporting', 'email_support', 'inventory_management', 'maintenance_calendar'],
-        display_order: 2,
-    },
-    {
-        code: 'professional',
-        name: 'Professional',
-        name_ar: 'احترافي',
-        description: 'For professional facilities management',
-        description_ar: 'لإدارة المرافق الاحترافية',
-        price_monthly: 599,
-        price_yearly: 5990,
-        currency: 'SAR',
-        max_users: 25,
-        max_buildings: 10,
-        max_assets: 1000,
-        max_work_orders_monthly: 1000,
-        features: ['advanced_reporting', 'priority_support', 'inventory_management', 'maintenance_calendar', 'api_access', 'custom_workflows'],
-        display_order: 3,
-    },
-    {
-        code: 'enterprise',
-        name: 'Enterprise',
-        name_ar: 'مؤسسي',
-        description: 'For large enterprises with custom needs',
-        description_ar: 'للمؤسسات الكبيرة ذات الاحتياجات المخصصة',
-        price_monthly: 1499,
-        price_yearly: 14990,
-        currency: 'SAR',
-        max_users: -1, // Unlimited
-        max_buildings: -1, // Unlimited
-        max_assets: -1, // Unlimited
-        max_work_orders_monthly: -1, // Unlimited
-        features: ['advanced_reporting', 'dedicated_support', 'inventory_management', 'maintenance_calendar', 'api_access', 'custom_workflows', 'sla_management', 'multi_location', 'white_label'],
-        display_order: 4,
-    },
-]
-
-// Fetch Subscription Plans
+// Fetch Subscription Plans — DB is the single source of truth
 export function useSubscriptionPlans() {
     return useQuery({
         queryKey: subscriptionKeys.plans(),
@@ -141,9 +73,8 @@ export function useSubscriptionPlans() {
                 .order('display_order') as any
 
             if (error) {
-                // If table doesn't exist, return default plans
-                console.warn('subscription_plans table not found, using defaults')
-                return DEFAULT_PLANS as SubscriptionPlan[]
+                console.error('Failed to fetch subscription_plans:', error.message)
+                throw new Error('Could not load subscription plans')
             }
             return data as SubscriptionPlan[]
         },

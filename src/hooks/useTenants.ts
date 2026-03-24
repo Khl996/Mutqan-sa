@@ -72,13 +72,8 @@ export const tenantsKeys = {
     stats: () => [...tenantsKeys.all, 'stats'] as const,
 }
 
-// Subscription Tiers
-export const SUBSCRIPTION_TIERS = [
-    { value: 'free', label: 'Free', labelAr: 'مجاني', color: 'bg-muted' },
-    { value: 'basic', label: 'Basic', labelAr: 'أساسي', color: 'bg-info' },
-    { value: 'professional', label: 'Professional', labelAr: 'احترافي', color: 'bg-secondary' },
-    { value: 'enterprise', label: 'Enterprise', labelAr: 'مؤسسي', color: 'bg-warning' },
-]
+// Note: Subscription tiers/plans are fetched from DB via useSubscriptionPlans hook.
+// No hardcoded tiers here — DB (subscription_plans table) is the single source of truth.
 
 // Helper to get token
 const getAccessToken = () => {
@@ -227,8 +222,8 @@ export function useCreateTenant() {
                     p_phone: tenantFields.phone || null,
                     p_address: tenantFields.address || null,
                     p_timezone: tenantFields.timezone || 'Asia/Riyadh',
-                    p_plan_code: 'free_trial',
-                    p_trial_days: 14,
+                    p_plan_code: null,        // let DB decide via is_default
+                    p_trial_days: null,       // let plan's trial_days decide
                     p_assign_caller_as_admin: false,  // platform admin is NOT the tenant admin
                 })
             })
