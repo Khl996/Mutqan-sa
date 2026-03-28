@@ -60,6 +60,16 @@ export default function TenantSubscriptionPage() {
     const endDate = subscription.current_period_end ? new Date(subscription.current_period_end) : null
     const daysRemaining = endDate ? Math.max(0, Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 0
     const isExpired = endDate ? endDate < new Date() : false
+    const trialStartDate = subscription.current_period_start ? new Date(subscription.current_period_start) : null
+    const trialEndDate = subscription.trial_ends_at ? new Date(subscription.trial_ends_at) : endDate
+    const trialTotalDays =
+        trialStartDate && trialEndDate
+            ? Math.max(1, Math.ceil((trialEndDate.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24)))
+            : 14
+    const trialProgress = Math.min(
+        100,
+        Math.max(0, Math.round(((trialTotalDays - daysRemaining) / trialTotalDays) * 100))
+    )
 
     // Handle Plan Selection / Payment
     const handleSubscribe = (plan: any) => {
@@ -167,12 +177,12 @@ export default function TenantSubscriptionPage() {
                     <div className="mt-6">
                         <div className="flex justify-between text-xs mb-2 font-medium">
                             <span>{isRTL ? 'الفترة التجريبية' : 'Trial Period'}</span>
-                            <span>{Math.round((14 - daysRemaining) / 14 * 100)}%</span>
+                            <span>{trialProgress}%</span>
                         </div>
                         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-blue-500 transition-all duration-500"
-                                style={{ width: `${Math.round((14 - daysRemaining) / 14 * 100)}%` }}
+                                style={{ width: `${trialProgress}%` }}
                             />
                         </div>
                     </div>

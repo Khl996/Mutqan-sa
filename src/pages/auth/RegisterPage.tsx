@@ -123,8 +123,8 @@ export default function RegisterPage() {
             toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match')
             return false
         }
-        if (formData.password.length < 6) {
-            toast.error(isRTL ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters')
+        if (formData.password.length < 10) {
+            toast.error(isRTL ? 'كلمة المرور يجب أن تكون 10 أحرف على الأقل' : 'Password must be at least 10 characters')
             return false
         }
         return true

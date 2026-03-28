@@ -22,9 +22,7 @@ CREATE POLICY "Users can view profiles in same tenant"
   ON profiles
   FOR SELECT
   USING (
-    tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
-    )
+    tenant_id = public.get_user_tenant_id()
   );
 
 -- رسالة تأكيد

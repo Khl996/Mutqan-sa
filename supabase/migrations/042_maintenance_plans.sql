@@ -25,11 +25,11 @@ DROP POLICY IF EXISTS "Users can view their tenant plans" ON maintenance_plans;
 DROP POLICY IF EXISTS "Admins/Managers can manage plans" ON maintenance_plans;
 
 CREATE POLICY "Users can view their tenant plans" ON maintenance_plans
-    FOR SELECT USING (tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid()));
+    FOR SELECT USING (tenant_id = public.get_user_tenant_id());
 
 CREATE POLICY "Admins/Managers can manage plans" ON maintenance_plans
     FOR ALL USING (
-        tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+        tenant_id = public.get_user_tenant_id()
         AND EXISTS (
             SELECT 1 FROM profiles 
             WHERE id = auth.uid() 

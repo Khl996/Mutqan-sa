@@ -60,6 +60,10 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.get_runtime_secret(TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_runtime_secret(TEXT) FROM anon;
+REVOKE ALL ON FUNCTION public.get_runtime_secret(TEXT) FROM authenticated;
+
 CREATE OR REPLACE FUNCTION public.send_email_notification()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -96,11 +100,14 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    IF v_shared_secret IS NOT NULL THEN
-        v_headers := v_headers || jsonb_build_object(
-            'x-internal-email-secret', v_shared_secret
-        );
+    IF v_shared_secret IS NULL THEN
+        RAISE NOTICE 'Runtime secret app.resend_email_secret is not configured; skipping notification email for notification %', NEW.id;
+        RETURN NEW;
     END IF;
+
+    v_headers := v_headers || jsonb_build_object(
+        'x-internal-email-secret', v_shared_secret
+    );
 
     PERFORM net.http_post(
         url := v_function_url,
@@ -136,20 +143,25 @@ SET search_path = public
 AS $$
 DECLARE
     v_actor public.profiles%ROWTYPE;
+    v_actor_id UUID := auth.uid();
 BEGIN
+    IF v_actor_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
     SELECT *
       INTO v_actor
       FROM public.profiles
-     WHERE id = auth.uid();
+     WHERE id = v_actor_id;
 
     IF NOT FOUND THEN
         RETURN NEW;
     END IF;
 
-    NEW.user_id := COALESCE(NEW.user_id, v_actor.id);
-    NEW.user_email := COALESCE(NULLIF(NEW.user_email, ''), v_actor.email);
-    NEW.user_name := COALESCE(NULLIF(NEW.user_name, ''), v_actor.full_name, v_actor.email);
-    NEW.user_role := COALESCE(NULLIF(NEW.user_role, ''), v_actor.role);
+    NEW.user_id := v_actor.id;
+    NEW.user_email := v_actor.email;
+    NEW.user_name := COALESCE(v_actor.full_name, v_actor.email);
+    NEW.user_role := v_actor.role;
 
     RETURN NEW;
 END;

@@ -39,6 +39,10 @@ AS $$
     LIMIT 1;
 $$;
 
+REVOKE ALL ON FUNCTION public.get_runtime_secret(TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_runtime_secret(TEXT) FROM anon;
+REVOKE ALL ON FUNCTION public.get_runtime_secret(TEXT) FROM authenticated;
+
 CREATE OR REPLACE FUNCTION public.send_email_notification()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -76,11 +80,14 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    IF v_shared_secret IS NOT NULL THEN
-        v_headers := v_headers || jsonb_build_object(
-            'x-internal-email-secret', v_shared_secret
-        );
+    IF v_shared_secret IS NULL THEN
+        RAISE NOTICE 'Runtime secret app.resend_email_secret is not configured; skipping notification email for notification %', NEW.id;
+        RETURN NEW;
     END IF;
+
+    v_headers := v_headers || jsonb_build_object(
+        'x-internal-email-secret', v_shared_secret
+    );
 
     -- Call Edge Function using pg_net
     PERFORM net.http_post(

@@ -60,16 +60,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (newStatus === 'cancelled') {
                 subUpdate.cancelled_at = now
             }
-            await supabase
+            const { error: subUpdateError } = await supabase
                 .from('tenant_subscriptions')
                 .update(subUpdate)
                 .eq('id', sub.id)
+
+            if (subUpdateError) {
+                throw new Error(`Failed to update subscription ${sub.id}: ${subUpdateError.message}`)
+            }
 
             // =====================================================
             // Update ALL related fields on tenants table consistently
             // This prevents drift between subscription status sources
             // =====================================================
-            await supabase
+            const { error: tenantUpdateError } = await supabase
                 .from('tenants')
                 .update({
                     subscription_status: newStatus,
@@ -77,6 +81,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     updated_at: now,
                 })
                 .eq('id', sub.tenant_id)
+
+            if (tenantUpdateError) {
+                throw new Error(`Failed to sync tenant ${sub.tenant_id}: ${tenantUpdateError.message}`)
+            }
 
             if (newStatus === 'cancelled') cancelled++
             else expired++

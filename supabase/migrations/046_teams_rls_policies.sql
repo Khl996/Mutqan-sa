@@ -20,36 +20,28 @@ DROP POLICY IF EXISTS "teams_delete_policy" ON teams;
 CREATE POLICY "teams_select_policy" ON teams
     FOR SELECT
     USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
+        tenant_id = public.get_user_tenant_id()
     );
 
 -- INSERT: Users can create teams in their tenant
 CREATE POLICY "teams_insert_policy" ON teams
     FOR INSERT
     WITH CHECK (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
+        tenant_id = public.get_user_tenant_id()
     );
 
 -- UPDATE: Users can update teams in their tenant
 CREATE POLICY "teams_update_policy" ON teams
     FOR UPDATE
     USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
+        tenant_id = public.get_user_tenant_id()
     );
 
 -- DELETE: Users can delete teams in their tenant
 CREATE POLICY "teams_delete_policy" ON teams
     FOR DELETE
     USING (
-        tenant_id IN (
-            SELECT tenant_id FROM profiles WHERE id = auth.uid()
-        )
+        tenant_id = public.get_user_tenant_id()
     );
 
 -- =====================================================
@@ -67,9 +59,7 @@ CREATE POLICY "team_members_select_policy" ON team_members
     FOR SELECT
     USING (
         team_id IN (
-            SELECT id FROM teams WHERE tenant_id IN (
-                SELECT tenant_id FROM profiles WHERE id = auth.uid()
-            )
+            SELECT id FROM teams WHERE tenant_id = public.get_user_tenant_id()
         )
     );
 
@@ -78,9 +68,7 @@ CREATE POLICY "team_members_insert_policy" ON team_members
     FOR INSERT
     WITH CHECK (
         team_id IN (
-            SELECT id FROM teams WHERE tenant_id IN (
-                SELECT tenant_id FROM profiles WHERE id = auth.uid()
-            )
+            SELECT id FROM teams WHERE tenant_id = public.get_user_tenant_id()
         )
     );
 
@@ -89,9 +77,7 @@ CREATE POLICY "team_members_update_policy" ON team_members
     FOR UPDATE
     USING (
         team_id IN (
-            SELECT id FROM teams WHERE tenant_id IN (
-                SELECT tenant_id FROM profiles WHERE id = auth.uid()
-            )
+            SELECT id FROM teams WHERE tenant_id = public.get_user_tenant_id()
         )
     );
 
@@ -100,9 +86,7 @@ CREATE POLICY "team_members_delete_policy" ON team_members
     FOR DELETE
     USING (
         team_id IN (
-            SELECT id FROM teams WHERE tenant_id IN (
-                SELECT tenant_id FROM profiles WHERE id = auth.uid()
-            )
+            SELECT id FROM teams WHERE tenant_id = public.get_user_tenant_id()
         )
     );
 

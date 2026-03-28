@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
             throw new Error('Missing required fields')
         }
 
-        if (newPassword.length < 6) {
-            throw new Error('Password must be at least 6 characters')
+        if (newPassword.length < 10) {
+            throw new Error('Password must be at least 10 characters')
         }
 
         const supabaseAdmin = createClient(

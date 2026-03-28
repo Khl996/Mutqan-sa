@@ -114,6 +114,7 @@ ALTER TABLE public.platform_invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.platform_financial_summary ENABLE ROW LEVEL SECURITY;
 
 -- Platform staff only accessible by platform admins
+DROP POLICY IF EXISTS "Platform admins can view staff" ON public.platform_staff;
 CREATE POLICY "Platform admins can view staff" ON public.platform_staff
     FOR SELECT TO authenticated
     USING (EXISTS (
@@ -121,6 +122,7 @@ CREATE POLICY "Platform admins can view staff" ON public.platform_staff
         WHERE id = auth.uid() AND role IN ('platform_owner', 'platform_admin')
     ));
 
+DROP POLICY IF EXISTS "Platform owner can manage staff" ON public.platform_staff;
 CREATE POLICY "Platform owner can manage staff" ON public.platform_staff
     FOR ALL TO authenticated
     USING (EXISTS (
@@ -129,6 +131,7 @@ CREATE POLICY "Platform owner can manage staff" ON public.platform_staff
     ));
 
 -- Audit logs readable by platform admins
+DROP POLICY IF EXISTS "Platform admins can view audit logs" ON public.platform_audit_logs;
 CREATE POLICY "Platform admins can view audit logs" ON public.platform_audit_logs
     FOR SELECT TO authenticated
     USING (EXISTS (
@@ -137,11 +140,13 @@ CREATE POLICY "Platform admins can view audit logs" ON public.platform_audit_log
     ));
 
 -- Anyone can insert audit logs (for tracking)
+DROP POLICY IF EXISTS "Authenticated users can insert audit logs" ON public.platform_audit_logs;
 CREATE POLICY "Authenticated users can insert audit logs" ON public.platform_audit_logs
     FOR INSERT TO authenticated
     WITH CHECK (true);
 
 -- Platform invoices accessible by platform admins and finance
+DROP POLICY IF EXISTS "Platform staff can view invoices" ON public.platform_invoices;
 CREATE POLICY "Platform staff can view invoices" ON public.platform_invoices
     FOR SELECT TO authenticated
     USING (EXISTS (
@@ -149,6 +154,7 @@ CREATE POLICY "Platform staff can view invoices" ON public.platform_invoices
         WHERE id = auth.uid() AND role IN ('platform_owner', 'platform_admin', 'platform_finance')
     ));
 
+DROP POLICY IF EXISTS "Platform finance can manage invoices" ON public.platform_invoices;
 CREATE POLICY "Platform finance can manage invoices" ON public.platform_invoices
     FOR ALL TO authenticated
     USING (EXISTS (
@@ -157,6 +163,7 @@ CREATE POLICY "Platform finance can manage invoices" ON public.platform_invoices
     ));
 
 -- Financial summary accessible by platform admins
+DROP POLICY IF EXISTS "Platform admins can view financial summary" ON public.platform_financial_summary;
 CREATE POLICY "Platform admins can view financial summary" ON public.platform_financial_summary
     FOR SELECT TO authenticated
     USING (EXISTS (
@@ -221,54 +228,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 9. Seed sample data for testing
-INSERT INTO public.platform_staff (user_id, profile_id, role, status, tenants_access, permissions)
-SELECT 
-    p.id,
-    p.id,
-    p.role,
-    'active',
-    CASE WHEN p.role = 'platform_owner' THEN 'all' ELSE 'assigned' END,
-    CASE 
-        WHEN p.role = 'platform_owner' THEN '["full_access"]'::jsonb
-        WHEN p.role = 'platform_admin' THEN '["manage_tenants", "manage_subscriptions", "view_reports"]'::jsonb
-        ELSE '["view_tenants", "support_tickets"]'::jsonb
-    END
-FROM public.profiles p
-WHERE p.role IN ('platform_owner', 'platform_admin', 'platform_support', 'platform_finance')
-ON CONFLICT DO NOTHING;
-
--- 10. Insert sample invoices
-INSERT INTO public.platform_invoices (invoice_number, tenant_id, plan_name, subtotal, tax_amount, total, status, due_date, paid_at)
-SELECT 
-    'INV-2026-' || LPAD(ROW_NUMBER() OVER()::TEXT, 4, '0'),
-    t.id,
-    COALESCE(t.subscription_tier, 'basic'),
-    CASE t.subscription_tier
-        WHEN 'enterprise' THEN 4990
-        WHEN 'professional' THEN 2990
-        WHEN 'basic' THEN 990
-        ELSE 0
-    END,
-    CASE t.subscription_tier
-        WHEN 'enterprise' THEN 748.50
-        WHEN 'professional' THEN 448.50
-        WHEN 'basic' THEN 148.50
-        ELSE 0
-    END,
-    CASE t.subscription_tier
-        WHEN 'enterprise' THEN 5738.50
-        WHEN 'professional' THEN 3438.50
-        WHEN 'basic' THEN 1138.50
-        ELSE 0
-    END,
-    CASE WHEN RANDOM() > 0.3 THEN 'paid' ELSE 'pending' END,
-    CURRENT_DATE + (RANDOM() * 30)::INTEGER,
-    CASE WHEN RANDOM() > 0.3 THEN now() - (RANDOM() * 10)::INTEGER * INTERVAL '1 day' ELSE NULL END
-FROM public.tenants t
-WHERE t.subscription_tier IS NOT NULL
-LIMIT 10
-ON CONFLICT DO NOTHING;
+-- 9. Keep production replays free from sample staff or billing data
+DO $$
+BEGIN
+    RAISE NOTICE '015_platform_management.sql applied without sample platform staff or invoice seed data.';
+END $$;
 
 COMMENT ON TABLE public.platform_staff IS 'Platform staff members with roles and permissions';
 COMMENT ON TABLE public.platform_audit_logs IS 'Audit log for all platform actions';

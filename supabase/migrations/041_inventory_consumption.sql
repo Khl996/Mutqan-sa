@@ -41,7 +41,7 @@ CREATE POLICY "Users can view parts for their tenant work orders" ON work_order_
     FOR SELECT USING (
         work_order_id IN (
             SELECT id FROM work_orders 
-            WHERE tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+            WHERE tenant_id = public.get_user_tenant_id()
         )
     );
 
@@ -49,11 +49,14 @@ CREATE POLICY "Technicians and Managers can add parts" ON work_order_parts
     FOR INSERT WITH CHECK (
         work_order_id IN (
             SELECT id FROM work_orders 
-            WHERE tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+            WHERE tenant_id = public.get_user_tenant_id()
         )
     );
 
 -- 5. Update complete_work_order_technician function
+DROP FUNCTION IF EXISTS complete_work_order_technician(UUID, TEXT, JSONB);
+DROP FUNCTION IF EXISTS complete_work_order_technician(UUID, UUID, TEXT, JSONB);
+
 CREATE OR REPLACE FUNCTION complete_work_order_technician(
     p_work_order_id UUID,
     p_technician_notes TEXT,
@@ -84,7 +87,7 @@ BEGIN
     END IF;
     
     -- Verify Tenant Access
-    IF v_tenant_id != (SELECT tenant_id FROM profiles WHERE id = auth.uid()) THEN
+    IF v_tenant_id IS DISTINCT FROM public.get_user_tenant_id() THEN
          RAISE EXCEPTION 'Unauthorized access';
     END IF;
 

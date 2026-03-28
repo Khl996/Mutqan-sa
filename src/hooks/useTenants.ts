@@ -257,7 +257,30 @@ export function useCreateTenant() {
                     console.log('Tenant admin created successfully')
                 } catch (authError) {
                     console.error('Failed to create tenant admin user:', authError)
-                    // Don't throw - tenant is already created
+                    const authMessage = authError instanceof Error ? authError.message : 'Unknown error'
+
+                    const rollbackResponse = await fetch(
+                        `${supabaseUrl}/rest/v1/tenants?id=eq.${newTenantId}`,
+                        {
+                            method: 'DELETE',
+                            headers: {
+                                'apikey': supabaseAnonKey,
+                                'Authorization': `Bearer ${accessToken}`,
+                                'Prefer': 'return=minimal',
+                            }
+                        }
+                    )
+
+                    if (!rollbackResponse.ok) {
+                        const rollbackError = await rollbackResponse.text().catch(() => '')
+                        throw new Error(
+                            `Tenant ${newTenantId} was created, but admin user provisioning failed and automatic rollback also failed. Manual cleanup is required. Root cause: ${authMessage}. ${rollbackError}`.trim()
+                        )
+                    }
+
+                    throw new Error(
+                        `Tenant provisioning was rolled back because admin user creation failed. Root cause: ${authMessage}`
+                    )
                 }
             }
             // 3. Fetch the newly created tenant to return full object

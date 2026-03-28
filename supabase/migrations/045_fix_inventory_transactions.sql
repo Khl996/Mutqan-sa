@@ -8,13 +8,13 @@ DROP POLICY IF EXISTS "Tenant users can create transactions" ON inventory_transa
 -- 3. Create Policies
 CREATE POLICY "Tenant users can view transactions" ON inventory_transactions
     FOR SELECT USING (
-        tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid()) OR
-        (SELECT is_super_admin FROM profiles WHERE id = auth.uid()) = TRUE
+        tenant_id = public.get_user_tenant_id() OR
+        public.is_super_admin() = TRUE
     );
 
 CREATE POLICY "Tenant users can create transactions" ON inventory_transactions
     FOR INSERT WITH CHECK (
-        tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+        tenant_id = public.get_user_tenant_id()
     );
 
 -- 4. Update Transaction Type Check Constraint to include 'usage'

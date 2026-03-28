@@ -25,7 +25,7 @@ DECLARE
     v_old_status VARCHAR;
 BEGIN
     -- Get caller's tenant
-    SELECT tenant_id INTO v_caller_tenant FROM profiles WHERE id = auth.uid();
+    SELECT public.get_user_tenant_id() INTO v_caller_tenant;
 
     -- Get work order info
     SELECT tenant_id, status INTO v_tenant_id, v_old_status
@@ -96,7 +96,7 @@ DECLARE
     v_available_qty DECIMAL;
 BEGIN
     -- Get caller's tenant
-    SELECT tenant_id INTO v_caller_tenant FROM profiles WHERE id = auth.uid();
+    SELECT public.get_user_tenant_id() INTO v_caller_tenant;
 
     -- Get work order info
     SELECT tenant_id, status INTO v_tenant_id, v_old_status
@@ -228,8 +228,9 @@ DECLARE
     v_next_status TEXT;
 BEGIN
     -- Get caller info
-    SELECT tenant_id, role INTO v_caller_tenant, v_caller_role
+    SELECT role INTO v_caller_role
     FROM profiles WHERE id = auth.uid();
+    SELECT public.get_user_tenant_id() INTO v_caller_tenant;
 
     -- Role check: only supervisors, managers, admins
     IF v_caller_role NOT IN ('supervisor', 'manager', 'tenant_admin', 'platform_owner', 'platform_admin') THEN
@@ -304,8 +305,9 @@ DECLARE
     v_old_status VARCHAR;
 BEGIN
     -- Get caller info
-    SELECT tenant_id, role INTO v_caller_tenant, v_caller_role
+    SELECT role INTO v_caller_role
     FROM profiles WHERE id = auth.uid();
+    SELECT public.get_user_tenant_id() INTO v_caller_tenant;
 
     -- Role check: only engineers, managers, admins
     IF v_caller_role NOT IN ('engineer', 'manager', 'tenant_admin', 'platform_owner', 'platform_admin') THEN
@@ -365,7 +367,7 @@ DECLARE
     v_caller_tenant UUID;
     v_old_status VARCHAR;
 BEGIN
-    SELECT tenant_id INTO v_caller_tenant FROM profiles WHERE id = auth.uid();
+    SELECT public.get_user_tenant_id() INTO v_caller_tenant;
 
     SELECT tenant_id, status INTO v_tenant_id, v_old_status
     FROM work_orders WHERE id = p_work_order_id;
@@ -422,8 +424,9 @@ DECLARE
     v_old_status VARCHAR;
 BEGIN
     -- Get caller info
-    SELECT tenant_id, role INTO v_caller_tenant, v_caller_role
+    SELECT role INTO v_caller_role
     FROM profiles WHERE id = auth.uid();
+    SELECT public.get_user_tenant_id() INTO v_caller_tenant;
 
     -- Role check
     IF v_caller_role NOT IN ('supervisor', 'engineer', 'manager', 'tenant_admin', 'platform_owner', 'platform_admin') THEN

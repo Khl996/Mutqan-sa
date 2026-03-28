@@ -6,7 +6,7 @@ const RESEND_EMAIL_SECRET = Deno.env.get('RESEND_EMAIL_SECRET')
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-email-secret',
 }
 
 Deno.serve(async (req) => {
@@ -16,14 +16,19 @@ Deno.serve(async (req) => {
     }
 
     try {
-        if (RESEND_EMAIL_SECRET) {
-            const providedSecret = req.headers.get('x-internal-email-secret')
-            if (providedSecret !== RESEND_EMAIL_SECRET) {
-                return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                    status: 401,
-                })
-            }
+        if (!RESEND_EMAIL_SECRET) {
+            return new Response(JSON.stringify({ error: 'Missing RESEND_EMAIL_SECRET environment variable' }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 500,
+            })
+        }
+
+        const providedSecret = req.headers.get('x-internal-email-secret')
+        if (providedSecret !== RESEND_EMAIL_SECRET) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 401,
+            })
         }
 
         const { to, subject, html, type, message, link, title } = await req.json()

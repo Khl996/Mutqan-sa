@@ -24,12 +24,14 @@ CREATE TABLE IF NOT EXISTS maintenance_tasks (
 ALTER TABLE maintenance_tasks ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Users can view tenant tasks" ON maintenance_tasks;
 CREATE POLICY "Users can view tenant tasks" ON maintenance_tasks
-    FOR SELECT USING (tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid()));
+    FOR SELECT USING (tenant_id = public.get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Admins and Managers can manage tasks" ON maintenance_tasks;
 CREATE POLICY "Admins and Managers can manage tasks" ON maintenance_tasks
     FOR ALL USING (
-        tenant_id = (SELECT tenant_id FROM profiles WHERE id = auth.uid())
+        tenant_id = public.get_user_tenant_id()
         AND EXISTS (
              SELECT 1 FROM profiles 
              WHERE id = auth.uid() 
@@ -37,6 +39,7 @@ CREATE POLICY "Admins and Managers can manage tasks" ON maintenance_tasks
         )
     );
 
+DROP POLICY IF EXISTS "Technicians can update their tasks" ON maintenance_tasks;
 CREATE POLICY "Technicians can update their tasks" ON maintenance_tasks
     FOR UPDATE USING (
         assigned_to = auth.uid()

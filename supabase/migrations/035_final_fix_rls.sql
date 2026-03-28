@@ -11,7 +11,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    RETURN (SELECT tenant_id FROM public.profiles WHERE id = auth.uid());
+    RETURN (
+        SELECT p.tenant_id
+        FROM public.profiles p
+        WHERE p.id = auth.uid()
+          AND public.tenant_has_operational_access(p.tenant_id)
+        LIMIT 1
+    );
 END;
 $$ LANGUAGE plpgsql;
 

@@ -161,34 +161,10 @@ CREATE POLICY "Platform finance can manage invoices" ON public.platform_invoices
         WHERE id = auth.uid() AND role IN ('platform_owner', 'platform_finance')
     ));
 
--- 5. Insert sample invoices
-INSERT INTO public.platform_invoices (invoice_number, tenant_id, plan_name, subtotal, tax_amount, total, status, due_date)
-SELECT 
-    'INV-2026-' || LPAD(ROW_NUMBER() OVER()::TEXT, 4, '0'),
-    t.id,
-    COALESCE(t.subscription_tier, 'basic'),
-    CASE t.subscription_tier
-        WHEN 'enterprise' THEN 4990
-        WHEN 'professional' THEN 2990
-        WHEN 'basic' THEN 990
-        ELSE 299
-    END,
-    CASE t.subscription_tier
-        WHEN 'enterprise' THEN 748.50
-        WHEN 'professional' THEN 448.50
-        WHEN 'basic' THEN 148.50
-        ELSE 44.85
-    END,
-    CASE t.subscription_tier
-        WHEN 'enterprise' THEN 5738.50
-        WHEN 'professional' THEN 3438.50
-        WHEN 'basic' THEN 1138.50
-        ELSE 343.85
-    END,
-    CASE WHEN RANDOM() > 0.3 THEN 'paid' ELSE 'pending' END,
-    CURRENT_DATE + (RANDOM() * 30)::INTEGER
-FROM public.tenants t
-LIMIT 5
-ON CONFLICT (invoice_number) DO NOTHING;
+-- 5. Keep production replays free from sample invoice data
+DO $$
+BEGIN
+    RAISE NOTICE '016_quick_fix.sql applied without sample invoice seed data.';
+END $$;
 
 SELECT 'Migration completed successfully!' as result;

@@ -401,8 +401,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'Email is required for new users' })
             }
 
-            if (typeof password !== 'string' || password.length < 6) {
-                return res.status(400).json({ error: 'A password with at least 6 characters is required for new users' })
+            if (typeof password !== 'string' || password.length < 10) {
+                return res.status(400).json({ error: 'A password with at least 10 characters is required for new users' })
             }
 
             const { data: createdUserData, error: createUserError } = await adminSupabase.auth.admin.createUser({

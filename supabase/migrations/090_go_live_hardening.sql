@@ -223,7 +223,10 @@ AS $$
         WHERE p.id = auth.uid()
           AND (
             public.is_platform_admin()
-            OR p.tenant_id = p_tenant_id
+            OR (
+                p.tenant_id = p_tenant_id
+                AND public.tenant_has_operational_access(p_tenant_id)
+            )
           )
     );
 $$;
@@ -242,6 +245,7 @@ AS $$
             public.is_platform_admin()
             OR (
                 p.tenant_id = p_tenant_id
+                AND public.tenant_has_operational_access(p_tenant_id)
                 AND p.role IN ('tenant_owner', 'tenant_admin', 'maintenance_manager')
             )
           )

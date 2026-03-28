@@ -126,8 +126,8 @@ export default function PlatformStaffPage() {
                 return
             }
 
-            if (formData.password.length < 6) {
-                toast.error(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ 6 أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Password must be at least 6 characters')
+            if (formData.password.length < 10) {
+                toast.error(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ 10 أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Password must be at least 10 characters')
                 return
             }
 

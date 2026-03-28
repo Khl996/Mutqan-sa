@@ -57,8 +57,8 @@ export default function ForgotPasswordPage() {
             return
         }
 
-        if (newPassword.length < 6) {
-            toast.error(isRTL ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters')
+        if (newPassword.length < 10) {
+            toast.error(isRTL ? 'كلمة المرور يجب أن تكون 10 أحرف على الأقل' : 'Password must be at least 10 characters')
             return
         }
 
