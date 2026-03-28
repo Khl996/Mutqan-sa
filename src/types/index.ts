@@ -1,3 +1,5 @@
+import type { WorkOrderStatus } from '@/config/workOrderStatus'
+
 // Common Types
 export interface BaseEntity {
     id: string
@@ -152,17 +154,8 @@ export interface WorkOrder extends BaseEntity {
     completed_at: string | null
 }
 
-export type WorkOrderStatus =
-    | 'pending'
-    | 'assigned'
-    | 'in_progress'
-    | 'pending_supervisor_approval'
-    | 'pending_engineer_review'
-    | 'pending_reporter_closure'
-    | 'completed'
-    | 'auto_closed'
-    | 'rejected_by_technician'
-    | 'cancelled'
+// Re-export from canonical source
+export type { WorkOrderStatus } from '@/config/workOrderStatus'
 
 export type Priority = 'low' | 'medium' | 'high' | 'urgent'
 

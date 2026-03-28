@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useCurrentTenantId } from './useTenantQuery'
+import type { WorkOrderStatus } from '@/config/workOrderStatus'
 
 // Types
 export interface WorkOrder {
@@ -11,9 +12,7 @@ export interface WorkOrder {
     description: string | null
     issue_type_id: string | null
     issue_type: string | null
-    status: 'pending' | 'assigned' | 'in_progress' | 'pending_supervisor_approval' |
-    'pending_engineer_review' | 'pending_reporter_closure' | 'completed' |
-    'auto_closed' | 'rejected_by_technician' | 'cancelled' | 'on_hold'
+    status: WorkOrderStatus
     priority: 'low' | 'medium' | 'high' | 'urgent'
     reported_by: string | null
     reporter_name?: string | null

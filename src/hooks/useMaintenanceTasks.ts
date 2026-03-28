@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useCurrentTenantId } from './useTenantQuery'
+import { workOrdersKeys } from './useWorkOrders'
 
 export interface MaintenanceTask {
     id: string
@@ -107,7 +108,7 @@ export function useMaintenanceTasks() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+            queryClient.invalidateQueries({ queryKey: workOrdersKeys.all })
         }
     })
 

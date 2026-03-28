@@ -1,8 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { workOrdersKeys } from './useWorkOrders'
 
 export const useWorkOrderWorkflow = () => {
     const queryClient = useQueryClient()
+
+    // Helper: invalidate all work order queries (list + detail + stats + logs)
+    const invalidateAll = (workOrderId?: string) => {
+        queryClient.invalidateQueries({ queryKey: workOrdersKeys.all })
+        if (workOrderId) {
+            queryClient.invalidateQueries({ queryKey: workOrdersKeys.workOrder(workOrderId) })
+        }
+    }
 
     // 1. Start Work (Technician)
     const startWork = useMutation({
@@ -14,9 +23,8 @@ export const useWorkOrderWorkflow = () => {
             } as any)
             if (error) throw error
         },
-        onSuccess: () => {
-            // Invalidate list and details
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
         }
     })
 
@@ -41,9 +49,9 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
-            queryClient.invalidateQueries({ queryKey: ['inventory'] }) // Update inventory stock
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
         }
     })
 
@@ -58,8 +66,8 @@ export const useWorkOrderWorkflow = () => {
             } as any)
             if (error) throw error
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
         }
     })
 
@@ -74,8 +82,8 @@ export const useWorkOrderWorkflow = () => {
             } as any)
             if (error) throw error
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
         }
     })
 
@@ -90,8 +98,8 @@ export const useWorkOrderWorkflow = () => {
             } as any)
             if (error) throw error
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
         }
     })
 
@@ -106,8 +114,8 @@ export const useWorkOrderWorkflow = () => {
             } as any)
             if (error) throw error
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['work-orders'] })
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
         }
     })
 
@@ -120,3 +128,4 @@ export const useWorkOrderWorkflow = () => {
         rejectWork
     }
 }
+
