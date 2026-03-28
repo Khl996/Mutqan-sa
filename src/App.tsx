@@ -163,17 +163,35 @@ function AppRoutes() {
                 <Route path="/register/complete" element={renderLazyPage(CompleteRegistrationPage)} />
             </Route>
 
-            {/* Platform Admin Routes */}
+            {/* Platform Routes */}
             <Route path="/platform" element={<PlatformLayout />}>
-                <Route index element={renderLazyPage(PlatformDashboardPage)} />
-                <Route path="tenants" element={renderLazyPage(TenantsManagementPage)} />
-                <Route path="subscriptions" element={renderLazyPage(SubscriptionPage)} />
-                <Route path="staff" element={renderLazyPage(PlatformStaffPage)} />
-                <Route path="financials" element={renderLazyPage(FinancialsPage)} />
-                <Route path="logs" element={renderLazyPage(AuditLogsPage)} />
-                <Route path="reports" element={renderLazyPage(PlatformReportsPage)} />
-                <Route path="announcements" element={renderLazyPage(AnnouncementsPage)} />
-                <Route path="settings" element={renderLazyPage(PlatformSettingsPage)} />
+                <Route element={<ProtectedRoute permission="platform.dashboard.view" redirectPath="/dashboard" />}>
+                    <Route index element={renderLazyPage(PlatformDashboardPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.tenants.view" redirectPath="/platform" />}>
+                    <Route path="tenants" element={renderLazyPage(TenantsManagementPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.subscriptions.manage" redirectPath="/platform" />}>
+                    <Route path="subscriptions" element={renderLazyPage(SubscriptionPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.staff.manage" redirectPath="/platform" />}>
+                    <Route path="staff" element={renderLazyPage(PlatformStaffPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.financials.view" redirectPath="/platform" />}>
+                    <Route path="financials" element={renderLazyPage(FinancialsPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.audit.view" redirectPath="/platform" />}>
+                    <Route path="logs" element={renderLazyPage(AuditLogsPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.reports.view" redirectPath="/platform" />}>
+                    <Route path="reports" element={renderLazyPage(PlatformReportsPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.announcements.manage" redirectPath="/platform" />}>
+                    <Route path="announcements" element={renderLazyPage(AnnouncementsPage)} />
+                </Route>
+                <Route element={<ProtectedRoute permission="platform.settings.manage" redirectPath="/platform" />}>
+                    <Route path="settings" element={renderLazyPage(PlatformSettingsPage)} />
+                </Route>
             </Route>
 
             {/* Tenant Dashboard Routes */}
@@ -207,6 +225,9 @@ function AppRoutes() {
 
                 <Route element={<ProtectedRoute permission="users.view" />}>
                     <Route path="/teams" element={renderLazyPage(TeamsPage)} />
+                </Route>
+
+                <Route element={<ProtectedRoute permission="work_teams.view" />}>
                     <Route path="/work-teams" element={renderLazyPage(WorkTeamsPage)} />
                 </Route>
 
@@ -216,14 +237,16 @@ function AppRoutes() {
 
                 <Route element={<ProtectedRoute permission="settings.view" />}>
                     <Route path="/settings" element={renderLazyPage(SettingsPage)} />
-                    <Route path="/settings/portal" element={renderLazyPage(PortalSettingsPage)} />
                     <Route path="/settings/modules" element={renderLazyPage(ModulesSettingsPage)} />
+                </Route>
+
+                <Route element={<ProtectedRoute permission="settings.manage" />}>
+                    <Route path="/settings/portal" element={renderLazyPage(PortalSettingsPage)} />
                     <Route path="/settings/tenant" element={renderLazyPage(TenantSettingsPage)} />
                     <Route path="/admin" element={renderLazyPage(AdminPage)} />
                 </Route>
 
-                {/* Tenant Admin/Owner Routes */}
-                <Route element={<ProtectedRoute allowedRoles={['tenant_admin', 'tenant_owner']} />}>
+                <Route element={<ProtectedRoute permission="subscription.manage" />}>
                     <Route path="/subscription" element={renderLazyPage(TenantSubscriptionPage)} />
                 </Route>
             </Route>

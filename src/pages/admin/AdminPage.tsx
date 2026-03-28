@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
+import { usePermission } from '@/hooks/usePermission'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import {
@@ -28,20 +29,16 @@ export default function AdminPage() {
     const isRTL = i18n.language === 'ar'
     const { profile } = useAuth()
     const { currentTenant } = useTenant()
+    const { can } = usePermission()
 
-    // Check if user is admin
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profileData = profile as any
-    const isAdmin = profileData?.role === 'platform_owner' ||
-        profileData?.role === 'platform_admin' ||
-        profileData?.role === 'tenant_admin' ||
-        profileData?.role === 'tenant_owner' ||
-        profileData?.is_super_admin
+    const isAdmin = can('settings.manage') || profileData?.is_super_admin
 
     // Fetch tenant-scoped stats
     const { data: systemStats, isLoading, refetch } = useQuery({
         queryKey: ['admin', 'system-stats', currentTenant?.id],
-        enabled: !!currentTenant?.id,
+        enabled: !!currentTenant?.id && isAdmin,
         queryFn: async () => {
             if (!currentTenant?.id) return null
 
@@ -128,7 +125,7 @@ export default function AdminPage() {
     // Fetch recent activity (Scoped)
     const { data: recentActivity } = useQuery({
         queryKey: ['admin', 'recent-activity', currentTenant?.id],
-        enabled: !!currentTenant?.id,
+        enabled: !!currentTenant?.id && isAdmin,
         queryFn: async () => {
             if (!currentTenant?.id) return []
 

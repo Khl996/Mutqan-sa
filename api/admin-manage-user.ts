@@ -69,7 +69,11 @@ function canAssignRole(
         return isTenantManagedRole(targetRole) || ['platform_support', 'platform_finance', 'platform_hr'].includes(targetRole)
     }
 
-    if (caller.role === 'tenant_owner' || caller.role === 'tenant_admin') {
+    if (caller.role === 'platform_hr') {
+        return tenantId === null && ['platform_support', 'platform_finance', 'platform_hr'].includes(targetRole)
+    }
+
+    if (caller.role === 'tenant_admin') {
         return !!tenantId && tenantId === caller.tenant_id && isTenantManagedRole(targetRole)
     }
 
@@ -340,10 +344,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'tenantId is not allowed for platform roles' })
         }
 
-        if (
-            (callerProfile.role === 'tenant_owner' || callerProfile.role === 'tenant_admin')
-            && tenantId !== callerProfile.tenant_id
-        ) {
+        if (callerProfile.role === 'tenant_admin' && tenantId !== callerProfile.tenant_id) {
             return res.status(403).json({ error: 'You can only manage users inside your own tenant' })
         }
 

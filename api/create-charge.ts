@@ -77,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ error: 'Invalid or expired token' })
         }
 
-        // Verify user belongs to this tenant and has admin/owner role
+        // Verify user belongs to this tenant and has tenant admin role
         // We use userSupabase because RLS allows the user to read their own profile natively
         const { data: profile, error: profileError } = await userSupabase
             .from('profiles')
@@ -97,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(403).json({ error: 'You are not authorized to manage this tenant' })
         }
 
-        if (!['tenant_admin', 'tenant_owner'].includes(profile.role)) {
+        if (profile.role !== 'tenant_admin') {
             return res.status(403).json({ error: 'Only tenant administrators can initiate payments' })
         }
 

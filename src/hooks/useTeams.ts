@@ -33,8 +33,6 @@ export interface TeamStats {
 }
 
 export const AVAILABLE_ROLES = [
-    { value: 'platform_owner', label: 'Platform Owner', label_ar: 'مالك المنصة', color: 'destructive' },
-    { value: 'platform_admin', label: 'Platform Admin', label_ar: 'مدير المنصة', color: 'destructive' },
     { value: 'tenant_admin', label: 'Tenant Admin', label_ar: 'مدير المنشأة', color: 'warning' },
     { value: 'facility_manager', label: 'Facility Manager', label_ar: 'مدير المرافق', color: 'warning' },
     { value: 'maintenance_manager', label: 'Maintenance Manager', label_ar: 'مدير الصيانة', color: 'info' },
@@ -44,9 +42,7 @@ export const AVAILABLE_ROLES = [
     { value: 'reporter', label: 'Reporter', label_ar: 'مبلّغ', color: 'muted' },
 ] as const
 
-export const TENANT_ROLES = AVAILABLE_ROLES.filter(
-    role => !['platform_owner', 'platform_admin'].includes(role.value)
-)
+export const TENANT_ROLES = AVAILABLE_ROLES
 
 export type RoleValue = typeof AVAILABLE_ROLES[number]['value']
 export type TenantRoleValue = typeof TENANT_ROLES[number]['value']
@@ -99,8 +95,8 @@ export function useTeamMembers() {
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?tenant_id=eq.${currentTenant.id}&order=created_at.desc`, {
                 headers: {
                     apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${accessToken}`
-                }
+                    Authorization: `Bearer ${accessToken}`,
+                },
             })
 
             if (!response.ok) throw new Error('Failed to fetch team members')
@@ -108,7 +104,7 @@ export function useTeamMembers() {
             const data = await response.json()
             return data as TeamMember[]
         },
-        enabled: !!currentTenant?.id
+        enabled: !!currentTenant?.id,
     })
 }
 
@@ -124,8 +120,8 @@ export function useTeamMember(id: string) {
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${id}&select=*`, {
                 headers: {
                     apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${accessToken}`
-                }
+                    Authorization: `Bearer ${accessToken}`,
+                },
             })
 
             if (!response.ok) throw new Error('Failed to fetch member')
@@ -153,8 +149,8 @@ export function useTeamStats() {
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?tenant_id=eq.${currentTenant.id}&select=role,is_active`, {
                 headers: {
                     apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${accessToken}`
-                }
+                    Authorization: `Bearer ${accessToken}`,
+                },
             })
 
             if (!response.ok) return { total: 0, active: 0, inactive: 0, byRole: {} }
@@ -178,7 +174,7 @@ export function useTeamStats() {
 
             return stats
         },
-        enabled: !!currentTenant?.id
+        enabled: !!currentTenant?.id,
     })
 }
 
@@ -208,9 +204,9 @@ export function useUpdateTeamMember() {
                     'Content-Type': 'application/json',
                     apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
                     Authorization: `Bearer ${accessToken}`,
-                    Prefer: 'return=representation'
+                    Prefer: 'return=representation',
                 },
-                body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() })
+                body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() }),
             })
 
             if (!response.ok) {

@@ -51,7 +51,7 @@ export default function DashboardLayout() {
     }
 
     // Check for subscription status
-    const isTenantAdmin = profile?.role === 'tenant_owner' || profile?.role === 'tenant_admin'
+    const isTenantAdmin = profile?.role === 'tenant_admin'
 
     // Redirect logic for expired subscriptions
     if (currentTenant && !isPlatformUser) {

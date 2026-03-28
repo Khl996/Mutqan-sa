@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { revokeManagedUser } from '@/lib/adminUserApi'
 
 // Types
 export interface PlatformStaff {
@@ -288,42 +289,7 @@ export function useDeletePlatformStaff() {
 
     return useMutation({
         mutationFn: async (id: string) => {
-            // Get token directly from localStorage
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-            const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
-            const storedSession = localStorage.getItem(storageKey)
-
-            let accessToken: string | null = null
-            if (storedSession) {
-                try {
-                    const parsed = JSON.parse(storedSession)
-                    accessToken = parsed.access_token
-                } catch (e) {
-                    console.error('Failed to parse stored session:', e)
-                }
-            }
-
-            if (!accessToken) throw new Error('Not authenticated')
-
-            // Downgrade to regular user
-            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({
-                    role: 'user',
-                    updated_at: new Date().toISOString()
-                })
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || `HTTP ${response.status}`)
-            }
+            await revokeManagedUser({ userId: id })
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: platformKeys.staff })

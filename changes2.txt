@@ -1,0 +1,61 @@
+﻿M	api/admin-manage-user.ts
+M	api/create-charge.ts
+M	src/App.tsx
+M	src/components/auth/ProtectedRoute.tsx
+M	src/components/layout/DashboardLayout.tsx
+M	src/components/layout/PlatformSidebar.tsx
+M	src/components/layout/Sidebar.tsx
+M	src/components/work-orders/InventorySelector.tsx
+M	src/components/work-orders/WorkOrderActions.tsx
+M	src/config/permissions.ts
+M	src/config/roles.ts
+M	src/config/tenantSettings.ts
+M	src/contexts/TenantContext.tsx
+M	src/hooks/usePermission.ts
+M	src/hooks/usePlatformManagement.ts
+M	src/hooks/useTeams.ts
+M	src/hooks/useTenants.ts
+M	src/hooks/useWorkOrderWorkflow.ts
+M	src/pages/admin/AdminPage.tsx
+M	src/pages/platform/PlatformDashboardPage.tsx
+M	src/pages/platform/PlatformStaffPage.tsx
+M	src/pages/platform/TenantsManagementPage.tsx
+M	src/pages/settings/SettingsPage.tsx
+M	src/pages/work-teams/WorkTeamsPage.tsx
+commit 135dcbd99943097e2371a05654b6bfebe199baab
+Author: Khl996 <khalid.a.kh990@gmail.com>
+Date:   Sat Mar 28 16:08:03 2026 +0300
+
+    fix(security): comprehensive RLS lockdown, enforce DB-tier subscription status and purge mock data
+
+ api/admin-manage-user.ts                           |  4 +-
+ api/check-subscriptions.ts                         | 12 ++-
+ changes.txt                                        | 29 +++++++
+ src/hooks/useTenants.ts                            | 25 +++++-
+ src/pages/auth/ForgotPasswordPage.tsx              |  4 +-
+ src/pages/auth/RegisterPage.tsx                    |  4 +-
+ src/pages/platform/PlatformStaffPage.tsx           |  4 +-
+ src/pages/profile/ProfilePage.tsx                  |  4 +-
+ src/pages/subscriptions/TenantSubscriptionPage.tsx | 14 +++-
+ supabase/functions/resend-email/index.ts           | 23 ++++--
+ supabase/functions/update-password/index.ts        |  4 +-
+ supabase/migrations/003_rls_policies.sql           | 72 +++++++++++++++-
+ supabase/migrations/004_seed_data.sql              | 96 +---------------------
+ supabase/migrations/005_fix_rls.sql                |  4 +-
+ supabase/migrations/007_fix_user_role.sql          | 42 +---------
+ supabase/migrations/013_update_platform_admin.sql  | 24 +-----
+ supabase/migrations/014_fix_platform_admin_rls.sql | 53 +++---------
+ supabase/migrations/015_platform_management.sql    | 60 +++-----------
+ supabase/migrations/016_quick_fix.sql              | 34 ++------
+ supabase/migrations/035_final_fix_rls.sql          |  8 +-
+ supabase/migrations/041_inventory_consumption.sql  |  9 +-
+ supabase/migrations/042_maintenance_plans.sql      |  4 +-
+ supabase/migrations/043_maintenance_tasks.sql      |  7 +-
+ .../migrations/045_fix_inventory_transactions.sql  |  6 +-
+ supabase/migrations/046_teams_rls_policies.sql     | 32 ++------
+ supabase/migrations/057_email_notifications.sql    | 15 +++-
+ supabase/migrations/080_buildings_floors_rls.sql   | 26 ++++--
+ supabase/migrations/087_gate1_secure_workflow.sql  | 15 ++--
+ supabase/migrations/090_go_live_hardening.sql      |  6 +-
+ ...secure_notification_delivery_and_audit_logs.sql | 30 +++++--
+ 30 files changed, 304 insertions(+), 366 deletions(-)

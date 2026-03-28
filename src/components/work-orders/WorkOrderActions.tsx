@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { WorkOrder } from '@/hooks/useWorkOrders'
 import { useAuth } from '@/contexts/AuthContext'
@@ -6,6 +6,7 @@ import { useTenantSettings } from '@/hooks/useTenantSettings'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck } from 'lucide-react'
 import { useWorkOrderWorkflow } from '@/hooks/useWorkOrderWorkflow'
+import { usePermission } from '@/hooks/usePermission'
 import InventorySelector, { SelectedPart } from './InventorySelector'
 
 interface WorkOrderActionsProps {
@@ -14,54 +15,66 @@ interface WorkOrderActionsProps {
     onActionCompleted: () => void
 }
 
+const PLATFORM_WORKFLOW_ROLES = new Set(['platform_owner', 'platform_admin'])
+const START_AND_COMPLETE_ROLES = new Set(['tenant_admin', 'maintenance_manager', 'engineer', 'technician'])
+const SUPERVISOR_APPROVER_ROLES = new Set(['tenant_admin', 'maintenance_manager', 'supervisor'])
+const ENGINEER_APPROVER_ROLES = new Set(['tenant_admin', 'maintenance_manager', 'engineer'])
+const CLOSURE_ROLES = new Set(['tenant_admin', 'maintenance_manager'])
+
 export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }: WorkOrderActionsProps) {
-    useTranslation() // not destructured, just for context
-    const { user, profile } = useAuth()
+    useTranslation()
+    const { user } = useAuth()
+    const { role, can } = usePermission()
     const workflow = useWorkOrderWorkflow()
 
-    // Get tenant settings to control workflow
     const { data: tenantSettings } = useTenantSettings()
     const requireSupervisorApproval = tenantSettings?.work_orders?.require_supervisor_approval ?? true
     const requireEngineerReview = tenantSettings?.work_orders?.require_engineer_review ?? true
     const allowTechnicianReject = tenantSettings?.work_orders?.allow_technician_reject ?? true
 
-    // Check module features
     const isWorkflowEnabled = useFeatureEnabled('work_orders', 'workflow')
     const isPartsTrackingEnabled = useFeatureEnabled('work_orders', 'parts_tracking')
 
-    // Local state
     const [notes, setNotes] = useState('')
     const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    // Role check logic - STRICT permissions
-    const myRole = profile?.role || 'user'
-    const myUserId = user?.id
-
-    // Only platform_admin and tenant_admin have full access
-    const isFullAdmin = myRole === 'platform_admin' || myRole === 'tenant_admin'
-
-    // Specific role checks - NOT cumulative (unless admin)
-    const isTechnicianRole = myRole === 'technician' || myRole === 'engineer' // engineers can also do tech work
-    const isSupervisorRole = myRole === 'supervisor' || myRole === 'maintenance_manager'
-    const isEngineerRole = myRole === 'engineer' || myRole === 'maintenance_manager'
-    const isReporterRole = myRole === 'reporter' || workOrder.reported_by === myUserId
-
-    // Check if this technician is assigned to this specific work order
+    const myUserId = user?.id ?? null
+    const actorRole = role ?? ''
+    const isPlatformWorkflowRole = PLATFORM_WORKFLOW_ROLES.has(actorRole)
     const isAssignedTechnician = workOrder.assigned_to === myUserId
+    const isReporter = workOrder.reported_by === myUserId
 
-    // Permission flags for each action type
-    // For technicians: 
-    // - Can START work if status is 'pending' (anyone can pick up) OR if already assigned
-    // - Can COMPLETE work ONLY if they are the assigned technician
-    const canStartWork = isFullAdmin || (isTechnicianRole && (isAssignedTechnician || workOrder.status === 'pending' || workOrder.status === 'assigned'))
-    const canCompleteWork = isFullAdmin || (isTechnicianRole && isAssignedTechnician)
+    const canStartOrCompleteByRole = START_AND_COMPLETE_ROLES.has(actorRole) || isPlatformWorkflowRole
+    const canTakeSupervisorAction = SUPERVISOR_APPROVER_ROLES.has(actorRole) || isPlatformWorkflowRole
+    const canTakeEngineerAction = ENGINEER_APPROVER_ROLES.has(actorRole) || isPlatformWorkflowRole
+    const canTakeReporterAction = CLOSURE_ROLES.has(actorRole) || isPlatformWorkflowRole || isReporter
 
-    const canTakeSupervisorAction = isFullAdmin || isSupervisorRole
-    const canTakeEngineerAction = isFullAdmin || isEngineerRole
-    const canTakeReporterAction = isFullAdmin || isReporterRole
+    const canStartWork = useMemo(() => {
+        if (!can('work_orders.update') || !canStartOrCompleteByRole) {
+            return false
+        }
 
-    const handleAction = async (actionFn: () => Promise<any>) => {
+        if (isPlatformWorkflowRole || actorRole === 'tenant_admin' || actorRole === 'maintenance_manager') {
+            return true
+        }
+
+        return workOrder.status === 'pending' || isAssignedTechnician
+    }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole, workOrder.status])
+
+    const canCompleteWork = useMemo(() => {
+        if (!can('work_orders.update') || !canStartOrCompleteByRole) {
+            return false
+        }
+
+        if (isPlatformWorkflowRole || actorRole === 'tenant_admin' || actorRole === 'maintenance_manager') {
+            return true
+        }
+
+        return isAssignedTechnician
+    }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole])
+
+    const handleAction = async (actionFn: () => Promise<unknown>) => {
         try {
             setIsSubmitting(true)
             await actionFn()
@@ -76,14 +89,13 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         }
     }
 
-    // 1. Start Work (with optional reject)
     const canStart = (workOrder.status === 'assigned' || workOrder.status === 'pending') && canStartWork
     if (canStart) {
         return (
             <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-primary">
                 <h3 className="font-bold text-lg font-cairo">{isRTL ? 'الإجراءات المتاحة' : 'Available Actions'}</h3>
                 <button
-                    onClick={() => handleAction(() => workflow.startWork.mutateAsync({ workOrderId: workOrder.id, userId: user?.id || '' }))}
+                    onClick={() => handleAction(() => workflow.startWork.mutateAsync({ workOrderId: workOrder.id }))}
                     disabled={isSubmitting}
                     className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow hover:shadow-lg transition-all font-cairo flex items-center justify-center gap-2"
                 >
@@ -91,8 +103,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     {isRTL ? 'بدء العمل' : 'Start Work'}
                 </button>
 
-                {/* Technician Reject Button - only if enabled in settings */}
-                {allowTechnicianReject && workOrder.status === 'assigned' && (
+                {allowTechnicianReject && workOrder.status === 'assigned' && canStartWork && (
                     <div className="pt-2 border-t">
                         <textarea
                             className="w-full p-3 border rounded-lg bg-background text-sm font-cairo outline-none mb-2"
@@ -104,7 +115,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                         <button
                             onClick={() => {
                                 if (!notes) return alert(isRTL ? 'الرجاء كتابة سبب الرفض' : 'Please provide a rejection reason')
-                                handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, userId: user?.id || '', reason: notes }))
+                                handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, reason: notes }))
                             }}
                             disabled={isSubmitting}
                             className="w-full py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg font-bold font-cairo flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
@@ -117,14 +128,13 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
 
                 {workOrder.status === 'pending' && (
                     <p className="text-xs text-muted text-center font-cairo">
-                        {isRTL ? 'سيتم إسناد البلاغ إليك تلقائياً عند البدء' : 'Ticket will be assigned to you automatically'}
+                        {isRTL ? 'سيتم إسناد البلاغ إليك تلقائيًا عند البدء' : 'Ticket will be assigned to you automatically'}
                     </p>
                 )}
             </div>
         )
     }
 
-    // 2. Complete Work - ONLY assigned technician can complete
     const canComplete = workOrder.status === 'in_progress' && canCompleteWork
     if (canComplete) {
         return (
@@ -139,7 +149,6 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     onChange={e => setNotes(e.target.value)}
                 />
 
-                {/* Inventory Selector - only if parts tracking feature is enabled */}
                 {isPartsTrackingEnabled && (
                     <InventorySelector
                         parts={selectedParts}
@@ -152,17 +161,15 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     onClick={() => {
                         if (!notes) return alert(isRTL ? 'الرجاء كتابة ملاحظات' : 'Please enter notes')
 
-                        // Transform parts for API
                         const partsPayload = selectedParts.map(p => ({
                             part_id: p.part_id,
-                            quantity: p.quantity
+                            quantity: p.quantity,
                         }))
 
                         handleAction(() => workflow.completeWorkTechnician.mutateAsync({
                             workOrderId: workOrder.id,
-                            userId: user?.id || '',
                             notes,
-                            parts: partsPayload
+                            parts: partsPayload,
                         }))
                     }}
                     disabled={isSubmitting}
@@ -175,11 +182,9 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         )
     }
 
-    // 3. Approvals (Supervisor/Engineer) - Only show if enabled in tenant settings
-    const isSupervisorStep = workOrder.status === 'pending_supervisor_approval' && canTakeSupervisorAction && requireSupervisorApproval
-    const isEngineerStep = workOrder.status === 'pending_engineer_review' && canTakeEngineerAction && requireEngineerReview
+    const isSupervisorStep = workOrder.status === 'pending_supervisor_approval' && canTakeSupervisorAction && requireSupervisorApproval && can('work_orders.approve')
+    const isEngineerStep = workOrder.status === 'pending_engineer_review' && canTakeEngineerAction && requireEngineerReview && can('work_orders.approve')
 
-    // If workflow feature is disabled entirely, skip all approval steps
     if (!isWorkflowEnabled && (workOrder.status === 'pending_supervisor_approval' || workOrder.status === 'pending_engineer_review')) {
         return (
             <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-info">
@@ -194,8 +199,6 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         )
     }
 
-    // If supervisor approval is disabled but status is pending_supervisor_approval, 
-    // show a message that this step is being skipped (handled by backend)
     if (workOrder.status === 'pending_supervisor_approval' && !requireSupervisorApproval) {
         return (
             <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-info">
@@ -203,14 +206,13 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     {isRTL ? 'تخطي مرحلة اعتماد المشرف' : 'Supervisor Approval Skipped'}
                 </h3>
                 <p className="text-sm text-muted font-cairo">
-                    {isRTL ? 'هذه المرحلة معطلة في إعدادات المنشأة. سيتم الانتقال للمرحلة التالية تلقائياً.'
+                    {isRTL ? 'هذه المرحلة معطلة في إعدادات المنشأة. سيتم الانتقال للمرحلة التالية تلقائيًا.'
                         : 'This step is disabled in tenant settings. Moving to next step automatically.'}
                 </p>
             </div>
         )
     }
 
-    // If engineer review is disabled but status is pending_engineer_review
     if (workOrder.status === 'pending_engineer_review' && !requireEngineerReview) {
         return (
             <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-info">
@@ -218,7 +220,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     {isRTL ? 'تخطي مرحلة مراجعة المهندس' : 'Engineer Review Skipped'}
                 </h3>
                 <p className="text-sm text-muted font-cairo">
-                    {isRTL ? 'هذه المرحلة معطلة في إعدادات المنشأة. سيتم الانتقال للمرحلة التالية تلقائياً.'
+                    {isRTL ? 'هذه المرحلة معطلة في إعدادات المنشأة. سيتم الانتقال للمرحلة التالية تلقائيًا.'
                         : 'This step is disabled in tenant settings. Moving to next step automatically.'}
                 </p>
             </div>
@@ -232,7 +234,6 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     {isRTL ? (isSupervisorStep ? 'موافقة المشرف' : 'اعتماد المهندس') : 'Review & Approval'}
                 </h3>
 
-                {/* Show notes from previous step */}
                 <div className="bg-muted/10 p-3 rounded text-sm mb-2">
                     <p className="font-bold text-xs text-muted-foreground mb-1 uppercase">
                         {isRTL ? 'ملاحظات سابقة:' : 'Previous Notes:'}
@@ -252,8 +253,8 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     <button
                         onClick={() => handleAction(() =>
                             isSupervisorStep
-                                ? workflow.approveSupervisor.mutateAsync({ workOrderId: workOrder.id, userId: user?.id || '', notes })
-                                : workflow.approveEngineer.mutateAsync({ workOrderId: workOrder.id, userId: user?.id || '', notes })
+                                ? workflow.approveSupervisor.mutateAsync({ workOrderId: workOrder.id, notes })
+                                : workflow.approveEngineer.mutateAsync({ workOrderId: workOrder.id, notes })
                         )}
                         disabled={isSubmitting}
                         className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold font-cairo flex items-center justify-center gap-2"
@@ -262,11 +263,10 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                         {isRTL ? 'موافقة' : 'Approve'}
                     </button>
 
-                    {/* Rejection logic */}
                     <button
                         onClick={() => {
                             if (!notes) return alert(isRTL ? 'الرجاء كتابة سبب الرفض' : 'Please provide a reason for rejection')
-                            handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, userId: user?.id || '', reason: notes }))
+                            handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, reason: notes }))
                         }}
                         disabled={isSubmitting}
                         className="flex-1 py-2.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg font-bold font-cairo flex items-center justify-center gap-2"
@@ -279,16 +279,15 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         )
     }
 
-    // 4. Reporter Closure (Final Step) - only reporter or admin can close
     if (workOrder.status === 'pending_reporter_closure' && canTakeReporterAction) {
         return (
             <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-blue-500">
                 <h3 className="font-bold text-lg font-cairo">{isRTL ? 'الإغلاق النهائي' : 'Final Closure'}</h3>
                 <p className="text-sm text-muted font-cairo">
-                    {isRTL ? 'تمت الموافقة على العمل. هل تود إغلاق البلاغ نهائياً؟' : 'Work approved. Close ticket?'}
+                    {isRTL ? 'تمت الموافقة على العمل. هل تود إغلاق البلاغ نهائيًا؟' : 'Work approved. Close ticket?'}
                 </p>
                 <button
-                    onClick={() => handleAction(() => workflow.closeWorkOrder.mutateAsync({ workOrderId: workOrder.id, userId: user?.id || '', notes: 'Closed by reporter/admin' }))}
+                    onClick={() => handleAction(() => workflow.closeWorkOrder.mutateAsync({ workOrderId: workOrder.id, notes: 'Closed via workflow action' }))}
                     disabled={isSubmitting}
                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow transition-all font-cairo flex items-center justify-center gap-2"
                 >

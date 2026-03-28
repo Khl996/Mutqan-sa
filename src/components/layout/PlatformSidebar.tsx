@@ -13,9 +13,11 @@ import {
     Activity,
     BarChart3,
     LogOut,
-    Megaphone
+    Megaphone,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePermission } from '@/hooks/usePermission'
+import { Permission } from '@/config/permissions'
 
 interface PlatformSidebarProps {
     collapsed: boolean
@@ -26,62 +28,81 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
     const { i18n } = useTranslation()
     const location = useLocation()
     const { signOut } = useAuth()
+    const { can } = usePermission()
     const isRTL = i18n.language === 'ar'
 
-    // منيو المنصة فقط - لا يوجد أي عناصر مستأجر
-    const platformMenuItems = [
+    const platformMenuItems: Array<{
+        icon: React.ElementType
+        label: string
+        href: string
+        permission: Permission
+    }> = [
         {
             icon: LayoutDashboard,
             label: isRTL ? 'لوحة المنصة' : 'Platform Dashboard',
-            href: '/platform'
+            href: '/platform',
+            permission: 'platform.dashboard.view',
         },
         {
             icon: Building2,
             label: isRTL ? 'إدارة المنشآت' : 'Institutions',
-            href: '/platform/tenants'
+            href: '/platform/tenants',
+            permission: 'platform.tenants.view',
         },
         {
             icon: CreditCard,
             label: isRTL ? 'الاشتراكات' : 'Subscriptions',
-            href: '/platform/subscriptions'
+            href: '/platform/subscriptions',
+            permission: 'platform.subscriptions.manage',
         },
         {
             icon: Users,
-            label: isRTL ? 'موظفي المنصة' : 'Platform Staff',
-            href: '/platform/staff'
+            label: isRTL ? 'موظفو المنصة' : 'Platform Staff',
+            href: '/platform/staff',
+            permission: 'platform.staff.manage',
         },
         {
             icon: DollarSign,
             label: isRTL ? 'الإدارة المالية' : 'Financials',
-            href: '/platform/financials'
+            href: '/platform/financials',
+            permission: 'platform.financials.view',
         },
         {
             icon: Megaphone,
             label: isRTL ? 'التعاميم' : 'Announcements',
-            href: '/platform/announcements'
+            href: '/platform/announcements',
+            permission: 'platform.announcements.manage',
         },
         {
             icon: Activity,
             label: isRTL ? 'سجلات النظام' : 'Audit Logs',
-            href: '/platform/logs'
+            href: '/platform/logs',
+            permission: 'platform.audit.view',
         },
         {
             icon: BarChart3,
             label: isRTL ? 'التقارير' : 'Reports',
-            href: '/platform/reports'
+            href: '/platform/reports',
+            permission: 'platform.reports.view',
         },
-    ]
+    ].filter(item => can(item.permission))
 
-    const settingsItems = [
+    const settingsItems: Array<{
+        icon: React.ElementType
+        label: string
+        href: string
+        permission: Permission
+    }> = [
         {
             icon: Settings,
             label: isRTL ? 'إعدادات المنصة' : 'Platform Settings',
-            href: '/platform/settings'
+            href: '/platform/settings',
+            permission: 'platform.settings.manage',
         },
-    ]
+    ].filter(item => can(item.permission))
 
-    const isActive = (href: string) => location.pathname === href ||
-        (href !== '/platform' && location.pathname.startsWith(href + '/'))
+    const isActive = (href: string) =>
+        location.pathname === href || (href !== '/platform' && location.pathname.startsWith(href + '/'))
 
     return (
         <aside
@@ -91,7 +112,6 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                 isRTL ? 'right-0' : 'left-0'
             )}
         >
-            {/* Logo - Platform Brand */}
             <div className="h-16 flex items-center justify-center border-b border-border">
                 <Link to="/platform" className="flex items-center gap-3">
                     <img
@@ -105,16 +125,14 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                                 {isRTL ? 'متقن' : 'Mutqan'}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-cairo block -mt-1">
-                                {isRTL ? 'إدارة المنصة' : 'Platform Admin'}
+                                {isRTL ? 'إدارة المنصة' : 'Platform Console'}
                             </span>
                         </div>
                     )}
                 </Link>
             </div>
 
-            {/* Navigation */}
             <nav className="flex flex-col h-[calc(100%-4rem)] py-4">
-                {/* Main Menu */}
                 <div className="flex-1 px-3 space-y-1">
                     {platformMenuItems.map((item) => (
                         <Link
@@ -123,11 +141,18 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                 'hover:bg-muted',
-                                isActive(item.href) ? 'bg-secondary text-white shadow-md shadow-secondary/20' : 'text-muted-foreground hover:text-foreground',
+                                isActive(item.href)
+                                    ? 'bg-secondary text-white shadow-md shadow-secondary/20'
+                                    : 'text-muted-foreground hover:text-foreground',
                                 collapsed && 'justify-center'
                             )}
                         >
-                            <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive(item.href) ? "text-white" : "text-muted-foreground")} />
+                            <item.icon
+                                className={cn(
+                                    'w-5 h-5 flex-shrink-0',
+                                    isActive(item.href) ? 'text-white' : 'text-muted-foreground'
+                                )}
+                            />
                             {!collapsed && (
                                 <span className="font-cairo text-sm">{item.label}</span>
                             )}
@@ -135,32 +160,42 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                     ))}
                 </div>
 
-                {/* Divider */}
-                <div className="px-6 py-2">
-                    <div className="h-px bg-border" />
-                </div>
+                {settingsItems.length > 0 && (
+                    <>
+                        <div className="px-6 py-2">
+                            <div className="h-px bg-border" />
+                        </div>
 
-                {/* Settings Menu */}
-                <div className="px-3 space-y-1">
-                    {settingsItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            to={item.href}
-                            className={cn(
-                                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                                'hover:bg-muted',
-                                isActive(item.href) ? 'bg-secondary text-white shadow-md shadow-secondary/20' : 'text-muted-foreground hover:text-foreground',
-                                collapsed && 'justify-center'
-                            )}
-                        >
-                            <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive(item.href) ? "text-white" : "text-muted-foreground")} />
-                            {!collapsed && (
-                                <span className="font-cairo text-sm">{item.label}</span>
-                            )}
-                        </Link>
-                    ))}
+                        <div className="px-3 space-y-1">
+                            {settingsItems.map((item) => (
+                                <Link
+                                    key={item.href}
+                                    to={item.href}
+                                    className={cn(
+                                        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+                                        'hover:bg-muted',
+                                        isActive(item.href)
+                                            ? 'bg-secondary text-white shadow-md shadow-secondary/20'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                        collapsed && 'justify-center'
+                                    )}
+                                >
+                                    <item.icon
+                                        className={cn(
+                                            'w-5 h-5 flex-shrink-0',
+                                            isActive(item.href) ? 'text-white' : 'text-muted-foreground'
+                                        )}
+                                    />
+                                    {!collapsed && (
+                                        <span className="font-cairo text-sm">{item.label}</span>
+                                    )}
+                                </Link>
+                            ))}
+                        </div>
+                    </>
+                )}
 
-                    {/* Sign Out */}
+                <div className="px-3 space-y-1 mt-4">
                     <button
                         onClick={signOut}
                         className={cn(
@@ -178,7 +213,6 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                     </button>
                 </div>
 
-                {/* Collapse Button */}
                 <div className="px-3 mt-4">
                     <button
                         onClick={onToggle}

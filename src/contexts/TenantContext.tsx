@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
 import { isPlatformRole } from '@/config/roles'
+import { getPermissionsForRole } from '@/config/permissions'
 
 // Tenant Type
 export interface Tenant {
@@ -42,6 +43,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
     // Check if user is a platform-level user using centralized role check
     const isPlatformUser = isPlatformRole(profileData?.role) || profileData?.is_super_admin
+    const canEnterTenant = profileData?.is_super_admin || getPermissionsForRole(profileData?.role).includes('platform.tenants.enter')
 
     const fetchTenants = useCallback(async () => {
         if (!isAuthenticated || !profile) {
@@ -78,7 +80,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
                 'Content-Type': 'application/json'
             }
 
-            if (isPlatformUser) {
+            if (isPlatformUser && canEnterTenant) {
                 const response = await fetch(`${supabaseUrl}/rest/v1/tenants?select=*&order=name.asc`, { headers })
 
                 if (response.ok) {
@@ -111,7 +113,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         } finally {
             setIsLoading(false)
         }
-    }, [isAuthenticated, profile, profileData?.tenant_id, isPlatformUser])
+    }, [isAuthenticated, profile, profileData?.tenant_id, isPlatformUser, canEnterTenant])
 
     // Fetch tenant data
     useEffect(() => {
@@ -120,13 +122,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
     // Check if user can access a specific tenant
     const canAccessTenant = (tenantId: string): boolean => {
-        if (isPlatformUser) return true
+        if (isPlatformUser) return canEnterTenant
         return profileData?.tenant_id === tenantId
     }
 
     // Switch to a different tenant (only for platform users)
     const switchTenant = async (tenantId: string): Promise<void> => {
-        if (!isPlatformUser) {
+        if (!isPlatformUser || !canEnterTenant) {
             console.warn('Only platform users can switch tenants')
             return
         }
@@ -140,7 +142,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
     // Clear current tenant and return to platform mode (only for platform users)
     const clearTenant = (): void => {
-        if (!isPlatformUser) {
+        if (!isPlatformUser || !canEnterTenant) {
             console.warn('Only platform users can clear tenant')
             return
         }

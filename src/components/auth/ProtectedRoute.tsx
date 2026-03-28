@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
+import { normalizeRole } from '@/config/roles'
 
 interface ProtectedRouteProps {
     permission?: Permission
@@ -17,12 +18,13 @@ export default function ProtectedRoute({ permission, allowedRoles, redirectPath 
     const { profile } = useAuth()
     const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
+    const normalizedRole = normalizeRole(profile?.role)
 
     // Check Permission
     const hasPermission = permission ? can(permission) : true
 
     // Check Role
-    const hasRole = allowedRoles ? (profile && allowedRoles.includes(profile.role)) : true
+    const hasRole = allowedRoles ? (!!normalizedRole && allowedRoles.includes(normalizedRole)) : true
 
     const hasAccess = hasPermission && hasRole
 

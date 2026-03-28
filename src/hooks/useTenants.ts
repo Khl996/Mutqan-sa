@@ -436,9 +436,17 @@ export function usePlatformStats() {
                 'Authorization': `Bearer ${accessToken}`
             }
 
+            const fetchJson = async <T>(url: string, fallback: T): Promise<T> => {
+                const response = await fetch(url, { headers })
+                if (!response.ok) {
+                    return fallback
+                }
+
+                return await response.json() as T
+            }
+
             // 1. Fetch Tenants Stats (Total & Active)
-            const tenantsResponse = await fetch(`${supabaseUrl}/rest/v1/tenants?select=is_active`, { headers })
-            const tenantsData = await tenantsResponse.json()
+            const tenantsData = await fetchJson<any[]>(`${supabaseUrl}/rest/v1/tenants?select=is_active`, [])
             const totalTenants = tenantsData?.length || 0
             const activeTenants = tenantsData?.filter((t: any) => t.is_active).length || 0
 
@@ -447,7 +455,7 @@ export function usePlatformStats() {
                 headers: { ...headers, 'Range': '0-0', 'Prefer': 'count=exact' }
             })
             // Content-Range header format: "0-0/123" -> 123 is total
-            const contentRange = usersResponse.headers.get('content-range')
+            const contentRange = usersResponse.ok ? usersResponse.headers.get('content-range') : null
             const totalUsers = contentRange ? parseInt(contentRange.split('/')[1] || '0') : 0
 
             // 3. Fetch Monthly Revenue (Paid Invoices this month)
@@ -455,15 +463,19 @@ export function usePlatformStats() {
             startOfMonth.setDate(1)
             startOfMonth.setHours(0, 0, 0, 0)
 
-            const invoicesResponse = await fetch(`${supabaseUrl}/rest/v1/platform_invoices?select=total&status=eq.paid&paid_at=gte.${startOfMonth.toISOString()}`, { headers })
-            const invoicesData = await invoicesResponse.json()
+            const invoicesData = await fetchJson<any[]>(
+                `${supabaseUrl}/rest/v1/platform_invoices?select=total&status=eq.paid&paid_at=gte.${startOfMonth.toISOString()}`,
+                []
+            )
             const monthlyRevenue = Array.isArray(invoicesData)
                 ? invoicesData.reduce((sum: number, inv: any) => sum + (Number(inv.total) || 0), 0)
                 : 0
 
             // 4. Fetch Recent Activity (Audit Logs)
-            const logsResponse = await fetch(`${supabaseUrl}/rest/v1/platform_audit_logs?select=*&order=created_at.desc&limit=5`, { headers })
-            const recentActivity = await logsResponse.json()
+            const recentActivity = await fetchJson<any[]>(
+                `${supabaseUrl}/rest/v1/platform_audit_logs?select=*&order=created_at.desc&limit=5`,
+                []
+            )
 
             return {
                 totalTenants,

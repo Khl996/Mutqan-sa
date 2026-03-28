@@ -75,7 +75,7 @@ export default function WorkTeamsPage() {
 
     // Permissions
     const { can } = usePermission()
-    const canManage = can('users.manage')
+    const canManage = can('work_teams.manage')
 
     const [searchQuery, setSearchQuery] = useState('')
     const [showCreateModal, setShowCreateModal] = useState(false)
@@ -633,7 +633,7 @@ function TeamMembersModal({
                                             </div>
                                         </div>
                                     </div>
-                                    {isMembersEnabled && (
+                                    {isMembersEnabled && canManage && (
                                         <button
                                             onClick={() => handleRemoveMember(member.id)}
                                             className="p-2 text-destructive hover:bg-destructive/10 rounded-lg"

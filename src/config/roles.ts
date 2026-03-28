@@ -1,12 +1,11 @@
 /**
- * Centralized Platform Roles Definition
- * 
- * This is the SINGLE SOURCE OF TRUTH for platform role names.
- * Used by: PlatformLayout, TenantContext, usePermission, LoginPage, DashboardLayout
- * Must match the DB constraint in 068_add_tenant_owner_role.sql
+ * Centralized role definitions for the v1 authorization model.
+ *
+ * Transitional legacy roles may still exist in the database temporarily:
+ * - tenant_owner -> treated as tenant_admin
+ * - user -> no operational access
  */
 
-/** All roles that grant platform-level access (no tenant required) */
 export const PLATFORM_ROLES = [
     'platform_owner',
     'platform_admin',
@@ -17,8 +16,45 @@ export const PLATFORM_ROLES = [
 
 export type PlatformRole = typeof PLATFORM_ROLES[number];
 
-/** Check if a role string is a platform-level role */
-export function isPlatformRole(role: string | null | undefined): boolean {
+export const TENANT_ROLES = [
+    'tenant_admin',
+    'facility_manager',
+    'maintenance_manager',
+    'supervisor',
+    'engineer',
+    'technician',
+    'reporter',
+] as const;
+
+export type TenantRole = typeof TENANT_ROLES[number];
+export type ActiveRole = PlatformRole | TenantRole;
+export type LegacyRole = 'tenant_owner' | 'user';
+export type KnownRole = ActiveRole | LegacyRole;
+
+export function isPlatformRole(role: string | null | undefined): role is PlatformRole {
     if (!role) return false;
     return (PLATFORM_ROLES as readonly string[]).includes(role);
+}
+
+export function isTenantRole(role: string | null | undefined): role is TenantRole {
+    if (!role) return false;
+    return (TENANT_ROLES as readonly string[]).includes(role);
+}
+
+export function normalizeRole(role: string | null | undefined): ActiveRole | null {
+    if (!role) return null;
+
+    if (role === 'tenant_owner') {
+        return 'tenant_admin';
+    }
+
+    if (role === 'user') {
+        return null;
+    }
+
+    if (isPlatformRole(role) || isTenantRole(role)) {
+        return role;
+    }
+
+    return null;
 }

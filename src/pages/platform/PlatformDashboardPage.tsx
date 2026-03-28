@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useTenantStats, usePlatformStats } from '@/hooks/useTenants'
+import { usePermission } from '@/hooks/usePermission'
+import { Permission } from '@/config/permissions'
 import {
     Building2,
     CreditCard,
@@ -23,6 +25,7 @@ import {
 export default function PlatformDashboardPage() {
     const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
+    const { can } = usePermission()
 
     const { data: statsData, isLoading } = usePlatformStats()
     const { data: tenantStats } = useTenantStats()
@@ -35,7 +38,14 @@ export default function PlatformDashboardPage() {
     const ArrowIcon = isRTL ? ArrowLeft : ArrowRight
 
     // Quick action cards
-    const quickActions = [
+    const quickActions: Array<{
+        title: string
+        description: string
+        icon: React.ElementType
+        href: string
+        color: string
+        permission?: Permission
+    }> = [
         {
             title: isRTL ? 'إدارة المنشآت' : 'Manage Institutions',
             description: isRTL ? 'إضافة، تعديل، وإدارة المنشآت المشتركة' : 'Add, edit, and manage subscribing institutions',
@@ -79,6 +89,21 @@ export default function PlatformDashboardPage() {
             color: 'bg-primary text-white',
         },
     ]
+
+    const quickActionPermissionMap: Record<string, Permission> = {
+        '/platform/tenants': 'platform.tenants.view',
+        '/platform/subscriptions': 'platform.subscriptions.manage',
+        '/platform/staff': 'platform.staff.manage',
+        '/platform/financials': 'platform.financials.view',
+        '/platform/logs': 'platform.audit.view',
+        '/platform/settings': 'platform.settings.manage',
+    }
+
+    quickActions.forEach(action => {
+        action.permission = quickActionPermissionMap[action.href]
+    })
+
+    const filteredQuickActions = quickActions.filter(action => action.permission && can(action.permission))
 
     // Map real audit logs to activity format
     const recentActivity = statsData?.recentActivity?.map((log: any) => ({
@@ -154,7 +179,7 @@ export default function PlatformDashboardPage() {
                     {isRTL ? 'إجراءات سريعة' : 'Quick Actions'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {quickActions.map((action) => (
+                    {filteredQuickActions.map((action) => (
                         <Link
                             key={action.href}
                             to={action.href}

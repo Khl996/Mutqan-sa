@@ -80,7 +80,7 @@ export default function InventorySelector({ parts, onChange, isRTL }: InventoryS
                     <ShieldAlert className="w-4 h-4 flex-shrink-0" />
                     {isRTL
                         ? 'يتطلب صرف القطع موافقة المدير قبل الاعتماد'
-                        : 'Parts consumption requires manager approval'}
+                        : 'Parts consumption requires supervisor or maintenance manager approval'}
                 </div>
             )}
 

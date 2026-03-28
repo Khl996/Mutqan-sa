@@ -210,7 +210,7 @@ export const SETTINGS_CATEGORIES: SettingsCategoryDefinition[] = [
                 key: 'require_approval_for_consumption',
                 name: 'Require Approval for Consumption',
                 name_ar: 'اعتماد قبل صرف القطع',
-                description: 'Require manager approval before consuming inventory',
+                description: 'Require supervisor or maintenance manager approval before consuming inventory',
                 description_ar: 'إلزام موافقة المدير قبل صرف القطع من المخزون',
                 type: 'boolean',
                 default: false
