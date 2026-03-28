@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/contexts/TenantContext'
-import { SYSTEM_MODULES, getDefaultEnabledModules, isModuleEnabled, isFeatureEnabled } from '@/config/modules'
+import { SYSTEM_MODULES, getRestrictedEnabledModules, isModuleEnabled, isFeatureEnabled } from '@/config/modules'
 
 export interface TenantModuleConfig {
     enabled: boolean
@@ -31,9 +31,9 @@ export function useTenantModules() {
             // Parse the JSONB field
             const enabledModules = data?.enabled_modules as TenantModules | null
 
-            // If no modules configured, return defaults
+            // If no modules are configured, fail closed except for core modules
             if (!enabledModules || Object.keys(enabledModules).length === 0) {
-                return getDefaultEnabledModules()
+                return getRestrictedEnabledModules()
             }
 
             return enabledModules
@@ -83,7 +83,7 @@ export function useToggleModule() {
                 .eq('id', currentTenant.id)
                 .single() as any)
 
-            const currentModules = (tenant?.enabled_modules as TenantModules) || getDefaultEnabledModules()
+            const currentModules = (tenant?.enabled_modules as TenantModules) || getRestrictedEnabledModules()
 
             // Update the specific module
             const updatedModules = {
@@ -125,7 +125,7 @@ export function useToggleFeature() {
                 .eq('id', currentTenant.id)
                 .single() as any)
 
-            const currentModules = (tenant?.enabled_modules as TenantModules) || getDefaultEnabledModules()
+            const currentModules = (tenant?.enabled_modules as TenantModules) || getRestrictedEnabledModules()
 
             // Update the specific feature
             const updatedModules = {

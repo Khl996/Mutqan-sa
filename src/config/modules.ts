@@ -210,6 +210,22 @@ export function getDefaultEnabledModules(): Record<string, { enabled: boolean; f
     return result
 }
 
+export function getRestrictedEnabledModules(): Record<string, { enabled: boolean; features: Record<string, boolean> }> {
+    const result: Record<string, { enabled: boolean; features: Record<string, boolean> }> = {}
+
+    for (const module of SYSTEM_MODULES) {
+        result[module.code] = {
+            enabled: module.isCore,
+            features: module.features.reduce((acc, feature) => {
+                acc[feature.code] = module.isCore ? feature.defaultEnabled : false
+                return acc
+            }, {} as Record<string, boolean>)
+        }
+    }
+
+    return result
+}
+
 // Check if a module is enabled for a tenant
 export function isModuleEnabled(
     tenantModules: Record<string, { enabled: boolean }> | null | undefined,
@@ -220,9 +236,9 @@ export function isModuleEnabled(
     // Core modules are always enabled
     if (module?.isCore) return true
 
-    // If no tenant config, use default
+    // If tenant config is missing, fail closed except for core modules
     if (!tenantModules) {
-        return module?.defaultEnabled ?? false
+        return module?.isCore ?? false
     }
 
     return tenantModules[moduleCode]?.enabled ?? module?.defaultEnabled ?? false
@@ -241,7 +257,7 @@ export function isFeatureEnabled(
     const feature = module?.features.find(f => f.code === featureCode)
 
     if (!tenantModules?.[moduleCode]?.features) {
-        return feature?.defaultEnabled ?? false
+        return module?.isCore ? (feature?.defaultEnabled ?? false) : false
     }
 
     return tenantModules[moduleCode].features?.[featureCode] ?? feature?.defaultEnabled ?? false

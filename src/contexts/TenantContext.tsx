@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
 import { isPlatformRole } from '@/config/roles'
 
@@ -26,6 +26,7 @@ interface TenantContextType {
     switchTenant: (tenantId: string) => Promise<void>
     clearTenant: () => void  // Return to platform mode
     accessibleTenants: Tenant[] // For platform admins who can access multiple tenants
+    refreshTenant: () => Promise<void>
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined)
@@ -42,8 +43,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     // Check if user is a platform-level user using centralized role check
     const isPlatformUser = isPlatformRole(profileData?.role) || profileData?.is_super_admin
 
-    // Fetch tenant data
-    useEffect(() => {
+    const fetchTenants = useCallback(async () => {
         if (!isAuthenticated || !profile) {
             setCurrentTenant(null)
             setAccessibleTenants([])
@@ -51,77 +51,72 @@ export function TenantProvider({ children }: { children: ReactNode }) {
             return
         }
 
-        const fetchTenants = async () => {
-            setIsLoading(true)
+        setIsLoading(true)
 
-            try {
-                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-                const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+        try {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-                // Get token manually from storage
-                const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
-                const storedSession = localStorage.getItem(storageKey)
-                let token = null
+            const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
+            const storedSession = localStorage.getItem(storageKey)
+            let token = null
 
-                if (storedSession) {
-                    try {
-                        token = JSON.parse(storedSession).access_token
-                    } catch { /* ignore */ }
-                }
+            if (storedSession) {
+                try {
+                    token = JSON.parse(storedSession).access_token
+                } catch { /* ignore */ }
+            }
 
-                if (!token) {
-                    setIsLoading(false)
-                    return
-                }
+            if (!token) {
+                setIsLoading(false)
+                return
+            }
 
-                const headers = {
-                    'apikey': supabaseAnonKey,
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+            const headers = {
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
 
-                if (isPlatformUser) {
-                    // Platform users can see all tenants
-                    const response = await fetch(`${supabaseUrl}/rest/v1/tenants?select=*&order=name.asc`, { headers })
+            if (isPlatformUser) {
+                const response = await fetch(`${supabaseUrl}/rest/v1/tenants?select=*&order=name.asc`, { headers })
 
-                    if (response.ok) {
-                        const data = await response.json()
-                        setAccessibleTenants(data || [])
+                if (response.ok) {
+                    const data = await response.json()
+                    setAccessibleTenants(data || [])
 
-                        // Only restore tenant if explicitly saved
-                        const lastTenantId = localStorage.getItem('currentTenantId')
-                        if (lastTenantId && data) {
-                            const lastTenant = data.find((t: Tenant) => t.id === lastTenantId)
-                            if (lastTenant) {
-                                setCurrentTenant(lastTenant)
-                            }
+                    const lastTenantId = localStorage.getItem('currentTenantId')
+                    if (lastTenantId && data) {
+                        const lastTenant = data.find((tenant: Tenant) => tenant.id === lastTenantId)
+                        if (lastTenant) {
+                            setCurrentTenant(lastTenant)
                         }
-                    } else {
-                        console.error('Error fetching tenants:', response.status)
                     }
                 } else {
-                    // Regular users can only see their tenant
-                    if (profileData?.tenant_id) {
-                        const response = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${profileData.tenant_id}&select=*`, { headers })
+                    console.error('Error fetching tenants:', response.status)
+                }
+            } else if (profileData?.tenant_id) {
+                const response = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${profileData.tenant_id}&select=*`, { headers })
 
-                        if (response.ok) {
-                            const data = await response.json()
-                            if (data && data.length > 0) {
-                                setCurrentTenant(data[0])
-                                setAccessibleTenants([data[0]])
-                            }
-                        }
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data && data.length > 0) {
+                        setCurrentTenant(data[0])
+                        setAccessibleTenants([data[0]])
                     }
                 }
-            } catch (e) {
-                console.error('Exception fetching tenants:', e)
-            } finally {
-                setIsLoading(false)
             }
+        } catch (e) {
+            console.error('Exception fetching tenants:', e)
+        } finally {
+            setIsLoading(false)
         }
-
-        fetchTenants()
     }, [isAuthenticated, profile, profileData?.tenant_id, isPlatformUser])
+
+    // Fetch tenant data
+    useEffect(() => {
+        fetchTenants()
+    }, [fetchTenants])
 
     // Check if user can access a specific tenant
     const canAccessTenant = (tenantId: string): boolean => {
@@ -162,6 +157,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
             switchTenant,
             clearTenant,
             accessibleTenants,
+            refreshTenant: fetchTenants,
         }}>
             {children}
         </TenantContext.Provider>

@@ -37,14 +37,16 @@ export async function sendPasswordResetOTP(email: string, isRTL: boolean = false
                 try {
                     const errBody = await error.context.json();
                     if (errBody && errBody.error) errorMsg = errBody.error;
-                } catch (e) {
-                    // ignore
+                } catch {
+                    errorMsg = error.message
                 }
             } else if (error.message && error.message.includes('{')) {
                 try {
                     const parsed = JSON.parse(error.message.substring(error.message.indexOf('{')));
                     if (parsed.error) errorMsg = parsed.error;
-                } catch (e) { }
+                } catch {
+                    errorMsg = error.message
+                }
             }
 
             // Check for rate limiting

@@ -4,10 +4,9 @@ import { cn } from '@/lib/utils'
 import {
     usePlatformStaff,
     usePlatformStaffStats,
-    useUpdatePlatformStaff,
-    useDeletePlatformStaff,
     PlatformStaff
 } from '@/hooks/usePlatformManagement'
+import { revokeManagedUser, upsertManagedUser, type ManagedUserRole } from '@/lib/adminUserApi'
 import {
     Users, UserPlus, Search, Shield, Edit2, Trash2, Key, Building2,
     CheckCircle2, XCircle, Clock, ArrowUpDown, Settings2, Loader2, X, AlertTriangle
@@ -15,11 +14,11 @@ import {
 import { toast } from 'sonner'
 
 const roleConfig = {
-    platform_owner: { label: { ar: 'مالك المنصة', en: 'Platform Owner' }, color: 'bg-destructive/10 text-destructive', icon: Shield },
-    platform_admin: { label: { ar: 'مدير النظام', en: 'Platform Admin' }, color: 'bg-primary/10 text-primary', icon: Settings2 },
-    platform_support: { label: { ar: 'الدعم الفني', en: 'Technical Support' }, color: 'bg-info/10 text-info', icon: Users },
-    platform_finance: { label: { ar: 'المالية', en: 'Finance' }, color: 'bg-success/10 text-success', icon: Building2 },
-    platform_hr: { label: { ar: 'الموارد البشرية', en: 'HR' }, color: 'bg-warning/10 text-warning', icon: Users },
+    platform_owner: { label: { ar: 'ط¸â€¦ط·آ§ط¸â€‍ط¸ئ’ ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آµط·آ©', en: 'Platform Owner' }, color: 'bg-destructive/10 text-destructive', icon: Shield },
+    platform_admin: { label: { ar: 'ط¸â€¦ط·آ¯ط¸ظ¹ط·آ± ط·آ§ط¸â€‍ط¸â€ ط·آ¸ط·آ§ط¸â€¦', en: 'Platform Admin' }, color: 'bg-primary/10 text-primary', icon: Settings2 },
+    platform_support: { label: { ar: 'ط·آ§ط¸â€‍ط·آ¯ط·آ¹ط¸â€¦ ط·آ§ط¸â€‍ط¸ظ¾ط¸â€ ط¸ظ¹', en: 'Technical Support' }, color: 'bg-info/10 text-info', icon: Users },
+    platform_finance: { label: { ar: 'ط·آ§ط¸â€‍ط¸â€¦ط·آ§ط¸â€‍ط¸ظ¹ط·آ©', en: 'Finance' }, color: 'bg-success/10 text-success', icon: Building2 },
+    platform_hr: { label: { ar: 'ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ§ط·آ±ط·آ¯ ط·آ§ط¸â€‍ط·آ¨ط·آ´ط·آ±ط¸ظ¹ط·آ©', en: 'HR' }, color: 'bg-warning/10 text-warning', icon: Users },
 }
 
 export default function PlatformStaffPage() {
@@ -34,6 +33,7 @@ export default function PlatformStaffPage() {
     const [editingStaff, setEditingStaff] = useState<PlatformStaff | null>(null)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [staffToDelete, setStaffToDelete] = useState<PlatformStaff | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     // Form state for add/edit
     const [formData, setFormData] = useState({
@@ -44,14 +44,19 @@ export default function PlatformStaffPage() {
     })
     const [isSearchingUser, setIsSearchingUser] = useState(false)
 
+    const assignableRoles = Object.entries(roleConfig).filter(([key]) => key !== 'platform_owner')
+
     // Hooks
     const { data: staff, isLoading, refetch: refetchStaff } = usePlatformStaff()
     const { data: stats, refetch: refetchStats } = usePlatformStaffStats()
-    const updateStaff = useUpdatePlatformStaff()
-    const deleteStaff = useDeletePlatformStaff()
 
     // Handlers
     const handleEdit = (staffMember: PlatformStaff) => {
+        if (staffMember.role === 'platform_owner') {
+            toast.error(isRTL ? 'ط¸â€‍ط·آ§ ط¸ظ¹ط¸â€¦ط¸ئ’ط¸â€  ط·ع¾ط·آ¹ط·آ¯ط¸ظ¹ط¸â€‍ ط·آ­ط·آ³ط·آ§ط·آ¨ ط¸â€¦ط·آ§ط¸â€‍ط¸ئ’ ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آµط·آ© ط¸â€¦ط¸â€  ط¸â€،ط·آ°ط¸â€، ط·آ§ط¸â€‍ط·آ´ط·آ§ط·آ´ط·آ©' : 'Platform owner cannot be edited from this screen')
+            return
+        }
+
         setEditingStaff(staffMember)
         setFormData({
             email: staffMember.profile?.email || '',
@@ -62,6 +67,11 @@ export default function PlatformStaffPage() {
     }
 
     const handleDeleteClick = (staffMember: PlatformStaff) => {
+        if (staffMember.role === 'platform_owner') {
+            toast.error(isRTL ? 'ط¸â€‍ط·آ§ ط¸ظ¹ط¸â€¦ط¸ئ’ط¸â€  ط·آ³ط·آ­ط·آ¨ ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ§ط·ع¾ ط¸â€¦ط·آ§ط¸â€‍ط¸ئ’ ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آµط·آ© ط¸â€¦ط¸â€  ط¸â€،ط·آ°ط¸â€، ط·آ§ط¸â€‍ط·آ´ط·آ§ط·آ´ط·آ©' : 'Platform owner cannot be modified from this screen')
+            return
+        }
+
         setStaffToDelete(staffMember)
         setIsDeleteModalOpen(true)
     }
@@ -70,210 +80,82 @@ export default function PlatformStaffPage() {
         if (!staffToDelete) return
 
         try {
-            await deleteStaff.mutateAsync(staffToDelete.id)
-            toast.success(isRTL ? 'تم حذف صلاحيات الموظف بنجاح' : 'Staff permissions removed successfully')
+            setIsDeleting(true)
+
+            await revokeManagedUser({
+                userId: staffToDelete.id,
+                email: staffToDelete.profile?.email || undefined,
+            })
+            toast.success(isRTL ? 'ط·ع¾ط¸â€¦ ط·آ­ط·آ°ط¸ظ¾ ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ§ط·ع¾ ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾ ط·آ¨ط¸â€ ط·آ¬ط·آ§ط·آ­' : 'Staff permissions removed successfully')
             setIsDeleteModalOpen(false)
             setStaffToDelete(null)
             refetchStaff()
             refetchStats()
         } catch (error) {
             console.error('Delete error:', error)
-            toast.error(isRTL ? 'حدث خطأ أثناء الحذف' : 'Error removing staff')
+            toast.error(isRTL ? 'ط·آ­ط·آ¯ط·آ« ط·آ®ط·آ·ط·آ£ ط·آ£ط·آ«ط¸â€ ط·آ§ط·طŒ ط·آ§ط¸â€‍ط·آ­ط·آ°ط¸ظ¾' : 'Error removing staff')
+        } finally {
+            setIsDeleting(false)
         }
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setIsSearchingUser(true)
 
         try {
+            const cleanEmail = formData.email.trim().toLowerCase()
+            const resolvedRole = formData.role as ManagedUserRole
+
             if (editingStaff) {
-                // Update existing
-                await updateStaff.mutateAsync({
-                    id: editingStaff.id,
-                    role: formData.role,
-                    status: formData.status
+                await upsertManagedUser({
+                    email: editingStaff.profile?.email || cleanEmail,
+                    fullName: editingStaff.profile?.full_name || cleanEmail.split('@')[0],
+                    role: resolvedRole,
+                    status: formData.status,
                 })
-                toast.success(isRTL ? 'تم تحديث البيانات بنجاح' : 'Staff updated successfully')
+
+                toast.success(isRTL ? 'أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Staff updated successfully')
                 setEditingStaff(null)
-                refetchStaff()
-                refetchStats()
-            } else {
-                // Add new logic
-                setIsSearchingUser(true)
-
-                const cleanEmail = formData.email.trim().toLowerCase()
-                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-                const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-                // Get current access token for authentication
-                const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
-                const storedSession = localStorage.getItem(storageKey)
-                const accessToken = storedSession ? JSON.parse(storedSession).access_token : null
-
-                if (!accessToken) {
-                    toast.error(isRTL ? 'خطأ في المصادقة' : 'Authentication error')
-                    setIsSearchingUser(false)
-                    return
-                }
-
-                // 1. Check if profile exists using direct fetch
-                let userId = null
-
-                try {
-                    const profileResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?email=eq.${cleanEmail}&select=id`, {
-                        method: 'GET',
-                        headers: {
-                            'apikey': supabaseAnonKey,
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    })
-
-                    if (profileResponse.ok) {
-                        const profiles = await profileResponse.json()
-                        if (profiles && profiles.length > 0) {
-                            userId = profiles[0].id
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error fetching profile:', err)
-                }
-
-                if (userId) {
-                    // User exists, confirm role update below
-                } else {
-                    // 2. Create new user if not found using direct fetch to Auth API
-                    if (!formData.password) {
-                        toast.error(isRTL ? 'الرجاء إدخال كلمة مرور للمستخدم الجديد' : 'Please enter a password for the new user')
-                        setIsSearchingUser(false)
-                        return
-                    }
-
-                    if (formData.password.length < 6) {
-                        toast.error(isRTL ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters')
-                        setIsSearchingUser(false)
-                        return
-                    }
-
-                    // Basic email validation
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                    if (!emailRegex.test(cleanEmail)) {
-                        toast.error(isRTL ? 'صيغة البريد الإلكتروني غير صحيحة' : 'Invalid email format')
-                        setIsSearchingUser(false)
-                        return
-                    }
-
-                    try {
-                        const signUpResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-                            method: 'POST',
-                            headers: {
-                                'apikey': supabaseAnonKey,
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                email: cleanEmail,
-                                password: formData.password,
-                                data: {
-                                    full_name: cleanEmail.split('@')[0],
-                                    role: formData.role // Pass the selected role immediately!
-                                }
-                            })
-                        })
-
-                        const authData = await signUpResponse.json()
-
-                        if (!signUpResponse.ok) {
-                            const errorMsg = authData.msg || authData.message || authData.error_description || 'Unknown error'
-                            console.error('Signup failed:', errorMsg)
-                            toast.error(isRTL ? `فشل إنشاء المستخدم: ${errorMsg}` : `Failed to create user: ${errorMsg}`)
-                            setIsSearchingUser(false)
-                            return
-                        }
-
-                        userId = authData.user?.id || authData.id || authData.identities?.[0]?.user_id
-
-                        if (!userId) {
-                            console.error('No user ID found in response:', authData)
-                            toast.error(isRTL ? 'تم إنشاء المستخدم ولكن لم يتم العثور على المعرف' : 'User created but ID not found')
-                            setIsSearchingUser(false)
-                            return
-                        }
-
-                    } catch (err) {
-                        console.error('Signup exception:', err)
-                        toast.error(isRTL ? 'حدث خطأ في الاتصال بالخادم' : 'Server connection error')
-                        setIsSearchingUser(false)
-                        return
-                    }
-                }
-
-                if (userId) {
-                    // 3. Wait for profile creation (Polling) and then update role
-                    let profileFound = false
-                    let attempts = 0
-                    const maxAttempts = 10
-
-                    toast.info(isRTL ? 'جاري إعداد حساب الموظف...' : 'Setting up staff account...')
-
-                    while (!profileFound && attempts < maxAttempts) {
-                        try {
-                            const checkResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=id`, {
-                                method: 'GET',
-                                headers: {
-                                    'apikey': supabaseAnonKey,
-                                    'Authorization': `Bearer ${accessToken}`,
-                                    'Content-Type': 'application/json'
-                                }
-                            })
-
-                            if (checkResponse.ok) {
-                                const profiles = await checkResponse.json()
-                                if (profiles && profiles.length > 0) {
-                                    profileFound = true
-                                    break
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Polling error', e)
-                        }
-
-                        await new Promise(r => setTimeout(r, 1000))
-                        attempts++
-                    }
-
-                    if (profileFound) {
-                        try {
-                            await updateStaff.mutateAsync({
-                                id: userId,
-                                role: formData.role,
-                                status: formData.status
-                            })
-
-                            toast.success(isRTL ? 'تمت إضافة الموظف بنجاح' : 'Staff added successfully')
-                            setIsSearchingUser(false)
-                            setIsAddModalOpen(false)
-                            setFormData(prev => ({ ...prev, password: '' }))
-
-                            await Promise.all([refetchStaff(), refetchStats()])
-                        } catch (updateError) {
-                            console.error('Failed to update role:', updateError)
-                            toast.error(isRTL ? 'تم إنشاء المستخدم ولكن فشل تحديث الصلاحيات. حاول تعديله يدوياً.' : 'User created but failed to assign role. Please edit manually.')
-                        }
-                    } else {
-                        toast.error(isRTL ? 'تأخر النظام في إنشاء ملف المستخدم. يرجى المحاولة لاحقاً.' : 'System timed out creating user profile. Please try again later.')
-                        setIsSearchingUser(false)
-                    }
-                } else {
-                    setIsSearchingUser(false)
-                }
+                await Promise.all([refetchStaff(), refetchStats()])
+                return
             }
+
+            if (!formData.password) {
+                toast.error(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Please enter a password for the new user')
+                return
+            }
+
+            if (formData.password.length < 6) {
+                toast.error(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ 6 أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Password must be at least 6 characters')
+                return
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (!emailRegex.test(cleanEmail)) {
+                toast.error(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Invalid email format')
+                return
+            }
+
+            await upsertManagedUser({
+                email: cleanEmail,
+                password: formData.password,
+                fullName: cleanEmail.split('@')[0],
+                role: resolvedRole,
+                status: formData.status,
+            })
+
+            toast.success(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Staff added successfully')
+            setIsAddModalOpen(false)
+            setFormData({ email: '', password: '', role: 'platform_support', status: 'active' })
+            await Promise.all([refetchStaff(), refetchStats()])
         } catch (error) {
-            console.error(error)
-            toast.error(isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
+            console.error('Submit error:', error)
+            toast.error(isRTL ? 'أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½ أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½أ¯طںآ½' : 'Error saving staff data')
+        } finally {
             setIsSearchingUser(false)
         }
     }
-
     // Filter staff
     const filteredStaff = (staff || []).filter((s) => {
         const name = s.profile?.full_name || ''
@@ -301,15 +183,15 @@ export default function PlatformStaffPage() {
                         <Users className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-primary font-cairo">{isRTL ? 'موظفي المنصة' : 'Platform Staff'}</h1>
-                        <p className="text-muted-foreground font-cairo">{isRTL ? 'إدارة فريق المنصة والصلاحيات' : 'Manage platform team and permissions'}</p>
+                        <h1 className="text-2xl font-bold text-primary font-cairo">{isRTL ? 'ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾ط¸ظ¹ ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آµط·آ©' : 'Platform Staff'}</h1>
+                        <p className="text-muted-foreground font-cairo">{isRTL ? 'ط·آ¥ط·آ¯ط·آ§ط·آ±ط·آ© ط¸ظ¾ط·آ±ط¸ظ¹ط¸â€ڑ ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آµط·آ© ط¸ث†ط·آ§ط¸â€‍ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ§ط·ع¾' : 'Manage platform team and permissions'}</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
                     <button
-                        onClick={() => { refetchStaff(); refetchStats(); toast.success(isRTL ? 'تم تحديث القائمة' : 'List refreshed') }}
+                        onClick={() => { refetchStaff(); refetchStats(); toast.success(isRTL ? 'ط·ع¾ط¸â€¦ ط·ع¾ط·آ­ط·آ¯ط¸ظ¹ط·آ« ط·آ§ط¸â€‍ط¸â€ڑط·آ§ط·آ¦ط¸â€¦ط·آ©' : 'List refreshed') }}
                         className="p-2.5 bg-card border hover:bg-muted/10 rounded-xl transition-all"
-                        title={isRTL ? 'تحديث' : 'Refresh'}
+                        title={isRTL ? 'ط·ع¾ط·آ­ط·آ¯ط¸ظ¹ط·آ«' : 'Refresh'}
                     >
                         <Clock className="w-5 h-5 text-muted-foreground" />
                     </button>
@@ -321,36 +203,36 @@ export default function PlatformStaffPage() {
                         className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-white rounded-xl hover:bg-secondary/90 transition-all font-cairo"
                     >
                         <UserPlus className="w-5 h-5" />
-                        {isRTL ? 'إضافة موظف' : 'Add Staff'}
+                        {isRTL ? 'ط·آ¥ط·آ¶ط·آ§ط¸ظ¾ط·آ© ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾' : 'Add Staff'}
                     </button>
                 </div>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatsCard title={isRTL ? 'إجمالي الموظفين' : 'Total Staff'} value={stats?.total || 0} icon={Users} color="info" />
-                <StatsCard title={isRTL ? 'نشط' : 'Active'} value={stats?.active || 0} icon={CheckCircle2} color="success" />
-                <StatsCard title={isRTL ? 'غير نشط' : 'Inactive'} value={stats?.inactive || 0} icon={XCircle} color="destructive" />
-                <StatsCard title={isRTL ? 'الأدوار' : 'Roles'} value={Object.keys(stats?.byRole || {}).length} icon={Key} color="warning" />
+                <StatsCard title={isRTL ? 'ط·آ¥ط·آ¬ط¸â€¦ط·آ§ط¸â€‍ط¸ظ¹ ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾ط¸ظ¹ط¸â€ ' : 'Total Staff'} value={stats?.total || 0} icon={Users} color="info" />
+                <StatsCard title={isRTL ? 'ط¸â€ ط·آ´ط·آ·' : 'Active'} value={stats?.active || 0} icon={CheckCircle2} color="success" />
+                <StatsCard title={isRTL ? 'ط·ط›ط¸ظ¹ط·آ± ط¸â€ ط·آ´ط·آ·' : 'Inactive'} value={stats?.inactive || 0} icon={XCircle} color="destructive" />
+                <StatsCard title={isRTL ? 'ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸ث†ط·آ§ط·آ±' : 'Roles'} value={Object.keys(stats?.byRole || {}).length} icon={Key} color="warning" />
             </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <input type="text" placeholder={isRTL ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                    <input type="text" placeholder={isRTL ? 'ط·آ¨ط·آ­ط·آ« ط·آ¨ط·آ§ط¸â€‍ط·آ§ط·آ³ط¸â€¦ ط·آ£ط¸ث† ط·آ§ط¸â€‍ط·آ¨ط·آ±ط¸ظ¹ط·آ¯...' : 'Search by name or email...'} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full ps-10 pe-4 py-2.5 bg-card border rounded-xl placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-secondary/20 font-cairo" />
                 </div>
                 <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="px-4 py-2.5 bg-card border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 font-cairo">
-                    <option value="all">{isRTL ? 'جميع الأدوار' : 'All Roles'}</option>
+                    <option value="all">{isRTL ? 'ط·آ¬ط¸â€¦ط¸ظ¹ط·آ¹ ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸ث†ط·آ§ط·آ±' : 'All Roles'}</option>
                     {Object.entries(roleConfig).map(([key, config]) => (
                         <option key={key} value={key}>{isRTL ? config.label.ar : config.label.en}</option>
                     ))}
                 </select>
                 <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="px-4 py-2.5 bg-card border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 font-cairo">
-                    <option value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</option>
-                    <option value="active">{isRTL ? 'نشط' : 'Active'}</option>
-                    <option value="inactive">{isRTL ? 'غير نشط' : 'Inactive'}</option>
+                    <option value="all">{isRTL ? 'ط·آ¬ط¸â€¦ط¸ظ¹ط·آ¹ ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط·آ§ط·ع¾' : 'All Status'}</option>
+                    <option value="active">{isRTL ? 'ط¸â€ ط·آ´ط·آ·' : 'Active'}</option>
+                    <option value="inactive">{isRTL ? 'ط·ط›ط¸ظ¹ط·آ± ط¸â€ ط·آ´ط·آ·' : 'Inactive'}</option>
                 </select>
             </div>
 
@@ -360,12 +242,12 @@ export default function PlatformStaffPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b bg-muted/5">
-                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo"><div className="flex items-center gap-2">{isRTL ? 'الموظف' : 'Staff'}<ArrowUpDown className="w-4 h-4" /></div></th>
-                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'الدور' : 'Role'}</th>
-                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'الوصول للمنشآت' : 'Tenants Access'}</th>
-                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'الحالة' : 'Status'}</th>
-                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'آخر نشاط' : 'Last Activity'}</th>
-                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'الإجراءات' : 'Actions'}</th>
+                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo"><div className="flex items-center gap-2">{isRTL ? 'ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾' : 'Staff'}<ArrowUpDown className="w-4 h-4" /></div></th>
+                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'ط·آ§ط¸â€‍ط·آ¯ط¸ث†ط·آ±' : 'Role'}</th>
+                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'ط·آ§ط¸â€‍ط¸ث†ط·آµط¸ث†ط¸â€‍ ط¸â€‍ط¸â€‍ط¸â€¦ط¸â€ ط·آ´ط·آ¢ط·ع¾' : 'Tenants Access'}</th>
+                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط·آ©' : 'Status'}</th>
+                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'ط·آ¢ط·آ®ط·آ± ط¸â€ ط·آ´ط·آ§ط·آ·' : 'Last Activity'}</th>
+                                <th className="text-start p-4 text-muted-foreground font-medium font-cairo">{isRTL ? 'ط·آ§ط¸â€‍ط·آ¥ط·آ¬ط·آ±ط·آ§ط·طŒط·آ§ط·ع¾' : 'Actions'}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -395,9 +277,9 @@ export default function PlatformStaffPage() {
                                             <div className="flex items-center gap-2 text-muted-foreground font-cairo">
                                                 <Building2 className="w-4 h-4" />
                                                 {member.tenants_access === 'all' ? (
-                                                    <span className="text-success">{isRTL ? 'جميع المنشآت' : 'All Tenants'}</span>
+                                                    <span className="text-success">{isRTL ? 'ط·آ¬ط¸â€¦ط¸ظ¹ط·آ¹ ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آ´ط·آ¢ط·ع¾' : 'All Tenants'}</span>
                                                 ) : (
-                                                    <span>{member.assigned_tenants?.length || 0} {isRTL ? 'منشأة' : 'tenants'}</span>
+                                                    <span>{member.assigned_tenants?.length || 0} {isRTL ? 'ط¸â€¦ط¸â€ ط·آ´ط·آ£ط·آ©' : 'tenants'}</span>
                                                 )}
                                             </div>
                                         </td>
@@ -405,7 +287,7 @@ export default function PlatformStaffPage() {
                                             <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
                                                 member.status === 'active' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive')}>
                                                 {member.status === 'active' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                                                {member.status === 'active' ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'غير نشط' : 'Inactive')}
+                                                {member.status === 'active' ? (isRTL ? 'ط¸â€ ط·آ´ط·آ·' : 'Active') : (isRTL ? 'ط·ط›ط¸ظ¹ط·آ± ط¸â€ ط·آ´ط·آ·' : 'Inactive')}
                                             </span>
                                         </td>
                                         <td className="p-4">
@@ -418,15 +300,27 @@ export default function PlatformStaffPage() {
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => handleEdit(member)}
-                                                    className="p-2 hover:bg-muted/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
-                                                    title={isRTL ? 'تعديل' : 'Edit'}
+                                                    disabled={member.role === 'platform_owner'}
+                                                    className={cn(
+                                                        'p-2 rounded-lg transition-colors',
+                                                        member.role === 'platform_owner'
+                                                            ? 'cursor-not-allowed opacity-40 text-muted-foreground'
+                                                            : 'hover:bg-muted/10 text-muted-foreground hover:text-primary'
+                                                    )}
+                                                    title={isRTL ? 'ط·ع¾ط·آ¹ط·آ¯ط¸ظ¹ط¸â€‍' : 'Edit'}
                                                 >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(member)}
-                                                    className="p-2 hover:bg-destructive/10 rounded-lg transition-colors text-destructive"
-                                                    title={isRTL ? 'حذف' : 'Delete'}
+                                                    disabled={member.role === 'platform_owner'}
+                                                    className={cn(
+                                                        'p-2 rounded-lg transition-colors',
+                                                        member.role === 'platform_owner'
+                                                            ? 'cursor-not-allowed opacity-40 text-muted-foreground'
+                                                            : 'hover:bg-destructive/10 text-destructive'
+                                                    )}
+                                                    title={isRTL ? 'ط·آ­ط·آ°ط¸ظ¾' : 'Delete'}
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -442,7 +336,7 @@ export default function PlatformStaffPage() {
                 {filteredStaff.length === 0 && (
                     <div className="p-12 text-center">
                         <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                        <p className="text-muted-foreground font-cairo">{isRTL ? 'لا يوجد موظفين' : 'No staff members found'}</p>
+                        <p className="text-muted-foreground font-cairo">{isRTL ? 'ط¸â€‍ط·آ§ ط¸ظ¹ط¸ث†ط·آ¬ط·آ¯ ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾ط¸ظ¹ط¸â€ ' : 'No staff members found'}</p>
                     </div>
                 )}
             </div>
@@ -454,8 +348,8 @@ export default function PlatformStaffPage() {
                         <div className="flex items-center justify-between p-6 border-b">
                             <h2 className="text-xl font-bold font-cairo">
                                 {editingStaff
-                                    ? (isRTL ? 'تعديل موظف' : 'Edit Staff')
-                                    : (isRTL ? 'إضافة موظف جديد' : 'Add New Staff')
+                                    ? (isRTL ? 'ط·ع¾ط·آ¹ط·آ¯ط¸ظ¹ط¸â€‍ ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾' : 'Edit Staff')
+                                    : (isRTL ? 'ط·آ¥ط·آ¶ط·آ§ط¸ظ¾ط·آ© ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾ ط·آ¬ط·آ¯ط¸ظ¹ط·آ¯' : 'Add New Staff')
                                 }
                             </h2>
                             <button
@@ -471,7 +365,7 @@ export default function PlatformStaffPage() {
                                 <>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium font-cairo">
-                                            {isRTL ? 'البريد الإلكتروني' : 'Email Address'}
+                                            {isRTL ? 'ط·آ§ط¸â€‍ط·آ¨ط·آ±ط¸ظ¹ط·آ¯ ط·آ§ط¸â€‍ط·آ¥ط¸â€‍ط¸ئ’ط·ع¾ط·آ±ط¸ث†ط¸â€ ط¸ظ¹' : 'Email Address'}
                                         </label>
                                         <input
                                             type="email"
@@ -484,7 +378,7 @@ export default function PlatformStaffPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium font-cairo">
-                                            {isRTL ? 'كلمة المرور (للمستخدمين الجدد)' : 'Password (for new users)'}
+                                            {isRTL ? 'ط¸ئ’ط¸â€‍ط¸â€¦ط·آ© ط·آ§ط¸â€‍ط¸â€¦ط·آ±ط¸ث†ط·آ± (ط¸â€‍ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦ط¸ظ¹ط¸â€  ط·آ§ط¸â€‍ط·آ¬ط·آ¯ط·آ¯)' : 'Password (for new users)'}
                                         </label>
                                         <input
                                             type="password"
@@ -495,7 +389,7 @@ export default function PlatformStaffPage() {
                                         />
                                         <p className="text-xs text-muted-foreground font-cairo">
                                             {isRTL
-                                                ? 'اتركه فارغاً إذا كان المستخدم مسجلاً بالفعل'
+                                                ? 'ط·آ§ط·ع¾ط·آ±ط¸ئ’ط¸â€، ط¸ظ¾ط·آ§ط·آ±ط·ط›ط·آ§ط¸â€¹ ط·آ¥ط·آ°ط·آ§ ط¸ئ’ط·آ§ط¸â€  ط·آ§ط¸â€‍ط¸â€¦ط·آ³ط·ع¾ط·آ®ط·آ¯ط¸â€¦ ط¸â€¦ط·آ³ط·آ¬ط¸â€‍ط·آ§ط¸â€¹ ط·آ¨ط·آ§ط¸â€‍ط¸ظ¾ط·آ¹ط¸â€‍'
                                                 : 'Leave empty if the user is already registered'
                                             }
                                         </p>
@@ -505,14 +399,14 @@ export default function PlatformStaffPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium font-cairo">
-                                    {isRTL ? 'الدور الوظيفي' : 'Role'}
+                                    {isRTL ? 'ط·آ§ط¸â€‍ط·آ¯ط¸ث†ط·آ± ط·آ§ط¸â€‍ط¸ث†ط·آ¸ط¸ظ¹ط¸ظ¾ط¸ظ¹' : 'Role'}
                                 </label>
                                 <select
                                     value={formData.role}
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                                     className="w-full px-4 py-2.5 bg-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 font-cairo"
                                 >
-                                    {Object.entries(roleConfig).map(([key, config]) => (
+                                    {assignableRoles.map(([key, config]) => (
                                         <option key={key} value={key}>
                                             {isRTL ? config.label.ar : config.label.en}
                                         </option>
@@ -522,15 +416,15 @@ export default function PlatformStaffPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium font-cairo">
-                                    {isRTL ? 'الحالة' : 'Status'}
+                                    {isRTL ? 'ط·آ§ط¸â€‍ط·آ­ط·آ§ط¸â€‍ط·آ©' : 'Status'}
                                 </label>
                                 <select
                                     value={formData.status}
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                                     className="w-full px-4 py-2.5 bg-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 font-cairo"
                                 >
-                                    <option value="active">{isRTL ? 'نشط' : 'Active'}</option>
-                                    <option value="inactive">{isRTL ? 'غير نشط' : 'Inactive'}</option>
+                                    <option value="active">{isRTL ? 'ط¸â€ ط·آ´ط·آ·' : 'Active'}</option>
+                                    <option value="inactive">{isRTL ? 'ط·ط›ط¸ظ¹ط·آ± ط¸â€ ط·آ´ط·آ·' : 'Inactive'}</option>
                                 </select>
                             </div>
 
@@ -540,15 +434,15 @@ export default function PlatformStaffPage() {
                                     onClick={() => { setIsAddModalOpen(false); setEditingStaff(null); }}
                                     className="px-4 py-2 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors font-cairo"
                                 >
-                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                    {isRTL ? 'ط·آ¥ط¸â€‍ط·ط›ط·آ§ط·طŒ' : 'Cancel'}
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={updateStaff.isPending || isSearchingUser}
+                                    disabled={isSearchingUser}
                                     className="px-6 py-2 bg-secondary text-white rounded-xl hover:bg-secondary/90 transition-all font-cairo disabled:opacity-50 flex items-center gap-2"
                                 >
-                                    {(updateStaff.isPending || isSearchingUser) && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    {isRTL ? 'حفظ التغييرات' : 'Save Changes'}
+                                    {isSearchingUser && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {isRTL ? 'ط·آ­ط¸ظ¾ط·آ¸ ط·آ§ط¸â€‍ط·ع¾ط·ط›ط¸ظ¹ط¸ظ¹ط·آ±ط·آ§ط·ع¾' : 'Save Changes'}
                                 </button>
                             </div>
                         </form>
@@ -565,11 +459,11 @@ export default function PlatformStaffPage() {
                                 <AlertTriangle className="w-6 h-6 text-destructive" />
                             </div>
                             <h3 className="text-lg font-bold font-cairo">
-                                {isRTL ? 'هل أنت متأكد؟' : 'Are you sure?'}
+                                {isRTL ? 'ط¸â€،ط¸â€‍ ط·آ£ط¸â€ ط·ع¾ ط¸â€¦ط·ع¾ط·آ£ط¸ئ’ط·آ¯ط·ع؛' : 'Are you sure?'}
                             </h3>
                             <p className="text-muted-foreground font-cairo">
                                 {isRTL
-                                    ? 'سيتم إزالة صلاحيات هذا الموظف من المنصة. لا يمكن التراجع عن هذا الإجراء.'
+                                    ? 'ط·آ³ط¸ظ¹ط·ع¾ط¸â€¦ ط·آ¥ط·آ²ط·آ§ط¸â€‍ط·آ© ط·آµط¸â€‍ط·آ§ط·آ­ط¸ظ¹ط·آ§ط·ع¾ ط¸â€،ط·آ°ط·آ§ ط·آ§ط¸â€‍ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾ ط¸â€¦ط¸â€  ط·آ§ط¸â€‍ط¸â€¦ط¸â€ ط·آµط·آ©. ط¸â€‍ط·آ§ ط¸ظ¹ط¸â€¦ط¸ئ’ط¸â€  ط·آ§ط¸â€‍ط·ع¾ط·آ±ط·آ§ط·آ¬ط·آ¹ ط·آ¹ط¸â€  ط¸â€،ط·آ°ط·آ§ ط·آ§ط¸â€‍ط·آ¥ط·آ¬ط·آ±ط·آ§ط·طŒ.'
                                     : 'This will remove the staff permissions from the platform. This action cannot be undone.'
                                 }
                             </p>
@@ -578,15 +472,15 @@ export default function PlatformStaffPage() {
                                     onClick={() => { setIsDeleteModalOpen(false); setStaffToDelete(null); }}
                                     className="px-4 py-2 bg-muted/10 rounded-xl hover:bg-muted/20 transition-colors font-cairo"
                                 >
-                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                    {isRTL ? 'ط·آ¥ط¸â€‍ط·ط›ط·آ§ط·طŒ' : 'Cancel'}
                                 </button>
                                 <button
                                     onClick={handleConfirmDelete}
-                                    disabled={deleteStaff.isPending}
+                                    disabled={isDeleting}
                                     className="px-4 py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl hover:bg-destructive/20 transition-colors font-cairo flex items-center gap-2"
                                 >
-                                    {deleteStaff.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    {isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}
+                                    {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {isRTL ? 'ط·ع¾ط·آ£ط¸ئ’ط¸ظ¹ط·آ¯ ط·آ§ط¸â€‍ط·آ­ط·آ°ط¸ظ¾' : 'Confirm Delete'}
                                 </button>
                             </div>
                         </div>
@@ -598,7 +492,7 @@ export default function PlatformStaffPage() {
             <div className="bg-card border rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-primary font-cairo mb-4 flex items-center gap-2">
                     <Key className="w-5 h-5 text-secondary" />
-                    {isRTL ? 'نظرة عامة على الأدوار' : 'Roles Overview'}
+                    {isRTL ? 'ط¸â€ ط·آ¸ط·آ±ط·آ© ط·آ¹ط·آ§ط¸â€¦ط·آ© ط·آ¹ط¸â€‍ط¸â€° ط·آ§ط¸â€‍ط·آ£ط·آ¯ط¸ث†ط·آ§ط·آ±' : 'Roles Overview'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {Object.entries(roleConfig).map(([key, config]) => {
@@ -612,7 +506,7 @@ export default function PlatformStaffPage() {
                                     </div>
                                     <div>
                                         <p className="font-medium font-cairo">{isRTL ? config.label.ar : config.label.en}</p>
-                                        <p className="text-muted-foreground text-sm">{count} {isRTL ? 'موظف' : 'staff'}</p>
+                                        <p className="text-muted-foreground text-sm">{count} {isRTL ? 'ط¸â€¦ط¸ث†ط·آ¸ط¸ظ¾' : 'staff'}</p>
                                     </div>
                                 </div>
                             </div>

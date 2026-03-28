@@ -49,8 +49,9 @@ export default function PortalSettingsPage() {
         if (!tenantId) return
         setLoading(true)
         try {
-            // Generate a secure random string (simple implementation)
-            const newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+            const randomBytes = new Uint8Array(32)
+            crypto.getRandomValues(randomBytes)
+            const newToken = Array.from(randomBytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
 
             const { data, error } = await (supabase.from('tenant_access_tokens') as any)
                 .insert({

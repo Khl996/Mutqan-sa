@@ -192,10 +192,23 @@ export default function RegisterPage() {
         }
     }
 
+    const waitForAuthenticatedSession = async () => {
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const { data } = await supabase.auth.getSession()
+
+            if (data.session?.user?.id) {
+                return data.session.user.id
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 250))
+        }
+
+        throw new Error('Authenticated session not ready')
+    }
+
     // Helper to create tenant after successful auth
     const createTenantAfterAuth = async () => {
-        // Wait a bit to ensure user is propagated if using replicas (rare issue but good practice)
-        await new Promise(r => setTimeout(r, 500));
+        await waitForAuthenticatedSession()
 
         const { error: rpcError } = await supabase.rpc('register_new_tenant', {
             p_name_ar: formData.orgNameAr,

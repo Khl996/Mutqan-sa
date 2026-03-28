@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { upsertManagedUser } from '@/lib/adminUserApi'
 
 // Tenant Type - matches database schema
 export interface Tenant {
@@ -73,7 +74,7 @@ export const tenantsKeys = {
 }
 
 // Note: Subscription tiers/plans are fetched from DB via useSubscriptionPlans hook.
-// No hardcoded tiers here — DB (subscription_plans table) is the single source of truth.
+// No hardcoded tiers here â€” DB (subscription_plans table) is the single source of truth.
 
 // Helper to get token
 const getAccessToken = () => {
@@ -194,7 +195,7 @@ export function useCreateTenant() {
 
     return useMutation({
         mutationFn: async (input: CreateTenantInput) => {
-            console.log('📝 Creating tenant via provision_tenant RPC...', input)
+            console.log('ًں“‌ Creating tenant via provision_tenant RPC...', input)
 
             const { admin_name, admin_email, admin_password, ...tenantFields } = input
 
@@ -230,45 +231,35 @@ export function useCreateTenant() {
 
             if (!rpcResponse.ok) {
                 const errorData = await rpcResponse.json().catch(() => ({}))
-                console.error('❌ provision_tenant RPC error:', errorData)
+                console.error('â‌Œ provision_tenant RPC error:', errorData)
                 throw new Error(errorData.message || errorData.error || `HTTP ${rpcResponse.status}`)
             }
 
             const rpcResult = await rpcResponse.json()
-            console.log('✅ Tenant provisioned:', rpcResult)
+            console.log('âœ… Tenant provisioned:', rpcResult)
 
             const newTenantId = rpcResult.tenant_id
 
-            // 2. Create the Admin User (if provided) — requires auth.signUp
+            // 2. Create the Admin User (if provided) via secure server-side route
             if (admin_email && admin_password && newTenantId) {
-                console.log('👤 Creating tenant admin user...')
+                console.log('Creating tenant admin user securely...')
 
-                const authResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': supabaseAnonKey,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: admin_email,
+                try {
+                    await upsertManagedUser({
+                        email: admin_email.trim().toLowerCase(),
                         password: admin_password,
-                        data: {
-                            full_name: admin_name || 'Admin',
-                            role: 'tenant_admin',
-                            tenant_id: newTenantId
-                        }
+                        fullName: admin_name || 'Admin',
+                        role: 'tenant_admin',
+                        tenantId: newTenantId,
+                        status: 'active',
                     })
-                })
 
-                if (!authResponse.ok) {
-                    const authError = await authResponse.json().catch(() => ({}))
-                    console.error('❌ Failed to create admin user:', authError)
-                    // Don't throw — tenant is already created
-                } else {
-                    console.log('✅ Tenant admin created successfully')
+                    console.log('Tenant admin created successfully')
+                } catch (authError) {
+                    console.error('Failed to create tenant admin user:', authError)
+                    // Don't throw - tenant is already created
                 }
             }
-
             // 3. Fetch the newly created tenant to return full object
             const tenantResponse = await fetch(
                 `${supabaseUrl}/rest/v1/tenants?id=eq.${newTenantId}&select=*`,

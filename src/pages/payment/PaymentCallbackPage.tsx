@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { CheckCircle2, XCircle, Loader2, ArrowRight } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowRight, CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { usePayment } from '@/hooks/usePayment'
+import { useTenant } from '@/contexts/TenantContext'
+
+type PaymentStatus = 'loading' | 'success' | 'failed'
+
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export default function PaymentCallbackPage() {
     const [searchParams] = useSearchParams()
-    const navigate = useNavigate()
     const { verifyPayment } = usePayment()
+    const { refreshTenant } = useTenant()
 
-    const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading')
+    const [status, setStatus] = useState<PaymentStatus>('loading')
     const [message, setMessage] = useState('')
 
     useEffect(() => {
@@ -16,35 +21,51 @@ export default function PaymentCallbackPage() {
 
         if (!tapId) {
             setStatus('failed')
-            setMessage('لم يتم العثور على معرّف العملية')
+            setMessage('لم يتم العثور على معرف عملية الدفع.')
             return
         }
 
+        let isMounted = true
+
         const verify = async () => {
             const result = await verifyPayment(tapId)
+            if (!isMounted) return
 
             if (result.success) {
+                for (let attempt = 0; attempt < 4; attempt++) {
+                    await refreshTenant()
+
+                    if (attempt < 3) {
+                        await wait(750)
+                    }
+                }
+
+                if (!isMounted) return
+
                 setStatus('success')
-                setMessage('تم الدفع بنجاح وتفعيل اشتراكك!')
-            } else {
-                setStatus('failed')
-                setMessage(
-                    result.status === 'CANCELLED'
-                        ? 'تم إلغاء عملية الدفع'
-                        : result.message || 'فشلت عملية الدفع. يرجى المحاولة مرة أخرى.'
-                )
+                setMessage('تم تفعيل اشتراكك بنجاح، ويمكنك المتابعة إلى لوحة التحكم الآن.')
+                return
             }
+
+            setStatus('failed')
+            setMessage(
+                result.status === 'CANCELLED'
+                    ? 'تم إلغاء عملية الدفع.'
+                    : result.message || 'تعذر التحقق من عملية الدفع. حاول مرة أخرى أو تواصل مع الدعم.'
+            )
         }
 
-        verify()
-    }, [searchParams])
+        void verify()
+
+        return () => {
+            isMounted = false
+        }
+    }, [refreshTenant, searchParams, verifyPayment])
 
     return (
         <div className="min-h-screen bg-slate-50 font-cairo flex items-center justify-center" dir="rtl">
             <div className="max-w-md w-full mx-4">
                 <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 text-center space-y-6">
-
-                    {/* Loading */}
                     {status === 'loading' && (
                         <>
                             <div className="flex justify-center">
@@ -53,13 +74,12 @@ export default function PaymentCallbackPage() {
                                 </div>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">جارٍ التحقق من الدفع...</h2>
-                                <p className="text-slate-500 mt-2">يرجى الانتظار بينما نتحقق من عملية الدفع</p>
+                                <h2 className="text-2xl font-bold text-slate-800">جارٍ التحقق من عملية الدفع...</h2>
+                                <p className="text-slate-500 mt-2">نحدّث حالة الاشتراك ونزامن بيانات المنشأة قبل تحويلك للوحة التحكم.</p>
                             </div>
                         </>
                     )}
 
-                    {/* Success */}
                     {status === 'success' && (
                         <>
                             <div className="flex justify-center">
@@ -68,41 +88,40 @@ export default function PaymentCallbackPage() {
                                 </div>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">تم بنجاح! 🎉</h2>
+                                <h2 className="text-2xl font-bold text-slate-800">تم الدفع بنجاح</h2>
                                 <p className="text-slate-500 mt-2">{message}</p>
                             </div>
                             <Link
                                 to="/dashboard"
                                 className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-xl font-bold transition-colors"
                             >
-                                الذهاب إلى لوحة التحكم
+                                الانتقال إلى لوحة التحكم
                                 <ArrowRight className="w-4 h-4" />
                             </Link>
                         </>
                     )}
 
-                    {/* Failed */}
                     {status === 'failed' && (
                         <>
                             <div className="flex justify-center">
                                 <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center">
-                                    <XCircle className="w-10 h-10 text-red-500" />
+                                    <XCircle className="w-10 h-10 text-red-600" />
                                 </div>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">لم تتم العملية</h2>
+                                <h2 className="text-2xl font-bold text-slate-800">تعذر إتمام العملية</h2>
                                 <p className="text-slate-500 mt-2">{message}</p>
                             </div>
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                 <Link
-                                    to="/subscription"
-                                    className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-xl font-bold transition-colors"
+                                    to="/subscriptions"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
                                 >
-                                    المحاولة مرة أخرى
+                                    العودة للاشتراكات
                                 </Link>
                                 <Link
                                     to="/dashboard"
-                                    className="text-slate-500 hover:text-slate-700 text-sm transition-colors"
+                                    className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-bold transition-colors"
                                 >
                                     العودة للوحة التحكم
                                 </Link>
@@ -110,11 +129,6 @@ export default function PaymentCallbackPage() {
                         </>
                     )}
                 </div>
-
-                {/* Footer */}
-                <p className="text-center text-slate-400 text-xs mt-6">
-                    الدفع مؤمّن بواسطة Tap Payments
-                </p>
             </div>
         </div>
     )

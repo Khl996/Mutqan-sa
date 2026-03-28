@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export interface SubscriptionPlan {
     id: string
@@ -25,6 +25,10 @@ export interface SubscriptionPlan {
     updated_at: string
 }
 
+type SubscriptionPlanRecord = Omit<SubscriptionPlan, 'sort_order'> & {
+    display_order: number | null
+}
+
 export type CreatePlanInput = Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>
 
 export const planKeys = {
@@ -33,20 +37,36 @@ export const planKeys = {
     detail: (id: string) => [...planKeys.all, id] as const,
 }
 
-// Helper to get token
 const getAccessToken = () => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
     const storedSession = localStorage.getItem(storageKey)
+
     if (storedSession) {
         try {
             return JSON.parse(storedSession).access_token
-        } catch { return null }
+        } catch {
+            return null
+        }
     }
+
     return null
 }
 
-// Fetch All Plans
+const mapPlanRecord = (plan: SubscriptionPlanRecord): SubscriptionPlan => ({
+    ...plan,
+    sort_order: plan.display_order,
+})
+
+const toPlanPayload = (plan: Partial<CreatePlanInput>) => {
+    const { sort_order, ...rest } = plan
+
+    return {
+        ...rest,
+        ...(sort_order !== undefined ? { display_order: sort_order } : {}),
+    }
+}
+
 export function useSubscriptionPlans() {
     return useQuery({
         queryKey: planKeys.list(),
@@ -56,12 +76,11 @@ export function useSubscriptionPlans() {
 
             if (!accessToken) throw new Error('Not authenticated')
 
-            // Fetch plans and order by display_order
             const response = await fetch(`${supabaseUrl}/rest/v1/subscription_plans?order=display_order.asc`, {
                 headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`
-                }
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`,
+                },
             })
 
             if (!response.ok) {
@@ -69,12 +88,12 @@ export function useSubscriptionPlans() {
                 throw new Error(error.message || 'Failed to fetch plans')
             }
 
-            return await response.json() as SubscriptionPlan[]
+            const plans = await response.json() as SubscriptionPlanRecord[]
+            return plans.map(mapPlanRecord)
         },
     })
 }
 
-// Create Plan
 export function useCreatePlan() {
     const queryClient = useQueryClient()
 
@@ -82,17 +101,18 @@ export function useCreatePlan() {
         mutationFn: async (plan: CreatePlanInput) => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
+
             if (!accessToken) throw new Error('Not authenticated')
 
             const response = await fetch(`${supabaseUrl}/rest/v1/subscription_plans`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`,
+                    Prefer: 'return=representation',
                 },
-                body: JSON.stringify(plan)
+                body: JSON.stringify(toPlanPayload(plan)),
             })
 
             if (!response.ok) {
@@ -100,8 +120,8 @@ export function useCreatePlan() {
                 throw new Error(error.message || 'Failed to create plan')
             }
 
-            const data = await response.json()
-            return data && data.length > 0 ? data[0] : null
+            const data = await response.json() as SubscriptionPlanRecord[]
+            return data.length > 0 ? mapPlanRecord(data[0]) : null
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: planKeys.list() })
@@ -109,7 +129,6 @@ export function useCreatePlan() {
     })
 }
 
-// Update Plan
 export function useUpdatePlan() {
     const queryClient = useQueryClient()
 
@@ -117,17 +136,21 @@ export function useUpdatePlan() {
         mutationFn: async ({ id, ...updates }: Partial<CreatePlanInput> & { id: string }) => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
+
             if (!accessToken) throw new Error('Not authenticated')
 
             const response = await fetch(`${supabaseUrl}/rest/v1/subscription_plans?id=eq.${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`,
+                    Prefer: 'return=representation',
                 },
-                body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() })
+                body: JSON.stringify({
+                    ...toPlanPayload(updates),
+                    updated_at: new Date().toISOString(),
+                }),
             })
 
             if (!response.ok) {
@@ -135,8 +158,8 @@ export function useUpdatePlan() {
                 throw new Error(error.message || 'Failed to update plan')
             }
 
-            const data = await response.json()
-            return data && data.length > 0 ? data[0] : null
+            const data = await response.json() as SubscriptionPlanRecord[]
+            return data.length > 0 ? mapPlanRecord(data[0]) : null
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: planKeys.list() })
@@ -144,7 +167,6 @@ export function useUpdatePlan() {
     })
 }
 
-// Delete Plan
 export function useDeletePlan() {
     const queryClient = useQueryClient()
 
@@ -152,15 +174,16 @@ export function useDeletePlan() {
         mutationFn: async (id: string) => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
+
             if (!accessToken) throw new Error('Not authenticated')
 
             const response = await fetch(`${supabaseUrl}/rest/v1/subscription_plans?id=eq.${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
-                }
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`,
+                    Prefer: 'return=representation',
+                },
             })
 
             if (!response.ok) {
