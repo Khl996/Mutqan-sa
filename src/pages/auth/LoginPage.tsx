@@ -29,6 +29,8 @@ export default function LoginPage() {
         // Profile is now loaded — route based on role
         if (isPlatformRole(profile.role)) {
             navigate('/platform', { replace: true })
+        } else if (!profile.tenant_id) {
+            navigate('/register/complete', { replace: true })
         } else {
             navigate('/dashboard', { replace: true })
         }

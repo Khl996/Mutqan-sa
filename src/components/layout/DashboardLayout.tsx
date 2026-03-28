@@ -40,6 +40,10 @@ export default function DashboardLayout() {
         return <Navigate to="/login" replace />
     }
 
+    if (!isPlatformRole(profile?.role) && !profile?.tenant_id) {
+        return <Navigate to="/register/complete" replace />
+    }
+
     // Guard: platform users without a selected tenant must go to /platform
     if (isPlatformRole(profile?.role) && !currentTenant) {
         console.log('⛔ DashboardLayout: platform user without tenant → redirect to /platform')

@@ -4,17 +4,55 @@
 
 -- 1. Enable pg_net extension for HTTP requests
 CREATE EXTENSION IF NOT EXISTS pg_net;
+CREATE SCHEMA IF NOT EXISTS internal;
+
+REVOKE ALL ON SCHEMA internal FROM PUBLIC;
+REVOKE ALL ON SCHEMA internal FROM anon;
+REVOKE ALL ON SCHEMA internal FROM authenticated;
+
+CREATE TABLE IF NOT EXISTS internal.runtime_secrets (
+    name TEXT PRIMARY KEY,
+    secret_value TEXT NOT NULL,
+    description TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE internal.runtime_secrets ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE internal.runtime_secrets FROM PUBLIC;
+REVOKE ALL ON TABLE internal.runtime_secrets FROM anon;
+REVOKE ALL ON TABLE internal.runtime_secrets FROM authenticated;
 
 -- 2. Create function to call send-email Edge Function
-CREATE OR REPLACE FUNCTION send_email_notification()
+--    Secrets are read from internal.runtime_secrets using these names:
+--      app.resend_email_url
+--      app.resend_email_secret
+CREATE OR REPLACE FUNCTION public.get_runtime_secret(p_name TEXT)
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, internal
+AS $$
+    SELECT rs.secret_value
+    FROM internal.runtime_secrets rs
+    WHERE rs.name = p_name
+    LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.send_email_notification()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     v_user_email TEXT;
     v_resend_body JSONB;
-    v_html_content TEXT;
+    v_function_url TEXT := public.get_runtime_secret('app.resend_email_url');
+    v_shared_secret TEXT := public.get_runtime_secret('app.resend_email_secret');
+    v_headers JSONB := jsonb_build_object(
+        'Content-Type', 'application/json'
+    );
 BEGIN
     -- Get user email
     SELECT email INTO v_user_email FROM auth.users WHERE id = NEW.user_id;
@@ -33,13 +71,21 @@ BEGIN
         'link', NEW.link
     );
 
+    IF v_function_url IS NULL THEN
+        RAISE NOTICE 'Runtime secret app.resend_email_url is not configured; skipping notification email for notification %', NEW.id;
+        RETURN NEW;
+    END IF;
+
+    IF v_shared_secret IS NOT NULL THEN
+        v_headers := v_headers || jsonb_build_object(
+            'x-internal-email-secret', v_shared_secret
+        );
+    END IF;
+
     -- Call Edge Function using pg_net
     PERFORM net.http_post(
-        url := 'https://mzpohntjotgeeaukwnbz.supabase.co/functions/v1/resend-email',
-        headers := jsonb_build_object(
-            'Content-Type', 'application/json',
-            'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16cG9obnRqb3RnZWVhdWt3bmJ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Nzk3NDIzOCwiZXhwIjoyMDgzNTUwMjM4fQ.Cujn087lgKCXXVimY2B5gcr8hhS50ArzX3ij2utLrFA'
-        ),
+        url := v_function_url,
+        headers := v_headers,
         body := v_resend_body
     );
 
@@ -48,9 +94,9 @@ END;
 $$;
 
 -- 3. Create Trigger
-DROP TRIGGER IF EXISTS trg_send_email_on_notification ON notifications;
+DROP TRIGGER IF EXISTS trg_send_email_on_notification ON public.notifications;
 
 CREATE TRIGGER trg_send_email_on_notification
-    AFTER INSERT ON notifications
+    AFTER INSERT ON public.notifications
     FOR EACH ROW
-    EXECUTE FUNCTION send_email_notification();
+    EXECUTE FUNCTION public.send_email_notification();

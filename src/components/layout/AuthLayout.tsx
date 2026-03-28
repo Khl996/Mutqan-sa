@@ -1,9 +1,10 @@
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { isPlatformRole } from '@/config/roles'
 
 export default function AuthLayout() {
-    const { isAuthenticated, isLoading } = useAuth()
+    const { isAuthenticated, isLoading, profile } = useAuth()
     const { t } = useTranslation()
     const location = useLocation()
 
@@ -18,12 +19,20 @@ export default function AuthLayout() {
             </div>
         )
     }
+    const isRegistrationRoute = location.pathname === '/register' || location.pathname === '/register/complete'
+    const canStayInRegistrationFlow =
+        isRegistrationRoute &&
+        (!profile || (!isPlatformRole(profile.role) && !profile.tenant_id))
 
+    if (isAuthenticated && !canStayInRegistrationFlow) {
+        if (profile && isPlatformRole(profile.role)) {
+            return <Navigate to="/platform" replace />
+        }
 
+        if (profile && !profile.tenant_id) {
+            return <Navigate to="/register/complete" replace />
+        }
 
-    // Redirect to dashboard if already authenticated
-    // Skip redirect for Register page to allow tenant creation logic to complete
-    if (isAuthenticated && location.pathname !== '/register') {
         return <Navigate to="/dashboard" replace />
     }
 

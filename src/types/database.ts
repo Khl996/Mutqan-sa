@@ -65,8 +65,13 @@ export interface Database {
                     name: string
                     name_ar: string | null
                     slug: string
+                    is_active: boolean
                     subscription_status: string
+                    subscription_tier: string | null
                     plan_id: string | null
+                    billing_cycle: string | null
+                    trial_ends_at: string | null
+                    subscription_ends_at: string | null
                     cr_number: string | null
                     tax_number: string | null
                     address: string | null
@@ -88,8 +93,13 @@ export interface Database {
                     name: string
                     name_ar?: string | null
                     slug: string
+                    is_active?: boolean
                     plan_id?: string | null
                     subscription_status?: string
+                    subscription_tier?: string | null
+                    billing_cycle?: string | null
+                    trial_ends_at?: string | null
+                    subscription_ends_at?: string | null
                     cr_number?: string | null
                     tax_number?: string | null
                     address?: string | null
@@ -111,8 +121,13 @@ export interface Database {
                     name?: string
                     name_ar?: string | null
                     slug?: string
+                    is_active?: boolean
                     subscription_status?: string
+                    subscription_tier?: string | null
                     plan_id?: string | null
+                    billing_cycle?: string | null
+                    trial_ends_at?: string | null
+                    subscription_ends_at?: string | null
                     logo_url?: string | null
                     primary_color?: string | null
                     secondary_color?: string | null
@@ -127,6 +142,12 @@ export interface Database {
             [_ in never]: never
         }
         Functions: {
+            complete_pending_registration: {
+                Args: {
+                    p_draft?: Json | null
+                }
+                Returns: Json
+            }
             register_new_tenant: {
                 Args: {
                     p_name_ar: string

@@ -114,7 +114,7 @@ export default function PaymentCallbackPage() {
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                 <Link
-                                    to="/subscriptions"
+                                    to="/subscription"
                                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
                                 >
                                     العودة للاشتراكات

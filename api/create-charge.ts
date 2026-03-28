@@ -2,9 +2,30 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
-const BASE_URL = process.env.VITE_APP_URL || 'https://mutqan-sa.com'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+function getBaseUrl(req: VercelRequest) {
+    const configuredBaseUrl = process.env.VITE_APP_URL?.trim()
+    if (configuredBaseUrl) {
+        return configuredBaseUrl.replace(/\/$/, '')
+    }
+
+    const forwardedProto = req.headers['x-forwarded-proto']
+    const forwardedHost = req.headers['x-forwarded-host']
+    const host = forwardedHost || req.headers.host
+
+    const protocol = Array.isArray(forwardedProto)
+        ? forwardedProto[0]
+        : forwardedProto || 'https'
+    const normalizedHost = Array.isArray(host) ? host[0] : host
+
+    if (!normalizedHost) {
+        throw new Error('Unable to determine application base URL')
+    }
+
+    return `${protocol}://${normalizedHost}`.replace(/\/$/, '')
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Only allow POST
@@ -13,6 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+        const baseUrl = getBaseUrl(req)
         const {
             planId,
             billingCycle = 'yearly',
@@ -164,10 +186,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     id: 'src_all',  // Allow all payment methods
                 },
                 redirect: {
-                    url: `${BASE_URL}/payment/callback`,
+                    url: `${baseUrl}/payment/callback`,
                 },
                 post: {
-                    url: `${BASE_URL}/api/payment-webhook`,
+                    url: `${baseUrl}/api/payment-webhook`,
                 },
             }),
         })

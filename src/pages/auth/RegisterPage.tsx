@@ -13,6 +13,11 @@ import {
     EyeOff
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+    clearPendingRegistrationDraft,
+    PendingRegistrationDraft,
+    savePendingRegistrationDraft,
+} from '@/lib/pendingRegistration'
 
 // Step Types
 type Step = 'org_info' | 'admin_info' | 'otp' | 'success'
@@ -53,6 +58,9 @@ export default function RegisterPage() {
     const [otp, setOtp] = useState(['', '', '', '', '', ''])
     const [showPassword, setShowPassword] = useState(false)
 
+    const getErrorMessage = (error: unknown, fallback: string) =>
+        error instanceof Error ? error.message : fallback
+
     const [formData, setFormData] = useState<FormData>({
         orgNameAr: '',
         orgNameEn: '',
@@ -77,6 +85,26 @@ export default function RegisterPage() {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
     }
+
+    const buildPendingRegistrationDraft = (): PendingRegistrationDraft => ({
+        version: 1,
+        created_at: new Date().toISOString(),
+        org_name_ar: formData.orgNameAr.trim(),
+        org_name_en: formData.orgNameEn.trim(),
+        org_email: (formData.orgEmail || formData.email).trim(),
+        org_phone: formData.orgPhone.trim(),
+        org_website: formData.orgWebsite.trim(),
+        org_address: formData.orgAddress.trim(),
+        org_country: formData.orgCountry.trim(),
+        org_city: formData.orgCity.trim(),
+        org_postal_code: formData.orgPostalCode.trim(),
+        cr_number: formData.crNumber.trim(),
+        tax_number: formData.taxNumber.trim(),
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        admin_email: formData.email.trim(),
+        admin_phone: formData.phone.trim(),
+    })
 
     const validateOrgInfo = () => {
         if (!formData.orgNameAr || !formData.orgNameEn || !formData.crNumber || !formData.taxNumber || !formData.orgCity || !formData.orgAddress) {
@@ -109,6 +137,8 @@ export default function RegisterPage() {
             if (validateAdminInfo()) {
                 setIsLoading(true)
                 try {
+                    const draft = buildPendingRegistrationDraft()
+
                     // 1. Trigger Sign Up to send OTP (via Email)
                     const { data, error } = await supabase.auth.signUp({
                         email: formData.email,
@@ -117,7 +147,9 @@ export default function RegisterPage() {
                             data: {
                                 full_name: `${formData.firstName} ${formData.lastName}`,
                                 full_name_ar: `${formData.firstName} ${formData.lastName}`,
-                                phone: formData.phone
+                                phone: formData.phone,
+                                registration_status: 'pending_tenant_setup',
+                                registration_draft: draft,
                             }
                         }
                     })
@@ -131,12 +163,23 @@ export default function RegisterPage() {
                         return
                     }
 
+                    savePendingRegistrationDraft(draft)
+
                     // Check if session exists (Auto confirm enabled) or not (OTP required)
                     if (data.session) {
-                        // User is verified immediately (Auto-confirm ON)
-                        // Create tenant directly
-                        await createTenantAfterAuth()
-                        setCurrentStep('success')
+                        try {
+                            await completeRegistrationAfterAuth(draft)
+                            await refreshProfile()
+                            setCurrentStep('success')
+                        } catch (setupError) {
+                            console.error('Workspace setup failed after auto-confirm:', setupError)
+                            toast.error(
+                                isRTL
+                                    ? 'تم إنشاء الحساب لكن تجهيز المنشأة لم يكتمل بعد. سننقلك لخطوة الاستكمال.'
+                                    : 'Your account was created, but workspace setup is still pending. We will take you to the completion step.',
+                            )
+                            navigate('/register/complete', { replace: true })
+                        }
                         return
                     }
 
@@ -144,9 +187,9 @@ export default function RegisterPage() {
                     setCurrentStep('otp')
                     toast.success(isRTL ? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' : 'Verification code sent to your email')
 
-                } catch (error: any) {
+                } catch (error: unknown) {
                     console.error('Signup error:', error)
-                    toast.error(error.message)
+                    toast.error(getErrorMessage(error, isRTL ? 'تعذر إنشاء الحساب الآن' : 'Could not create the account right now'))
                 } finally {
                     setIsLoading(false)
                 }
@@ -168,6 +211,7 @@ export default function RegisterPage() {
 
         setIsLoading(true)
         try {
+            const draft = buildPendingRegistrationDraft()
             // 2. Verify OTP (Email)
             const { data, error } = await supabase.auth.verifyOtp({
                 email: formData.email,
@@ -175,16 +219,28 @@ export default function RegisterPage() {
                 type: 'signup'
             })
 
-            if (error) throw error
-
-            if (data.session) {
-                await createTenantAfterAuth()
-                // Refresh profile to get the new role (tenant_admin)
-                await refreshProfile()
-                setCurrentStep('success')
+            if (error) {
+                toast.error(isRTL ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired OTP')
+                return
             }
 
-        } catch (error: any) {
+            if (data.session) {
+                try {
+                    await completeRegistrationAfterAuth(draft)
+                    await refreshProfile()
+                    setCurrentStep('success')
+                } catch (setupError) {
+                    console.error('Workspace setup failed after OTP verification:', setupError)
+                    toast.error(
+                        isRTL
+                            ? 'تم التحقق من البريد لكن تجهيز المنشأة لم يكتمل بعد. سننقلك لخطوة الاستكمال.'
+                            : 'Email verification succeeded, but workspace setup is still pending. We will take you to the completion step.',
+                    )
+                    navigate('/register/complete', { replace: true })
+                }
+            }
+
+        } catch (error: unknown) {
             console.error('Verification failed:', error)
             toast.error(isRTL ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired OTP')
         } finally {
@@ -206,27 +262,16 @@ export default function RegisterPage() {
         throw new Error('Authenticated session not ready')
     }
 
-    // Helper to create tenant after successful auth
-    const createTenantAfterAuth = async () => {
+    const completeRegistrationAfterAuth = async (draft: PendingRegistrationDraft) => {
         await waitForAuthenticatedSession()
 
-        const { error: rpcError } = await supabase.rpc('register_new_tenant', {
-            p_name_ar: formData.orgNameAr,
-            p_name_en: formData.orgNameEn,
-            p_email: formData.orgEmail || formData.email,
-            p_address: formData.orgAddress,
-            p_cr_number: formData.crNumber,
-            p_tax_number: formData.taxNumber,
-            p_first_name: formData.firstName,
-            p_last_name: formData.lastName,
-            p_phone: formData.orgPhone || null,
-            p_country: formData.orgCountry,
-            p_city: formData.orgCity,
-            p_postal_code: formData.orgPostalCode,
-            p_website: formData.orgWebsite || null
+        const { error: rpcError } = await supabase.rpc('complete_pending_registration', {
+            p_draft: draft,
         })
 
         if (rpcError) throw rpcError
+
+        clearPendingRegistrationDraft()
     }
 
     const handleOtpChange = (index: number, value: string) => {

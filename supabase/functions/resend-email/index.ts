@@ -2,6 +2,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+const RESEND_EMAIL_SECRET = Deno.env.get('RESEND_EMAIL_SECRET')
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,16 @@ Deno.serve(async (req) => {
     }
 
     try {
+        if (RESEND_EMAIL_SECRET) {
+            const providedSecret = req.headers.get('x-internal-email-secret')
+            if (providedSecret !== RESEND_EMAIL_SECRET) {
+                return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                    status: 401,
+                })
+            }
+        }
+
         const { to, subject, html, type, message, link, title } = await req.json()
 
         if (!RESEND_API_KEY) {
