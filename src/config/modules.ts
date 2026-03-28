@@ -188,6 +188,32 @@ export const SYSTEM_MODULES: SystemModule[] = [
     },
 ]
 
+const MODULE_CODES = SYSTEM_MODULES.map(module => module.code)
+
+const LEGACY_PLAN_FEATURE_MAP: Record<string, string[]> = {
+    dashboard: ['dashboard'],
+    basic_dashboard: ['dashboard'],
+    full_dashboard: ['dashboard'],
+    facilities: ['facilities'],
+    multi_location: ['facilities'],
+    assets: ['facilities', 'assets'],
+    basic_assets: ['facilities', 'assets'],
+    work_orders: ['facilities', 'work_orders'],
+    basic_work_orders: ['facilities', 'work_orders'],
+    custom_workflows: ['facilities', 'work_orders'],
+    maintenance: ['facilities', 'maintenance'],
+    maintenance_calendar: ['facilities', 'maintenance'],
+    inventory: ['facilities', 'inventory'],
+    inventory_management: ['facilities', 'inventory'],
+    employees: ['employees'],
+    teams: ['work_teams'],
+    work_teams: ['work_teams'],
+    reports: ['reports'],
+    basic_reporting: ['reports'],
+    advanced_reporting: ['reports'],
+    public_portal: ['public_portal'],
+}
+
 // Get module by code
 export function getModuleByCode(code: string): SystemModule | undefined {
     return SYSTEM_MODULES.find(m => m.code === code)
@@ -224,6 +250,35 @@ export function getRestrictedEnabledModules(): Record<string, { enabled: boolean
     }
 
     return result
+}
+
+export function normalizePlanFeatureCodes(features: string[] | null | undefined): string[] {
+    if (!Array.isArray(features)) return []
+
+    const normalized = new Set<string>()
+
+    for (const rawFeature of features) {
+        const feature = rawFeature.trim().toLowerCase()
+
+        if (!feature) continue
+
+        if (feature === 'all_features') {
+            MODULE_CODES.forEach(code => normalized.add(code))
+            continue
+        }
+
+        const mappedModules = LEGACY_PLAN_FEATURE_MAP[feature]
+        if (mappedModules) {
+            mappedModules.forEach(code => normalized.add(code))
+            continue
+        }
+
+        if (MODULE_CODES.includes(feature)) {
+            normalized.add(feature)
+        }
+    }
+
+    return MODULE_CODES.filter(code => normalized.has(code))
 }
 
 // Check if a module is enabled for a tenant

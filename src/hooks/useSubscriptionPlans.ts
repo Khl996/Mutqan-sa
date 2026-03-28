@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { normalizePlanFeatureCodes } from '@/config/modules'
 
 export interface SubscriptionPlan {
     id: string
@@ -55,6 +56,7 @@ const getAccessToken = () => {
 
 const mapPlanRecord = (plan: SubscriptionPlanRecord): SubscriptionPlan => ({
     ...plan,
+    features: normalizePlanFeatureCodes(plan.features),
     sort_order: plan.display_order,
 })
 
@@ -63,6 +65,7 @@ const toPlanPayload = (plan: Partial<CreatePlanInput>) => {
 
     return {
         ...rest,
+        ...(rest.features !== undefined ? { features: normalizePlanFeatureCodes(rest.features) } : {}),
         ...(sort_order !== undefined ? { display_order: sort_order } : {}),
     }
 }

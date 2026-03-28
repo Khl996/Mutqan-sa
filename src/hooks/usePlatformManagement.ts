@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 
 // Types
 export interface PlatformStaff {
@@ -141,12 +140,7 @@ export function usePlatformStaff() {
 
             if (!accessToken) return [] as PlatformStaff[]
 
-            // Roles filter using LIKE for platform_%
-            // Since we can't easily do complicated OR logic in simple REST, we'll fetch all profiles and filter in memory
-            // Or use a more specific query if possible. For now, fetching all is safer to debug, but ideally we should filter.
-            // Let's filter by checking if role contains 'platform' to limit data a bit if possible, but standard REST simpler:
-
-            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=*&order=created_at.desc`, {
+            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=*&role=like.platform_*&order=created_at.desc`, {
                 headers: {
                     'apikey': supabaseAnonKey,
                     'Authorization': `Bearer ${accessToken}`,
@@ -159,17 +153,7 @@ export function usePlatformStaff() {
                 throw new Error('Failed to fetch staff')
             }
 
-            const profiles = await response.json()
-
-            // Filter in memory for platform roles
-            const platformProfiles = profiles.filter((p: any) =>
-                p.role === 'platform_owner' ||
-                p.role === 'platform_admin' ||
-                p.role === 'platform_support' ||
-                p.role === 'platform_finance' ||
-                p.role === 'platform_hr' ||
-                p.role.startsWith('platform_')
-            )
+            const platformProfiles = await response.json()
 
             // Map to staff format
             return platformProfiles.map((p: any) => ({
@@ -218,7 +202,7 @@ export function usePlatformStaffStats() {
 
             if (!accessToken) return { total: 0, active: 0, inactive: 0, byRole: {} }
 
-            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id,role,is_active`, {
+            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id,role,is_active&role=like.platform_*`, {
                 headers: {
                     'apikey': supabaseAnonKey,
                     'Authorization': `Bearer ${accessToken}`,
@@ -228,13 +212,7 @@ export function usePlatformStaffStats() {
 
             if (!response.ok) throw new Error('Failed to fetch stats')
 
-            const data = await response.json()
-
-            // Filter for platform roles
-            const platformData = data.filter((p: any) =>
-                p.role === 'platform_owner' ||
-                p.role?.startsWith('platform_')
-            )
+            const platformData = await response.json()
 
             const stats = {
                 total: platformData.length || 0,

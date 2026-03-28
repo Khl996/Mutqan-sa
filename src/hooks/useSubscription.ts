@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { normalizePlanFeatureCodes } from '@/config/modules'
 
 // Subscription Plan Type
 export interface SubscriptionPlan {
@@ -76,7 +77,10 @@ export function useSubscriptionPlans() {
                 console.error('Failed to fetch subscription_plans:', error.message)
                 throw new Error('Could not load subscription plans')
             }
-            return data as SubscriptionPlan[]
+            return ((data || []) as SubscriptionPlan[]).map(plan => ({
+                ...plan,
+                features: normalizePlanFeatureCodes(plan.features),
+            }))
         },
     })
 }
@@ -103,7 +107,16 @@ export function useTenantSubscription(tenantId: string) {
                 console.warn('No subscription found for tenant')
                 return null
             }
-            return data as TenantSubscription
+            const subscription = data as TenantSubscription
+
+            if (subscription.plan) {
+                subscription.plan = {
+                    ...subscription.plan,
+                    features: normalizePlanFeatureCodes(subscription.plan.features),
+                }
+            }
+
+            return subscription
         },
         enabled: !!tenantId,
     })
@@ -225,7 +238,7 @@ export function useResumeSubscription() {
 // Feature Check Helper
 export function hasFeature(plan: SubscriptionPlan | null | undefined, feature: string): boolean {
     if (!plan) return false
-    return plan.features?.includes(feature) || false
+    return normalizePlanFeatureCodes(plan.features).includes(feature)
 }
 
 // Usage Limit Check Helper

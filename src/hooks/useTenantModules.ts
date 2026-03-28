@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/contexts/TenantContext'
 import { SYSTEM_MODULES, getRestrictedEnabledModules, isModuleEnabled, isFeatureEnabled } from '@/config/modules'
@@ -9,6 +9,8 @@ export interface TenantModuleConfig {
 }
 
 export type TenantModules = Record<string, TenantModuleConfig>
+
+export const TENANT_MODULES_MANAGED_MESSAGE = 'Modules are managed by the active subscription plan.'
 
 // Fetch tenant modules configuration
 export function useTenantModules() {
@@ -44,111 +46,27 @@ export function useTenantModules() {
 
 // Update tenant modules configuration
 export function useUpdateTenantModules() {
-    const queryClient = useQueryClient()
-    const { currentTenant } = useTenant()
-
     return useMutation({
-        mutationFn: async (modules: TenantModules) => {
-            if (!currentTenant?.id) throw new Error('No tenant selected')
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase
-                .from('tenants')
-                .update({ enabled_modules: modules })
-                .eq('id', currentTenant.id) as any)
-
-            if (error) throw error
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tenant-modules'] })
-            queryClient.invalidateQueries({ queryKey: ['tenants'] })
+        mutationFn: async (_modules: TenantModules) => {
+            throw new Error(TENANT_MODULES_MANAGED_MESSAGE)
         }
     })
 }
 
 // Toggle module enabled/disabled
 export function useToggleModule() {
-    const queryClient = useQueryClient()
-    const { currentTenant } = useTenant()
-
     return useMutation({
-        mutationFn: async ({ moduleCode, enabled }: { moduleCode: string; enabled: boolean }) => {
-            if (!currentTenant?.id) throw new Error('No tenant selected')
-
-            // Get current modules
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: tenant } = await (supabase
-                .from('tenants')
-                .select('enabled_modules')
-                .eq('id', currentTenant.id)
-                .single() as any)
-
-            const currentModules = (tenant?.enabled_modules as TenantModules) || getRestrictedEnabledModules()
-
-            // Update the specific module
-            const updatedModules = {
-                ...currentModules,
-                [moduleCode]: {
-                    ...currentModules[moduleCode],
-                    enabled
-                }
-            }
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase
-                .from('tenants')
-                .update({ enabled_modules: updatedModules })
-                .eq('id', currentTenant.id) as any)
-
-            if (error) throw error
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tenant-modules'] })
+        mutationFn: async (_payload: { moduleCode: string; enabled: boolean }) => {
+            throw new Error(TENANT_MODULES_MANAGED_MESSAGE)
         }
     })
 }
 
 // Toggle feature enabled/disabled
 export function useToggleFeature() {
-    const queryClient = useQueryClient()
-    const { currentTenant } = useTenant()
-
     return useMutation({
-        mutationFn: async ({ moduleCode, featureCode, enabled }: { moduleCode: string; featureCode: string; enabled: boolean }) => {
-            if (!currentTenant?.id) throw new Error('No tenant selected')
-
-            // Get current modules
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data: tenant } = await (supabase
-                .from('tenants')
-                .select('enabled_modules')
-                .eq('id', currentTenant.id)
-                .single() as any)
-
-            const currentModules = (tenant?.enabled_modules as TenantModules) || getRestrictedEnabledModules()
-
-            // Update the specific feature
-            const updatedModules = {
-                ...currentModules,
-                [moduleCode]: {
-                    ...currentModules[moduleCode],
-                    features: {
-                        ...currentModules[moduleCode]?.features,
-                        [featureCode]: enabled
-                    }
-                }
-            }
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase
-                .from('tenants')
-                .update({ enabled_modules: updatedModules })
-                .eq('id', currentTenant.id) as any)
-
-            if (error) throw error
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['tenant-modules'] })
+        mutationFn: async (_payload: { moduleCode: string; featureCode: string; enabled: boolean }) => {
+            throw new Error(TENANT_MODULES_MANAGED_MESSAGE)
         }
     })
 }

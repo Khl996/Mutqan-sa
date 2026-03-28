@@ -8,12 +8,13 @@ import {
     useCreateTeamMember,
     TeamMember,
     AVAILABLE_ROLES,
-    TENANT_ROLES
+    TENANT_ROLES,
+    TenantRoleValue
 } from '@/hooks/useTeams'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { useTenantSubscription, useTenantUsage } from '@/hooks/useSubscription'
 import { usePermission } from '@/hooks/usePermission'
-import { useAuth } from '@/contexts/AuthContext'
+import { useCurrentTenantId } from '@/hooks/useTenantQuery'
 import {
     Users,
     UserCheck,
@@ -60,8 +61,8 @@ const roleColors: Record<string, string> = {
 
 export default function TeamsPage() {
     const { t, i18n } = useTranslation()
-    const { user } = useAuth()
     const isRTL = i18n.language === 'ar'
+    const tenantId = useCurrentTenantId()
 
     // Feature Flags
     const { can } = usePermission()
@@ -91,11 +92,11 @@ export default function TeamsPage() {
     }) || []
 
     // Handle Role Change
-    const handleRoleChange = async (memberId: string, newRole: string) => {
+    const handleRoleChange = async (memberId: string, newRole: TenantRoleValue) => {
         try {
             await updateMember.mutateAsync({ id: memberId, role: newRole })
             toast.success(isRTL ? 'تم تحديث الدور بنجاح' : 'Role updated successfully')
-        } catch (error) {
+        } catch {
             toast.error(isRTL ? 'فشل تحديث الدور' : 'Failed to update role')
         }
     }
@@ -105,13 +106,20 @@ export default function TeamsPage() {
         try {
             await updateMember.mutateAsync({ id: memberId, is_active: !currentStatus })
             toast.success(isRTL ? 'تم تحديث الحالة' : 'Status updated')
-        } catch (error) {
+        } catch {
             toast.error(isRTL ? 'فشل تحديث الحالة' : 'Failed to update status')
         }
     }
 
     const [showAddModal, setShowAddModal] = useState(false)
-    const [newMemberData, setNewMemberData] = useState({
+    const [newMemberData, setNewMemberData] = useState<{
+        email: string
+        full_name: string
+        role: TenantRoleValue
+        password: string
+        department: string
+        job_title: string
+    }>({
         email: '',
         full_name: '',
         role: 'technician',
@@ -121,8 +129,8 @@ export default function TeamsPage() {
     })
 
     const createMember = useCreateTeamMember()
-    const { data: subscription } = useTenantSubscription(user?.user_metadata?.tenant_id || '')
-    const { data: usage } = useTenantUsage(user?.user_metadata?.tenant_id || '')
+    const { data: subscription } = useTenantSubscription(tenantId || '')
+    const { data: usage } = useTenantUsage(tenantId || '')
 
     const handleCreateMember = async () => {
         // Check Subscription Limits
@@ -149,8 +157,9 @@ export default function TeamsPage() {
                 department: '',
                 job_title: ''
             })
-        } catch (error: any) {
-            toast.error(isRTL ? `فشل إضافة الموظف: ${error.message}` : `Failed to add employee: ${error.message}`)
+        } catch (error) {
+            const message = error instanceof Error ? error.message : (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
+            toast.error(isRTL ? `فشل إضافة الموظف: ${message}` : `Failed to add employee: ${message}`)
         }
     }
 
@@ -277,10 +286,10 @@ export default function TeamsPage() {
                     className="px-4 py-3 bg-card border border-border rounded-xl font-cairo text-sm focus:ring-2 focus:ring-secondary/20"
                 >
                     <option value="all">{isRTL ? 'جميع الأدوار' : 'All Roles'}</option>
-                    {AVAILABLE_ROLES.map(role => (
-                        <option key={role.value} value={role.value}>
-                            {isRTL ? role.label_ar : role.label}
-                        </option>
+                            {TENANT_ROLES.map(role => (
+                                <option key={role.value} value={role.value}>
+                                    {isRTL ? role.label_ar : role.label}
+                                </option>
                     ))}
                 </select>
             </div>
@@ -392,7 +401,7 @@ export default function TeamsPage() {
                                     </label>
                                     <select
                                         value={newMemberData.role}
-                                        onChange={(e) => setNewMemberData({ ...newMemberData, role: e.target.value })}
+                                        onChange={(e) => setNewMemberData({ ...newMemberData, role: e.target.value as TenantRoleValue })}
                                         className="w-full py-2 px-3 bg-background border rounded-lg focus:ring-2 focus:ring-secondary/20 outline-none font-cairo"
                                     >
                                         {TENANT_ROLES.map(role => (
@@ -464,7 +473,7 @@ function MemberRow({
 }: {
     member: TeamMember
     isRTL: boolean
-    onRoleChange: (id: string, role: string) => void
+    onRoleChange: (id: string, role: TenantRoleValue) => void
     onStatusToggle: (id: string, current: boolean) => void
     isUpdating: boolean
     canManage: boolean
@@ -519,7 +528,7 @@ function MemberRow({
                     {/* Role Dropdown */}
                     {showRoleDropdown && isRoleAssignmentEnabled && canManage && (
                         <div className="absolute top-full mt-1 z-50 bg-card border rounded-lg shadow-lg min-w-[180px] py-1">
-                            {AVAILABLE_ROLES.map(role => (
+                            {TENANT_ROLES.map(role => (
                                 <button
                                     key={role.value}
                                     onClick={() => {

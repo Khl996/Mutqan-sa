@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { upsertManagedUser } from '@/lib/adminUserApi'
+import { useTenant } from '@/contexts/TenantContext'
 
-
-// Types
 export interface TeamMember {
     id: string
     tenant_id: string | null
@@ -22,7 +22,6 @@ export interface TeamMember {
     timezone: string
     created_at: string
     updated_at: string
-    // Joined data
     supervisor?: { id: string, full_name: string | null, full_name_ar: string | null }
 }
 
@@ -33,16 +32,34 @@ export interface TeamStats {
     byRole: Record<string, number>
 }
 
+export const AVAILABLE_ROLES = [
+    { value: 'platform_owner', label: 'Platform Owner', label_ar: 'مالك المنصة', color: 'destructive' },
+    { value: 'platform_admin', label: 'Platform Admin', label_ar: 'مدير المنصة', color: 'destructive' },
+    { value: 'tenant_admin', label: 'Tenant Admin', label_ar: 'مدير المنشأة', color: 'warning' },
+    { value: 'facility_manager', label: 'Facility Manager', label_ar: 'مدير المرافق', color: 'warning' },
+    { value: 'maintenance_manager', label: 'Maintenance Manager', label_ar: 'مدير الصيانة', color: 'info' },
+    { value: 'engineer', label: 'Engineer', label_ar: 'مهندس', color: 'info' },
+    { value: 'supervisor', label: 'Supervisor', label_ar: 'مشرف', color: 'success' },
+    { value: 'technician', label: 'Technician', label_ar: 'فني', color: 'success' },
+    { value: 'reporter', label: 'Reporter', label_ar: 'مبلّغ', color: 'muted' },
+] as const
+
+export const TENANT_ROLES = AVAILABLE_ROLES.filter(
+    role => !['platform_owner', 'platform_admin'].includes(role.value)
+)
+
+export type RoleValue = typeof AVAILABLE_ROLES[number]['value']
+export type TenantRoleValue = typeof TENANT_ROLES[number]['value']
+
 export interface CreateTeamMemberInput {
     email: string
     full_name: string
-    role: string
-    password?: string // Optional, if we want to auto-generate or set it
+    role: TenantRoleValue
+    password: string
     department?: string
     job_title?: string
 }
 
-// Query Keys
 export const teamKeys = {
     all: ['team'] as const,
     list: () => [...teamKeys.all, 'list'] as const,
@@ -50,22 +67,22 @@ export const teamKeys = {
     stats: () => [...teamKeys.all, 'stats'] as const,
 }
 
-import { useTenant } from '@/contexts/TenantContext'
-
-// Helper to get token
 const getAccessToken = () => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
     const storedSession = localStorage.getItem(storageKey)
+
     if (storedSession) {
         try {
             return JSON.parse(storedSession).access_token
-        } catch { return null }
+        } catch {
+            return null
+        }
     }
+
     return null
 }
 
-// Fetch All Team Members (Filtered by Tenant)
 export function useTeamMembers() {
     const { currentTenant } = useTenant()
 
@@ -81,8 +98,8 @@ export function useTeamMembers() {
 
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?tenant_id=eq.${currentTenant.id}&order=created_at.desc`, {
                 headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`
                 }
             })
 
@@ -95,23 +112,24 @@ export function useTeamMembers() {
     })
 }
 
-// Fetch Single Team Member
 export function useTeamMember(id: string) {
     return useQuery({
         queryKey: teamKeys.member(id),
         queryFn: async () => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
+
             if (!accessToken) throw new Error('Not authenticated')
 
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${id}&select=*`, {
                 headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`
                 }
             })
 
             if (!response.ok) throw new Error('Failed to fetch member')
+
             const data = await response.json()
             return (data && data.length > 0 ? data[0] : null) as TeamMember
         },
@@ -119,7 +137,6 @@ export function useTeamMember(id: string) {
     })
 }
 
-// Get Team Stats (Filtered by Tenant)
 export function useTeamStats() {
     const { currentTenant } = useTenant()
 
@@ -135,15 +152,14 @@ export function useTeamStats() {
 
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?tenant_id=eq.${currentTenant.id}&select=role,is_active`, {
                 headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`
                 }
             })
 
             if (!response.ok) return { total: 0, active: 0, inactive: 0, byRole: {} }
 
             const data = await response.json()
-
             const stats: TeamStats = {
                 total: data?.length || 0,
                 active: 0,
@@ -151,8 +167,7 @@ export function useTeamStats() {
                 byRole: {},
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data?.forEach((member: any) => {
+            data?.forEach((member: { is_active?: boolean; role?: string }) => {
                 if (member.is_active) stats.active++
                 else stats.inactive++
 
@@ -167,7 +182,6 @@ export function useTeamStats() {
     })
 }
 
-// Update Team Member (Role, Status, etc.)
 export function useUpdateTeamMember() {
     const queryClient = useQueryClient()
 
@@ -177,7 +191,7 @@ export function useUpdateTeamMember() {
             ...updates
         }: {
             id: string
-            role?: string
+            role?: TenantRoleValue
             is_active?: boolean
             department?: string
             job_title?: string
@@ -192,9 +206,9 @@ export function useUpdateTeamMember() {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
+                    apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${accessToken}`,
+                    Prefer: 'return=representation'
                 },
                 body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() })
             })
@@ -215,7 +229,6 @@ export function useUpdateTeamMember() {
     })
 }
 
-// Create Team Member
 export function useCreateTeamMember() {
     const queryClient = useQueryClient()
     const { currentTenant } = useTenant()
@@ -224,41 +237,16 @@ export function useCreateTeamMember() {
         mutationFn: async (input: CreateTeamMemberInput) => {
             if (!currentTenant?.id) throw new Error('No active tenant selected')
 
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-            const accessToken = getAccessToken()
-
-            if (!accessToken) throw new Error('Not authenticated')
-
-            console.log('👤 Creating team member for tenant:', currentTenant.id)
-
-            // Create user via Auth API
-            const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-                method: 'POST',
-                headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({
-                    email: input.email,
-                    password: input.password || 'Mutqan@123',
-                    data: {
-                        full_name: input.full_name,
-                        role: input.role,
-                        tenant_id: currentTenant.id, // CRITICAL: Link to current tenant
-                        department: input.department,
-                        job_title: input.job_title
-                    }
-                })
+            return upsertManagedUser({
+                email: input.email.trim().toLowerCase(),
+                password: input.password,
+                fullName: input.full_name,
+                role: input.role,
+                tenantId: currentTenant.id,
+                status: 'active',
+                department: input.department || null,
+                jobTitle: input.job_title || null,
             })
-
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({}))
-                throw new Error(error.msg || error.message || 'Failed to create member')
-            }
-
-            const data = await response.json()
-            return data
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: teamKeys.list() })
@@ -266,23 +254,3 @@ export function useCreateTeamMember() {
         },
     })
 }
-
-// Get Available Roles (for dropdowns)
-export const AVAILABLE_ROLES = [
-    { value: 'platform_owner', label: 'Platform Owner', label_ar: 'مالك المنصة', color: 'destructive' },
-    { value: 'platform_admin', label: 'Platform Admin', label_ar: 'مدير المنصة', color: 'destructive' },
-    { value: 'tenant_admin', label: 'Tenant Admin', label_ar: 'مدير المنشأة', color: 'warning' },
-    { value: 'facility_manager', label: 'Facility Manager', label_ar: 'مدير المرافق', color: 'warning' },
-    { value: 'maintenance_manager', label: 'Maintenance Manager', label_ar: 'مدير الصيانة', color: 'info' },
-    { value: 'engineer', label: 'Engineer', label_ar: 'مهندس', color: 'info' },
-    { value: 'supervisor', label: 'Supervisor', label_ar: 'مشرف', color: 'success' },
-    { value: 'technician', label: 'Technician', label_ar: 'فني', color: 'success' },
-] as const
-
-// Tenant-only roles (excludes platform_owner and platform_admin)
-export const TENANT_ROLES = AVAILABLE_ROLES.filter(
-    role => !['platform_owner', 'platform_admin'].includes(role.value)
-)
-
-export type RoleValue = typeof AVAILABLE_ROLES[number]['value']
-

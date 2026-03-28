@@ -5,45 +5,90 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-type ManagedRole =
+type PlatformManagedRole =
     | 'platform_admin'
     | 'platform_support'
     | 'platform_finance'
     | 'platform_hr'
+type TenantManagedRole =
     | 'tenant_admin'
+    | 'facility_manager'
+    | 'maintenance_manager'
+    | 'supervisor'
+    | 'technician'
+    | 'engineer'
+    | 'reporter'
+type ManagedRole = PlatformManagedRole | TenantManagedRole
 
 type Operation = 'upsert' | 'revoke'
 
-const MANAGED_ROLES = new Set<ManagedRole>([
+const PLATFORM_MANAGED_ROLES = new Set<PlatformManagedRole>([
     'platform_admin',
     'platform_support',
     'platform_finance',
     'platform_hr',
+])
+
+const TENANT_MANAGED_ROLES = new Set<TenantManagedRole>([
     'tenant_admin',
+    'facility_manager',
+    'maintenance_manager',
+    'supervisor',
+    'technician',
+    'engineer',
+    'reporter',
+])
+
+const MANAGED_ROLES = new Set<ManagedRole>([
+    ...PLATFORM_MANAGED_ROLES,
+    ...TENANT_MANAGED_ROLES,
 ])
 
 function isPlatformRole(role: string | null | undefined): boolean {
     return !!role && role.startsWith('platform_')
 }
 
-function canAssignRole(callerRole: string, targetRole: string): boolean {
-    if (callerRole === 'platform_owner') {
+function isPlatformManagedRole(role: string): role is PlatformManagedRole {
+    return PLATFORM_MANAGED_ROLES.has(role as PlatformManagedRole)
+}
+
+function isTenantManagedRole(role: string): role is TenantManagedRole {
+    return TENANT_MANAGED_ROLES.has(role as TenantManagedRole)
+}
+
+function canAssignRole(
+    caller: { role: string; tenant_id: string | null },
+    targetRole: string,
+    tenantId: string | null,
+): boolean {
+    if (caller.role === 'platform_owner') {
         return targetRole !== 'platform_owner' && MANAGED_ROLES.has(targetRole as ManagedRole)
     }
 
-    if (callerRole === 'platform_admin') {
-        return ['platform_support', 'platform_finance', 'platform_hr', 'tenant_admin'].includes(targetRole)
+    if (caller.role === 'platform_admin') {
+        return isTenantManagedRole(targetRole) || ['platform_support', 'platform_finance', 'platform_hr'].includes(targetRole)
+    }
+
+    if (caller.role === 'tenant_owner' || caller.role === 'tenant_admin') {
+        return !!tenantId && tenantId === caller.tenant_id && isTenantManagedRole(targetRole)
     }
 
     return false
 }
 
-function canRevokeRole(callerRole: string, targetRole: string): boolean {
-    if (targetRole === 'platform_owner') {
+function canRevokeRole(
+    caller: { role: string; tenant_id: string | null },
+    target: { role: string; tenant_id: string | null },
+): boolean {
+    if (target.role === 'platform_owner') {
         return false
     }
 
-    return canAssignRole(callerRole, targetRole)
+    if (isTenantManagedRole(target.role)) {
+        return canAssignRole(caller, target.role, target.tenant_id)
+    }
+
+    return canAssignRole(caller, target.role, null)
 }
 
 async function sleep(ms: number) {
@@ -177,6 +222,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             role,
             tenantId = null,
             status = 'active',
+            department,
+            jobTitle,
         } = req.body ?? {}
 
         const resolvedOperation = operation === 'revoke' ? 'revoke' : 'upsert'
@@ -226,7 +273,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'This account is not currently assigned as a managed role' })
             }
 
-            if (!canRevokeRole(callerProfile.role, existingProfile.role)) {
+            if (!canRevokeRole(callerProfile, existingProfile)) {
                 return res.status(403).json({ error: 'You are not allowed to revoke this managed role' })
             }
 
@@ -277,7 +324,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Invalid role' })
         }
 
-        if (!canAssignRole(callerProfile.role, requestedRole)) {
+        if (!canAssignRole(callerProfile, requestedRole, tenantId)) {
             return res.status(403).json({ error: 'You are not allowed to assign this role' })
         }
 
@@ -285,12 +332,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Email is required' })
         }
 
-        if (requestedRole === 'tenant_admin' && !tenantId) {
-            return res.status(400).json({ error: 'tenantId is required for tenant administrators' })
+        if (isTenantManagedRole(requestedRole) && !tenantId) {
+            return res.status(400).json({ error: 'tenantId is required for tenant-scoped roles' })
         }
 
-        if (requestedRole !== 'tenant_admin' && tenantId) {
-            return res.status(400).json({ error: 'tenantId is only allowed for tenant administrators' })
+        if (isPlatformManagedRole(requestedRole) && tenantId) {
+            return res.status(400).json({ error: 'tenantId is not allowed for platform roles' })
+        }
+
+        if (
+            (callerProfile.role === 'tenant_owner' || callerProfile.role === 'tenant_admin')
+            && tenantId !== callerProfile.tenant_id
+        ) {
+            return res.status(403).json({ error: 'You can only manage users inside your own tenant' })
         }
 
         if (tenantId) {
@@ -326,9 +380,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'Changing the email address of an existing managed account is not supported here' })
             }
 
-            if (requestedRole === 'tenant_admin') {
+            if (isTenantManagedRole(requestedRole)) {
                 if (isPlatformRole(existingProfile.role)) {
-                    return res.status(409).json({ error: 'Platform staff accounts cannot be reassigned as tenant administrators directly' })
+                    return res.status(409).json({ error: 'Platform staff accounts cannot be reassigned as tenant users directly' })
                 }
 
                 if (existingProfile.tenant_id && existingProfile.tenant_id !== tenantId) {
@@ -377,19 +431,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         const isActive = status !== 'inactive'
-        const targetTenantId = requestedRole === 'tenant_admin' ? tenantId : null
+        const targetTenantId = isTenantManagedRole(requestedRole) ? tenantId : null
+        const profileUpdates: Record<string, unknown> = {
+            email: resolvedEmail,
+            full_name: resolvedName,
+            full_name_ar: resolvedName,
+            role: requestedRole,
+            tenant_id: targetTenantId,
+            is_active: isActive,
+            updated_at: new Date().toISOString(),
+        }
+
+        if (department !== undefined) {
+            profileUpdates.department = typeof department === 'string' && department.trim().length > 0
+                ? department.trim()
+                : null
+        }
+
+        if (jobTitle !== undefined) {
+            profileUpdates.job_title = typeof jobTitle === 'string' && jobTitle.trim().length > 0
+                ? jobTitle.trim()
+                : null
+        }
 
         const { error: updateProfileError } = await adminSupabase
             .from('profiles')
-            .update({
-                email: resolvedEmail,
-                full_name: resolvedName,
-                full_name_ar: resolvedName,
-                role: requestedRole,
-                tenant_id: targetTenantId,
-                is_active: isActive,
-                updated_at: new Date().toISOString(),
-            })
+            .update(profileUpdates)
             .eq('id', userId)
 
         if (updateProfileError) {

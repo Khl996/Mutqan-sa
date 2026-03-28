@@ -6,6 +6,12 @@ export type ManagedUserRole =
     | 'platform_finance'
     | 'platform_hr'
     | 'tenant_admin'
+    | 'facility_manager'
+    | 'maintenance_manager'
+    | 'supervisor'
+    | 'technician'
+    | 'engineer'
+    | 'reporter'
 
 export interface UpsertManagedUserInput {
     email: string
@@ -14,6 +20,8 @@ export interface UpsertManagedUserInput {
     role: ManagedUserRole
     tenantId?: string | null
     status?: 'active' | 'inactive'
+    department?: string | null
+    jobTitle?: string | null
 }
 
 export interface UpsertManagedUserResult {
