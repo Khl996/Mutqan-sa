@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAsset, useUpdateAsset } from '@/hooks/useAssets'
+import { useAsset } from '@/hooks/useAssets'
+import { useChangeAssetStatus } from '@/hooks/useAssetOperations'
 import { useWorkOrders } from '@/hooks/useWorkOrders'
 import {
     ArrowRight,
@@ -28,7 +29,7 @@ export default function AssetDetailsPage() {
     const isRTL = i18n.language === 'ar'
 
     const { data: asset, isLoading, error } = useAsset(id!)
-    const updateAsset = useUpdateAsset()
+    const changeAssetStatus = useChangeAssetStatus()
 
     // Fetch related work orders
     const { data: allWorkOrders } = useWorkOrders()
@@ -66,7 +67,11 @@ export default function AssetDetailsPage() {
 
         try {
             setIsStatusChanging(true)
-            await updateAsset.mutateAsync({ id: asset.id, status: newStatus })
+            await changeAssetStatus.mutateAsync({
+                assetId: asset.id,
+                newStatus,
+                notes: undefined,
+            })
             toast.success(isRTL ? 'تم تحديث الحالة بنجاح' : 'Status updated successfully')
         } catch (error) {
             console.error(error)
@@ -164,7 +169,7 @@ export default function AssetDetailsPage() {
                             <InfoItem
                                 label={isRTL ? 'الموقع' : 'Location'}
                                 value={asset.building?.name || '-'}
-                                subValue={asset.room?.name}
+                                subValue={asset.floor?.name || asset.room?.name}
                                 icon={Building2}
                             />
                             <InfoItem

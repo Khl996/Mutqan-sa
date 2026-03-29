@@ -85,6 +85,11 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
         })
     }, [issueTypes])
 
+    const filteredAssets = useMemo(() => {
+        if (!assets || !formData.building_id) return []
+        return assets.filter(asset => asset.building_id === formData.building_id)
+    }, [assets, formData.building_id])
+
     // Auto-assign team when issue type changes
     useEffect(() => {
         if (!isAssignmentEnabled) return // Skip if feature disabled
@@ -117,6 +122,11 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target
+        if (name === 'building_id') {
+            setFormData(prev => ({ ...prev, building_id: value, asset_id: '' }))
+            return
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
@@ -358,11 +368,12 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
                             value={formData.asset_id}
                             onChange={handleChange}
                             className={selectClass}
+                            disabled={!formData.building_id}
                         >
                             <option value="">{isRTL ? 'اختر الأصل (اختياري)' : 'Select asset (optional)'}</option>
-                            {assets?.map(asset => (
+                            {filteredAssets.map(asset => (
                                 <option key={asset.id} value={asset.id}>
-                                    {asset.code} - {isRTL ? asset.name_ar : asset.name}
+                                    {asset.code} - {isRTL ? (asset.name_ar || asset.name) : asset.name}
                                 </option>
                             ))}
                         </select>

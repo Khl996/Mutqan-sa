@@ -41,7 +41,17 @@ export interface WorkOrder {
     reporter?: { id: string; full_name: string; full_name_ar: string | null }
     assignee?: { id: string; full_name: string; full_name_ar: string | null }
     building?: { id: string; name: string; name_ar: string | null }
-    asset?: { id: string; name: string; name_ar: string | null; code: string }
+    floor?: { id: string; name: string; name_ar: string | null }
+    room?: { id: string; name: string; name_ar: string | null }
+    asset?: {
+        id: string
+        name: string
+        name_ar: string | null
+        code: string
+        building?: { id: string; name: string; name_ar: string | null }
+        floor?: { id: string; name: string; name_ar: string | null }
+        room?: { id: string; name: string; name_ar: string | null }
+    }
 
     // Workflow tracking fields
     technician_notes?: string | null
@@ -82,8 +92,11 @@ export interface CreateWorkOrderInput {
     status?: WorkOrder['status']
     priority?: WorkOrder['priority']
     reported_by?: string | null
+    assigned_team?: string | null
     building_id?: string | null
     floor_id?: string | null
+    department_id?: string | null
+    room_id?: string | null
     asset_id?: string | null
     due_date?: string | null
 }
@@ -128,7 +141,17 @@ export function useWorkOrders() {
                     reporter:reported_by(id, full_name, full_name_ar),
                     assignee:assigned_to(id, full_name, full_name_ar),
                     building:buildings(id, name, name_ar),
-                    asset:assets(id, name, name_ar, code)
+                    floor:floors(id, name, name_ar),
+                    room:rooms(id, name, name_ar),
+                    asset:assets(
+                        id,
+                        name,
+                        name_ar,
+                        code,
+                        building:buildings(id, name, name_ar),
+                        floor:floors(id, name, name_ar),
+                        room:rooms(id, name, name_ar)
+                    )
                 `)
 
             if (tenantId) {
@@ -154,7 +177,17 @@ export function useWorkOrder(id: string) {
                     reporter:reported_by(id, full_name, full_name_ar),
                     assignee:assigned_to(id, full_name, full_name_ar),
                     building:buildings(id, name, name_ar),
-                    asset:assets(id, name, name_ar, code)
+                    floor:floors(id, name, name_ar),
+                    room:rooms(id, name, name_ar),
+                    asset:assets(
+                        id,
+                        name,
+                        name_ar,
+                        code,
+                        building:buildings(id, name, name_ar),
+                        floor:floors(id, name, name_ar),
+                        room:rooms(id, name, name_ar)
+                    )
                 `)
                 .eq('id', id)
                 .single()
@@ -206,9 +239,13 @@ export function useWorkOrderStats() {
                     pending: 0,
                     assigned: 0,
                     in_progress: 0,
+                    pending_supervisor_approval: 0,
+                    pending_engineer_review: 0,
+                    pending_reporter_closure: 0,
                     completed: 0,
+                    rejected_by_technician: 0,
                     cancelled: 0,
-                    on_hold: 0,
+                    archived: 0,
                 },
                 byPriority: {
                     low: 0,

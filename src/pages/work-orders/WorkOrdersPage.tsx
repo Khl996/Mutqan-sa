@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
+import { cn, formatRelativeTime } from '@/lib/utils'
 import { useWorkOrders, useWorkOrderStats, WorkOrder } from '@/hooks/useWorkOrders'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
@@ -38,6 +38,7 @@ const statusConfig = {
     rejected_by_technician: { color: 'text-destructive', bg: 'bg-destructive/10', icon: XCircle, label: 'rejected' },
     cancelled: { color: 'text-muted', bg: 'bg-muted/10', icon: XCircle, label: 'cancelled' },
     on_hold: { color: 'text-orange-500', bg: 'bg-orange-500/10', icon: Pause, label: 'onHold' },
+    archived: { color: 'text-muted', bg: 'bg-muted/10', icon: ClipboardList, label: 'archived' },
 }
 
 const priorityConfig = {

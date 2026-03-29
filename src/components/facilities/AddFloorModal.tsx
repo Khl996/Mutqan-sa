@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCreateFloor } from '@/hooks/useFacilities'
-import { useCurrentTenantId } from '@/hooks/useTenantQuery'
 import { toast } from 'sonner'
 import { X, Layers, Building2, MapPin, Hash, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -11,12 +10,12 @@ interface AddFloorModalProps {
     onClose: () => void
     buildingId: string | null
     buildingName: string
+    onSuccess?: () => void
 }
 
-export default function AddFloorModal({ isOpen, onClose, buildingId, buildingName }: AddFloorModalProps) {
+export default function AddFloorModal({ isOpen, onClose, buildingId, buildingName, onSuccess }: AddFloorModalProps) {
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
-    const tenantId = useCurrentTenantId()
     const createFloor = useCreateFloor()
 
     const [floorData, setFloorData] = useState({
@@ -42,6 +41,7 @@ export default function AddFloorModal({ isOpen, onClose, buildingId, buildingNam
 
             toast.success(isRTL ? 'تم إضافة الطابق بنجاح' : 'Floor added successfully')
             onClose()
+            onSuccess?.()
             // Reset form
             setFloorData({
                 code: '',

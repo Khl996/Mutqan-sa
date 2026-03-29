@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { WorkOrder } from '@/hooks/useWorkOrders'
 import { MapPin, Box, Building2, Layers } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -9,9 +8,11 @@ interface WorkOrderAssetLocationProps {
 }
 
 export default function WorkOrderAssetLocation({ workOrder, isRTL }: WorkOrderAssetLocationProps) {
-    const { t } = useTranslation()
+    const locationBuilding = workOrder.building || workOrder.asset?.building
+    const locationFloor = workOrder.floor || workOrder.asset?.floor
+    const locationRoom = workOrder.room || workOrder.asset?.room
 
-    if (!workOrder.asset && !workOrder.building) return null
+    if (!workOrder.asset && !locationBuilding && !locationFloor && !locationRoom) return null
 
     return (
         <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4">
@@ -40,33 +41,32 @@ export default function WorkOrderAssetLocation({ workOrder, isRTL }: WorkOrderAs
 
                 {/* Location Info */}
                 <div className="space-y-2 text-sm">
-                    {workOrder.building && (
+                    {locationBuilding && (
                         <div className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
                             <Building2 className="w-4 h-4 text-muted-foreground" />
                             <div>
                                 <p className="text-xs text-muted-foreground font-cairo">{isRTL ? 'المبنى' : 'Building'}</p>
-                                <p className="font-medium">{isRTL ? workOrder.building.name_ar || workOrder.building.name : workOrder.building.name}</p>
+                                <p className="font-medium">{isRTL ? locationBuilding.name_ar || locationBuilding.name : locationBuilding.name}</p>
                             </div>
                         </div>
                     )}
 
-                    {/* Floor/Room placeholders as they are not joined yet in the hook but good to support visually */}
-                    {workOrder.floor_id && (
+                    {locationFloor && (
                         <div className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
                             <Layers className="w-4 h-4 text-muted-foreground" />
                             <div>
                                 <p className="text-xs text-muted-foreground font-cairo">{isRTL ? 'الطابق' : 'Floor'}</p>
-                                <p className="font-medium">Floor #{workOrder.floor_id.slice(0, 4)}</p>
+                                <p className="font-medium">{isRTL ? (locationFloor.name_ar || locationFloor.name) : locationFloor.name}</p>
                             </div>
                         </div>
                     )}
 
-                    {workOrder.room_id && (
+                    {locationRoom && (
                         <div className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
                             <MapPin className="w-4 h-4 text-muted-foreground" />
                             <div>
                                 <p className="text-xs text-muted-foreground font-cairo">{isRTL ? 'الغرفة' : 'Room'}</p>
-                                <p className="font-medium">Room #{workOrder.room_id.slice(0, 4)}</p>
+                                <p className="font-medium">{isRTL ? (locationRoom.name_ar || locationRoom.name) : locationRoom.name}</p>
                             </div>
                         </div>
                     )}

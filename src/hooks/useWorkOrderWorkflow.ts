@@ -14,7 +14,8 @@ export const useWorkOrderWorkflow = () => {
 
     const startWork = useMutation({
         mutationFn: async ({ workOrderId }: { workOrderId: string }) => {
-            const { error } = await supabase.rpc('start_work_order', {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).rpc('start_work_order', {
                 p_work_order_id: workOrderId,
             })
             if (error) throw error
@@ -50,7 +51,8 @@ export const useWorkOrderWorkflow = () => {
 
     const approveSupervisor = useMutation({
         mutationFn: async ({ workOrderId, notes }: { workOrderId: string, notes: string }) => {
-            const { error } = await supabase.rpc('approve_work_order_supervisor', {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).rpc('approve_work_order_supervisor', {
                 p_work_order_id: workOrderId,
                 p_notes: notes,
             })
@@ -63,7 +65,8 @@ export const useWorkOrderWorkflow = () => {
 
     const approveEngineer = useMutation({
         mutationFn: async ({ workOrderId, notes }: { workOrderId: string, notes: string }) => {
-            const { error } = await supabase.rpc('approve_work_order_engineer', {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).rpc('approve_work_order_engineer', {
                 p_work_order_id: workOrderId,
                 p_notes: notes,
             })
@@ -76,7 +79,8 @@ export const useWorkOrderWorkflow = () => {
 
     const closeWorkOrder = useMutation({
         mutationFn: async ({ workOrderId, notes }: { workOrderId: string, notes: string }) => {
-            const { error } = await supabase.rpc('close_work_order', {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).rpc('close_work_order', {
                 p_work_order_id: workOrderId,
                 p_notes: notes,
             })
@@ -89,7 +93,8 @@ export const useWorkOrderWorkflow = () => {
 
     const rejectWork = useMutation({
         mutationFn: async ({ workOrderId, reason }: { workOrderId: string, reason: string }) => {
-            const { error } = await supabase.rpc('reject_work_order', {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).rpc('reject_work_order', {
                 p_work_order_id: workOrderId,
                 p_reason: reason,
             })

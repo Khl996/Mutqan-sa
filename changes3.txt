@@ -1,0 +1,48 @@
+﻿ M src/components/assets/AddAssetModal.tsx
+ M src/components/assets/AssetActionModal.tsx
+ M src/components/facilities/AddFloorModal.tsx
+ M src/components/work-orders/AddWorkOrderModal.tsx
+ M src/components/work-orders/WorkOrderAssetLocation.tsx
+ M src/config/modules.ts
+ M src/hooks/useAssetOperations.ts
+ M src/hooks/useAssets.ts
+ M src/hooks/useWorkOrderWorkflow.ts
+ M src/hooks/useWorkOrders.ts
+ M src/pages/assets/AssetDetailsPage.tsx
+ M src/pages/assets/AssetsPage.tsx
+ M src/pages/work-orders/WorkOrdersPage.tsx
+?? changes3.txt
+?? supabase/migrations/094_soft_launch_assets_facilities_hardening.sql
+commit 2c30141f875711498e3ed840b31dbb9504821c93
+Author: Khl996 <khalid.a.kh990@gmail.com>
+Date:   Sun Mar 29 01:56:20 2026 +0300
+
+    feat: refine permissions and backend role validations
+
+ api/admin-manage-user.ts                           |   11 +-
+ api/create-charge.ts                               |    4 +-
+ changes2.txt                                       |   61 +
+ src/App.tsx                                        |   49 +-
+ src/components/auth/ProtectedRoute.tsx             |    4 +-
+ src/components/layout/DashboardLayout.tsx          |    2 +-
+ src/components/layout/PlatformSidebar.tsx          |  132 +-
+ src/components/layout/Sidebar.tsx                  |   49 +-
+ src/components/work-orders/InventorySelector.tsx   |    2 +-
+ src/components/work-orders/WorkOrderActions.tsx    |  113 +-
+ src/config/permissions.ts                          |  161 +-
+ src/config/roles.ts                                |   52 +-
+ src/config/tenantSettings.ts                       |    2 +-
+ src/contexts/TenantContext.tsx                     |   12 +-
+ src/hooks/usePermission.ts                         |   29 +-
+ src/hooks/usePlatformManagement.ts                 |   38 +-
+ src/hooks/useTeams.ts                              |   26 +-
+ src/hooks/useTenants.ts                            |   26 +-
+ src/hooks/useWorkOrderWorkflow.ts                  |   70 +-
+ src/pages/admin/AdminPage.tsx                      |   13 +-
+ src/pages/platform/PlatformDashboardPage.tsx       |   29 +-
+ src/pages/platform/PlatformStaffPage.tsx           |  130 +-
+ src/pages/platform/TenantsManagementPage.tsx       |  450 +++---
+ src/pages/settings/SettingsPage.tsx                |  187 ++-
+ src/pages/work-teams/WorkTeamsPage.tsx             |    4 +-
+ .../093_v1_roles_permissions_alignment.sql         | 1597 ++++++++++++++++++++
+ 26 files changed, 2485 insertions(+), 768 deletions(-)

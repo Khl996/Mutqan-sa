@@ -140,7 +140,7 @@ export function useAssetHierarchy() {
     const tenantId = useCurrentTenantId()
 
     return useQuery({
-        queryKey: assetsKeys.hierarchy(),
+        queryKey: [...assetsKeys.hierarchy(), tenantId],
         queryFn: async () => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
@@ -152,21 +152,29 @@ export function useAssetHierarchy() {
                 'Authorization': `Bearer ${accessToken}`
             }
 
-            // Fetch all required data in parallel
-            const [buildingsRes, floorsRes, roomsRes, assetsRes] = await Promise.all([
-                fetch(`${supabaseUrl}/rest/v1/buildings?tenant_id=eq.${tenantId}&order=name.asc`, { headers }),
-                fetch(`${supabaseUrl}/rest/v1/floors?order=name.asc`, { headers }), // Floors might not have tenant_id directly, filtering by building later is safer but for now we get all and filter in memory if needed
-                fetch(`${supabaseUrl}/rest/v1/rooms?tenant_id=eq.${tenantId}&order=name.asc`, { headers }),
-                fetch(`${supabaseUrl}/rest/v1/assets?tenant_id=eq.${tenantId}&select=*,category:asset_categories(id,name,name_ar)&order=name.asc`, { headers })
-            ])
+            const buildingsRes = await fetch(`${supabaseUrl}/rest/v1/buildings?tenant_id=eq.${tenantId}&order=name.asc`, { headers })
 
-            if (!buildingsRes.ok || !floorsRes.ok || !roomsRes.ok || !assetsRes.ok) {
+            if (!buildingsRes.ok) {
                 throw new Error('Failed to fetch hierarchy data')
             }
 
             const buildings = await buildingsRes.json()
+            const buildingIds = buildings.map((building: { id: string }) => building.id)
+
+            const floorsUrl = buildingIds.length > 0
+                ? `${supabaseUrl}/rest/v1/floors?building_id=in.(${buildingIds.join(',')})&order=level.asc&select=*`
+                : null
+
+            const [floorsRes, assetsRes] = await Promise.all([
+                floorsUrl ? fetch(floorsUrl, { headers }) : Promise.resolve(new Response('[]', { status: 200 })),
+                fetch(`${supabaseUrl}/rest/v1/assets?tenant_id=eq.${tenantId}&select=*,category:asset_categories(id,name,name_ar)&order=name.asc`, { headers })
+            ])
+
+            if (!floorsRes.ok || !assetsRes.ok) {
+                throw new Error('Failed to fetch hierarchy data')
+            }
+
             const floors = await floorsRes.json()
-            const rooms = await roomsRes.json()
             const assets = await assetsRes.json() as Asset[]
 
             // Build Tree
@@ -195,31 +203,7 @@ export function useAssetHierarchy() {
                         data: f
                     }
 
-                    // 2. Find rooms for this floor
-                    const fRooms = rooms.filter((r: any) => r.floor_id === f.id)
-
-                    fRooms.forEach((r: any) => {
-                        const rNode: HierarchyNode = {
-                            id: r.id,
-                            type: 'room',
-                            name: r.name,
-                            name_ar: r.name_ar,
-                            children: [],
-                            data: r
-                        }
-
-                        // 3. Find assets in this room (Strict check)
-                        const rAssets = assets.filter(a => a.room_id === r.id)
-                        rAssets.forEach(a => {
-                            rNode.children.push(createAssetNode(a))
-                        })
-
-                        fNode.children.push(rNode)
-                    })
-
-                    // 4. Find assets directly in floor (No Room)
-                    // Logic: Must have floor_id matching AND (room_id is null OR matches no room in current list - but checking null is safer)
-                    const fAssets = assets.filter(a => a.floor_id === f.id && !a.room_id)
+                    const fAssets = assets.filter(a => a.floor_id === f.id)
                     fAssets.forEach(a => {
                         fNode.children.push(createAssetNode(a))
                     })
@@ -227,8 +211,7 @@ export function useAssetHierarchy() {
                     bNode.children.push(fNode)
                 })
 
-                // 5. Find assets directly in building (No Floor, No Room)
-                const bAssets = assets.filter(a => a.building_id === b.id && !a.floor_id && !a.room_id)
+                const bAssets = assets.filter(a => a.building_id === b.id && !a.floor_id)
                 bAssets.forEach(a => {
                     bNode.children.push(createAssetNode(a))
                 })
@@ -236,7 +219,7 @@ export function useAssetHierarchy() {
                 tree.push(bNode)
             })
 
-            // 6. Handle orphans (Assets not linked to any building)
+            // Handle orphans (Assets not linked to any building)
             const orphans = assets.filter(a => !a.building_id)
             if (orphans.length > 0) {
                 tree.push({
@@ -290,8 +273,10 @@ export function useAsset(id: string) {
 
 // Fetch Asset Categories
 export function useAssetCategories() {
+    const tenantId = useCurrentTenantId()
+
     return useQuery({
-        queryKey: assetsKeys.categories(),
+        queryKey: [...assetsKeys.categories(), tenantId],
         queryFn: async () => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
@@ -315,7 +300,7 @@ export function useAssetStats() {
     const tenantId = useCurrentTenantId()
 
     return useQuery({
-        queryKey: assetsKeys.stats(),
+        queryKey: [...assetsKeys.stats(), tenantId],
         queryFn: async () => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()

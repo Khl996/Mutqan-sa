@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
@@ -11,7 +11,6 @@ import {
 } from '@/hooks/useAssets'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
-import { useDeleteBuilding, useDeleteBuilding as useDeleteFloor } from '@/hooks/useFacilities' // Todo: Fix hooks export if needed for floor/room deletion
 import AddAssetModal from '@/components/assets/AddAssetModal'
 import AddFloorModal from '@/components/facilities/AddFloorModal'
 import AssetActionModal from '@/components/assets/AssetActionModal'
@@ -29,11 +28,9 @@ import {
     ChevronRight,
     ChevronLeft,
     Layers,
-    DoorOpen,
     LayoutList,
     FolderTree,
     MoreVertical,
-    Pencil,
     Trash2,
     PlusCircle,
     Power,
@@ -118,13 +115,13 @@ export default function AssetsPage() {
 
     // Actions Handlers
     const handleDeleteAsset = async (id: string) => {
-        if (window.confirm(isRTL ? 'هل أنت متأكد من حذف هذا الأصل؟' : 'Are you sure you want to delete this asset?')) {
+        if (window.confirm(isRTL ? 'ظ‡ظ„ ط£ظ†طھ ظ…طھط£ظƒط¯ ظ…ظ† ط­ط°ظپ ظ‡ط°ط§ ط§ظ„ط£طµظ„طں' : 'Are you sure you want to delete this asset?')) {
             try {
                 await deleteAsset.mutateAsync(id)
-                toast.success(isRTL ? 'تم حذف الأصل بنجاح' : 'Asset deleted successfully')
+                toast.success(isRTL ? 'طھظ… ط­ط°ظپ ط§ظ„ط£طµظ„ ط¨ظ†ط¬ط§ط­' : 'Asset deleted successfully')
                 refetchTree()
             } catch (error) {
-                toast.error(isRTL ? 'حدث خطأ أثناء الحذف' : 'Error deleting asset')
+                toast.error(isRTL ? 'ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط§ظ„ط­ط°ظپ' : 'Error deleting asset')
             }
         }
     }
@@ -197,7 +194,7 @@ export default function AssetsPage() {
                     </h1>
                     <p className="text-muted font-cairo">
                         {isRTL
-                            ? 'إدارة الأصول والمعدات والمواقع'
+                            ? 'ط¥ط¯ط§ط±ط© ط§ظ„ط£طµظˆظ„ ظˆط§ظ„ظ…ط¹ط¯ط§طھ ظˆط§ظ„ظ…ظˆط§ظ‚ط¹'
                             : 'Manage assets, equipment and locations'
                         }
                     </p>
@@ -212,7 +209,7 @@ export default function AssetsPage() {
                                 "p-2 rounded transition-colors",
                                 viewMode === 'tree' ? "bg-primary/10 text-primary" : "text-muted hover:text-primary"
                             )}
-                            title={isRTL ? "عرض شجري" : "Tree View"}
+                            title={isRTL ? "ط¹ط±ط¶ ط´ط¬ط±ظٹ" : "Tree View"}
                         >
                             <FolderTree className="w-5 h-5" />
                         </button>
@@ -222,7 +219,7 @@ export default function AssetsPage() {
                                 "p-2 rounded transition-colors",
                                 viewMode === 'list' ? "bg-primary/10 text-primary" : "text-muted hover:text-primary"
                             )}
-                            title={isRTL ? "عرض قائمة" : "List View"}
+                            title={isRTL ? "ط¹ط±ط¶ ظ‚ط§ط¦ظ…ط©" : "List View"}
                         >
                             <LayoutList className="w-5 h-5" />
                         </button>
@@ -246,7 +243,7 @@ export default function AssetsPage() {
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="font-cairo text-sm">
                         {isRTL
-                            ? 'تم تعطيل ميزة تتبع الأصول. يرجى مراجعة مدير النظام لتفعيلها.'
+                            ? 'طھظ… طھط¹ط·ظٹظ„ ظ…ظٹط²ط© طھطھط¨ط¹ ط§ظ„ط£طµظˆظ„. ظٹط±ط¬ظ‰ ظ…ط±ط§ط¬ط¹ط© ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ… ظ„طھظپط¹ظٹظ„ظ‡ط§.'
                             : 'Asset tracking feature is disabled. Please contact admin to enable it.'}
                     </p>
                 </div>
@@ -256,25 +253,25 @@ export default function AssetsPage() {
             {stats && isAssetTrackingEnabled && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <StatCard
-                        title={isRTL ? 'إجمالي الأصول' : 'Total Assets'}
+                        title={isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط£طµظˆظ„' : 'Total Assets'}
                         value={stats.total}
                         icon={Box}
                         color="secondary"
                     />
                     <StatCard
-                        title={isRTL ? 'تعمل' : 'Operational'}
+                        title={isRTL ? 'طھط¹ظ…ظ„' : 'Operational'}
                         value={stats.byStatus.operational}
                         icon={CheckCircle2}
                         color="success"
                     />
                     <StatCard
-                        title={isRTL ? 'تحت الصيانة' : 'Under Maintenance'}
+                        title={isRTL ? 'طھط­طھ ط§ظ„طµظٹط§ظ†ط©' : 'Under Maintenance'}
                         value={stats.byStatus.under_maintenance}
                         icon={Wrench}
                         color="warning"
                     />
                     <StatCard
-                        title={isRTL ? 'خارج الخدمة' : 'Out of Service'}
+                        title={isRTL ? 'ط®ط§ط±ط¬ ط§ظ„ط®ط¯ظ…ط©' : 'Out of Service'}
                         value={stats.byStatus.out_of_service}
                         icon={XCircle}
                         color="destructive"
@@ -292,7 +289,7 @@ export default function AssetsPage() {
                         )} />
                         <input
                             type="text"
-                            placeholder={isRTL ? 'البحث عن أصل...' : 'Search assets...'}
+                            placeholder={isRTL ? 'ط§ظ„ط¨ط­ط« ط¹ظ† ط£طµظ„...' : 'Search assets...'}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={cn(
@@ -330,9 +327,9 @@ export default function AssetsPage() {
                 // --- TREE VIEW ---
                 <div className="bg-card border rounded-xl overflow-hidden min-h-[500px]">
                     <div className="p-4 border-b bg-muted/5 font-cairo text-sm font-bold text-muted-foreground flex justify-between items-center">
-                        <span>{isRTL ? 'هيكل المباني والأصول' : 'Buildings & Assets Hierarchy'}</span>
+                        <span>{isRTL ? 'ظ‡ظٹظƒظ„ ط§ظ„ظ…ط¨ط§ظ†ظٹ ظˆط§ظ„ط£طµظˆظ„' : 'Buildings & Assets Hierarchy'}</span>
                         <span className="text-xs font-normal bg-muted/50 px-2 py-0.5 rounded">
-                            {hierarchy?.length || 0} {isRTL ? 'مواقع' : 'roots'}
+                            {hierarchy?.length || 0} {isRTL ? 'ظ…ظˆط§ظ‚ط¹' : 'roots'}
                         </span>
                     </div>
                     <div className="p-4">
@@ -409,7 +406,6 @@ function TreeNode({
     let colorClass = 'text-primary'
     if (node.type === 'building') { Icon = Building2; colorClass = 'text-blue-500' }
     else if (node.type === 'floor') { Icon = Layers; colorClass = 'text-indigo-500' }
-    else if (node.type === 'room') { Icon = DoorOpen; colorClass = 'text-orange-500' }
     else if (node.type === 'asset') {
         const status = node.data?.status || 'operational'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -471,7 +467,7 @@ function TreeNode({
                 </div>
 
                 {/* Actions Button */}
-                {canManage && (
+                {canManage && (node.type === 'asset' || node.type === 'building') && (
                     <div className="relative" ref={menuRef}>
                         <button
                             onClick={(e) => {
@@ -501,7 +497,7 @@ function TreeNode({
                                                 className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-destructive/10 hover:text-destructive cursor-pointer font-cairo"
                                             >
                                                 <Power className="w-4 h-4" />
-                                                {isRTL ? 'إيقاف / إخراج عن الخدمة' : 'Stop / Out of Service'}
+                                                {isRTL ? 'ط¥ظٹظ‚ط§ظپ / ط¥ط®ط±ط§ط¬ ط¹ظ† ط§ظ„ط®ط¯ظ…ط©' : 'Stop / Out of Service'}
                                             </button>
                                         )}
 
@@ -514,7 +510,7 @@ function TreeNode({
                                                 className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-success/10 hover:text-success cursor-pointer font-cairo"
                                             >
                                                 <Power className="w-4 h-4" />
-                                                {isRTL ? 'تشغيل' : 'Start / Operational'}
+                                                {isRTL ? 'طھط´ط؛ظٹظ„' : 'Start / Operational'}
                                             </button>
                                         )}
 
@@ -527,7 +523,7 @@ function TreeNode({
                                                 className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-success/10 hover:text-success cursor-pointer font-cairo"
                                             >
                                                 <CheckCircle2 className="w-4 h-4" />
-                                                {isRTL ? 'إتمام الصيانة (تشغيل)' : 'Complete Maintenance'}
+                                                {isRTL ? 'ط¥طھظ…ط§ظ… ط§ظ„طµظٹط§ظ†ط© (طھط´ط؛ظٹظ„)' : 'Complete Maintenance'}
                                             </button>
                                         )}
 
@@ -540,7 +536,7 @@ function TreeNode({
                                                 className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-warning/10 hover:text-warning cursor-pointer font-cairo"
                                             >
                                                 <Wrench className="w-4 h-4" />
-                                                {isRTL ? 'بدء صيانة' : 'Start Maintenance'}
+                                                {isRTL ? 'ط¨ط¯ط، طµظٹط§ظ†ط©' : 'Start Maintenance'}
                                             </button>
                                         )}
 
@@ -553,7 +549,7 @@ function TreeNode({
                                                 className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-muted hover:text-muted-foreground cursor-pointer font-cairo border-b mb-1"
                                             >
                                                 <Ban className="w-4 h-4" />
-                                                {isRTL ? 'إتلاف / تقاعد' : 'Retire Asset'}
+                                                {isRTL ? 'ط¥طھظ„ط§ظپ / طھظ‚ط§ط¹ط¯' : 'Retire Asset'}
                                             </button>
                                         )}
                                     </>
@@ -566,47 +562,27 @@ function TreeNode({
                                             onAddFloor(node.id, displayName)
                                             setIsMenuOpen(false)
                                         }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer font-cairo"
+                                        className="hidden"
                                     >
                                         <PlusCircle className="w-4 h-4" />
-                                        {isRTL ? 'إضافة طابق' : 'Add Floor'}
+                                        {isRTL ? 'ط¥ط¶ط§ظپط© ط·ط§ط¨ظ‚' : 'Add Floor'}
                                     </button>
                                 )}
 
-                                {node.type === 'floor' && (
-                                    <button
-                                        onClick={() => {
-                                            toast.info(isRTL ? "قريباً: إضافة غرفة" : "Coming Soon: Add Room")
-                                            setIsMenuOpen(false)
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer font-cairo"
-                                    >
-                                        <PlusCircle className="w-4 h-4" />
-                                        {isRTL ? 'إضافة غرفة' : 'Add Room'}
-                                    </button>
-                                )}
-
-                                <button
-                                    onClick={() => {
-                                        toast.info(isRTL ? "قريباً: التعديل" : "Coming Soon: Edit")
-                                        setIsMenuOpen(false)
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground cursor-pointer font-cairo"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                    {isRTL ? 'تعديل' : 'Edit'}
-                                </button>
 
                                 <button
                                     onClick={() => {
                                         if (node.type === 'asset') onDeleteAsset(node.id)
-                                        else toast.warning(isRTL ? "لا يمكن حذف هذا العنصر حالياً" : "Cannot delete this item yet")
+                                        else toast.warning(isRTL ? "ظ„ط§ ظٹظ…ظƒظ† ط­ط°ظپ ظ‡ط°ط§ ط§ظ„ط¹ظ†طµط± ط­ط§ظ„ظٹط§ظ‹" : "Cannot delete this item yet")
                                         setIsMenuOpen(false)
                                     }}
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-destructive hover:text-destructive-foreground text-destructive cursor-pointer font-cairo"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-destructive hover:text-destructive-foreground text-destructive cursor-pointer font-cairo",
+                                        node.type !== 'asset' && 'hidden'
+                                    )}
                                 >
                                     <Trash2 className="w-4 h-4" />
-                                    {isRTL ? 'حذف' : 'Delete'}
+                                    {isRTL ? 'ط­ط°ظپ' : 'Delete'}
                                 </button>
                             </div>
                         )}
@@ -641,11 +617,11 @@ function EmptyState({ isRTL }: { isRTL: boolean }) {
         <div className="flex flex-col items-center justify-center py-16 text-center">
             <Box className="w-16 h-16 text-muted/50 mb-4" />
             <h3 className="text-lg font-bold text-primary font-cairo mb-2">
-                {isRTL ? 'لا توجد أصول' : 'No assets found'}
+                {isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط£طµظˆظ„' : 'No assets found'}
             </h3>
             <p className="text-muted font-cairo">
                 {isRTL
-                    ? 'قم بإضافة أصل جديد للبدء'
+                    ? 'ظ‚ظ… ط¨ط¥ط¶ط§ظپط© ط£طµظ„ ط¬ط¯ظٹط¯ ظ„ظ„ط¨ط¯ط،'
                     : 'Add a new asset to get started'
                 }
             </p>
@@ -679,7 +655,7 @@ function AssetCard({ asset, isRTL, onDelete, onAction, isQrEnabled, isHistoryEna
                         <button
                             onClick={(e) => { e.stopPropagation(); toast.info("QR Code") }}
                             className="p-1 bg-white/80 hover:bg-primary hover:text-white text-primary rounded-full shadow-sm"
-                            title={isRTL ? "رمز QR" : "QR Code"}
+                            title={isRTL ? "ط±ظ…ط² QR" : "QR Code"}
                         >
                             <QrCode className="w-4 h-4" />
                         </button>
@@ -690,7 +666,7 @@ function AssetCard({ asset, isRTL, onDelete, onAction, isQrEnabled, isHistoryEna
                         <button
                             onClick={(e) => { e.stopPropagation(); onAction('stop'); }}
                             className="p-1 bg-white/80 hover:bg-destructive hover:text-white text-destructive rounded-full shadow-sm"
-                            title={isRTL ? "إيقاف" : "Stop"}
+                            title={isRTL ? "ط¥ظٹظ‚ط§ظپ" : "Stop"}
                         >
                             <Power className="w-4 h-4" />
                         </button>
@@ -698,7 +674,7 @@ function AssetCard({ asset, isRTL, onDelete, onAction, isQrEnabled, isHistoryEna
                     <button
                         onClick={(e) => { e.stopPropagation(); onDelete(); }}
                         className="p-1 bg-white/80 hover:bg-destructive hover:text-white text-destructive rounded-full shadow-sm"
-                        title={isRTL ? "حذف" : "Delete"}
+                        title={isRTL ? "ط­ط°ظپ" : "Delete"}
                     >
                         <Trash2 className="w-4 h-4" />
                     </button>
@@ -762,15 +738,15 @@ function AssetCard({ asset, isRTL, onDelete, onAction, isQrEnabled, isHistoryEna
                     {/* Feature Indicators */}
                     <div className="flex gap-2 mt-2 pt-2 border-t border-border/50">
                         {isHistoryEnabled && (
-                            <div className="flex items-center gap-1 text-[10px] bg-muted/20 px-1.5 py-0.5 rounded text-muted-foreground" title={isRTL ? "سجل النشاط" : "Activity Log"}>
+                            <div className="flex items-center gap-1 text-[10px] bg-muted/20 px-1.5 py-0.5 rounded text-muted-foreground" title={isRTL ? "ط³ط¬ظ„ ط§ظ„ظ†ط´ط§ط·" : "Activity Log"}>
                                 <History className="w-3 h-3" />
-                                <span>{isRTL ? "سجل" : "Log"}</span>
+                                <span>{isRTL ? "ط³ط¬ظ„" : "Log"}</span>
                             </div>
                         )}
                         {isWarrantyEnabled && (
-                            <div className="flex items-center gap-1 text-[10px] bg-muted/20 px-1.5 py-0.5 rounded text-muted-foreground" title={isRTL ? "الضمان" : "Warranty"}>
+                            <div className="flex items-center gap-1 text-[10px] bg-muted/20 px-1.5 py-0.5 rounded text-muted-foreground" title={isRTL ? "ط§ظ„ط¶ظ…ط§ظ†" : "Warranty"}>
                                 <ShieldCheck className="w-3 h-3" />
-                                <span>{isRTL ? "ضمان" : "Warranty"}</span>
+                                <span>{isRTL ? "ط¶ظ…ط§ظ†" : "Warranty"}</span>
                             </div>
                         )}
                     </div>

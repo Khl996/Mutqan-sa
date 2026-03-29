@@ -76,7 +76,6 @@ export default function AssetActionModal({
             await changeStatus.mutateAsync({
                 assetId,
                 newStatus: config.newStatus,
-                currentStatus,
                 notes: notes
             })
             toast.success(isRTL ? 'تم تنفيذ الإجراء بنجاح' : 'Action performed successfully')

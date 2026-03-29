@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCreateAsset, useAssetCategories } from '@/hooks/useAssets'
-import { useBuildings, useFloors, useRooms } from '@/hooks/useFacilities'
+import { useBuildings, useFloors } from '@/hooks/useFacilities'
 import { useTenantSubscription, useTenantUsage } from '@/hooks/useSubscription'
 import { useAuth } from '@/contexts/AuthContext'
 import Modal from '@/components/ui/Modal'
@@ -31,7 +31,6 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
         category_id: '',
         building_id: '',
         floor_id: '',
-        room_id: '',
         manufacturer: '',
         model: '',
         serial_number: '',
@@ -40,18 +39,17 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
         purchase_cost: '',
     })
 
-    // Fetch floors and rooms based on selection
+    // Fetch floors based on selected building
     const { data: floors } = useFloors(formData.building_id)
-    const { data: rooms } = useRooms(formData.floor_id)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target
 
         // Handle cascading resets
         if (name === 'building_id') {
-            setFormData(prev => ({ ...prev, building_id: value, floor_id: '', room_id: '' }))
+            setFormData(prev => ({ ...prev, building_id: value, floor_id: '' }))
         } else if (name === 'floor_id') {
-            setFormData(prev => ({ ...prev, floor_id: value, room_id: '' }))
+            setFormData(prev => ({ ...prev, floor_id: value }))
         } else {
             setFormData(prev => ({ ...prev, [name]: value }))
         }
@@ -76,14 +74,14 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
         e.preventDefault()
 
         if (!formData.code || !formData.name) {
-            toast.error(isRTL ? 'يرجى ملء الحقول المطلوبة' : 'Please fill required fields')
+            toast.error(isRTL ? 'ظٹط±ط¬ظ‰ ظ…ظ„ط، ط§ظ„ط­ظ‚ظˆظ„ ط§ظ„ظ…ط·ظ„ظˆط¨ط©' : 'Please fill required fields')
             return
         }
 
         const tenantId = profile?.tenant_id
 
         if (!tenantId) {
-            toast.error(isRTL ? 'لم يتم العثور على معرف المؤسسة' : 'Tenant ID not found')
+            toast.error(isRTL ? 'ظ„ظ… ظٹطھظ… ط§ظ„ط¹ط«ظˆط± ط¹ظ„ظ‰ ظ…ط¹ط±ظپ ط§ظ„ظ…ط¤ط³ط³ط©' : 'Tenant ID not found')
             return
         }
 
@@ -93,7 +91,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
             const maxAssets = subscription.plan.max_assets
             if (maxAssets !== -1 && usage.assets_count >= maxAssets) {
                 toast.error(isRTL
-                    ? `عذراً، لقد استهلكت حد الأصول المسموح به في باقتك (${maxAssets})`
+                    ? `ط¹ط°ط±ط§ظ‹طŒ ظ„ظ‚ط¯ ط§ط³طھظ‡ظ„ظƒطھ ط­ط¯ ط§ظ„ط£طµظˆظ„ ط§ظ„ظ…ط³ظ…ظˆط­ ط¨ظ‡ ظپظٹ ط¨ط§ظ‚طھظƒ (${maxAssets})`
                     : `Sorry, you have reached the asset limit for your plan (${maxAssets})`
                 )
                 return
@@ -110,7 +108,6 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                 category_id: formData.category_id || null,
                 building_id: formData.building_id || null,
                 floor_id: formData.floor_id || null,
-                room_id: formData.room_id || null,
                 manufacturer: formData.manufacturer || null,
                 model: formData.model || null,
                 serial_number: formData.serial_number || null,
@@ -119,7 +116,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                 purchase_cost: formData.purchase_cost ? parseFloat(formData.purchase_cost) : null,
             })
 
-            toast.success(isRTL ? 'تم إضافة الأصل بنجاح' : 'Asset added successfully')
+            toast.success(isRTL ? 'طھظ… ط¥ط¶ط§ظپط© ط§ظ„ط£طµظ„ ط¨ظ†ط¬ط§ط­' : 'Asset added successfully')
 
             // Reset form and close
             setFormData({
@@ -130,7 +127,6 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                 category_id: '',
                 building_id: '',
                 floor_id: '',
-                room_id: '',
                 manufacturer: '',
                 model: '',
                 serial_number: '',
@@ -141,7 +137,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
             onClose()
         } catch (error: any) {
             console.error('Create asset error:', error)
-            toast.error(error.message || (isRTL ? 'حدث خطأ' : 'An error occurred'))
+            toast.error(error.message || (isRTL ? 'ط­ط¯ط« ط®ط·ط£' : 'An error occurred'))
         }
     }
 
@@ -171,7 +167,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className={labelClass}>
-                            {isRTL ? 'كود الأصل' : 'Asset Code'} <span className="text-destructive">*</span>
+                            {isRTL ? 'ظƒظˆط¯ ط§ظ„ط£طµظ„' : 'Asset Code'} <span className="text-destructive">*</span>
                         </label>
                         <div className="flex gap-2">
                             <input
@@ -179,7 +175,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                                 name="code"
                                 value={formData.code}
                                 onChange={handleChange}
-                                placeholder={isRTL ? 'مثال: AST-0001' : 'e.g., AST-0001'}
+                                placeholder={isRTL ? 'ظ…ط«ط§ظ„: AST-0001' : 'e.g., AST-0001'}
                                 className={cn(inputClass, 'flex-1')}
                                 required
                             />
@@ -188,20 +184,20 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                                 onClick={generateCode}
                                 className="px-3 py-2 bg-muted/20 text-primary rounded-lg hover:bg-muted/30 transition-colors text-sm"
                             >
-                                {isRTL ? 'توليد' : 'Generate'}
+                                {isRTL ? 'طھظˆظ„ظٹط¯' : 'Generate'}
                             </button>
                         </div>
                     </div>
                     <div>
                         <label className={labelClass}>
-                            {isRTL ? 'اسم الأصل (إنجليزي)' : 'Asset Name'} <span className="text-destructive">*</span>
+                            {isRTL ? 'ط§ط³ظ… ط§ظ„ط£طµظ„ (ط¥ظ†ط¬ظ„ظٹط²ظٹ)' : 'Asset Name'} <span className="text-destructive">*</span>
                         </label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder={isRTL ? 'الاسم بالإنجليزية' : 'Asset name'}
+                            placeholder={isRTL ? 'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ط¥ظ†ط¬ظ„ظٹط²ظٹط©' : 'Asset name'}
                             className={inputClass}
                             required
                         />
@@ -211,20 +207,20 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                 {/* Arabic Name (retained) */}
                 <div>
                     <label className={labelClass}>
-                        {isRTL ? 'اسم الأصل (عربي)' : 'Asset Name (Arabic)'}
+                        {isRTL ? 'ط§ط³ظ… ط§ظ„ط£طµظ„ (ط¹ط±ط¨ظٹ)' : 'Asset Name (Arabic)'}
                     </label>
                     <input
                         type="text"
                         name="name_ar"
                         value={formData.name_ar}
                         onChange={handleChange}
-                        placeholder={isRTL ? 'الاسم بالعربية' : 'Arabic name'}
+                        placeholder={isRTL ? 'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ط¹ط±ط¨ظٹط©' : 'Arabic name'}
                         className={inputClass}
                         dir="rtl"
                     />
                 </div>
 
-                {/* Category & Building -> This block is replaced to include Floors and Rooms */}
+                {/* Category & Building */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className={labelClass}>
@@ -236,7 +232,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                             onChange={handleChange}
                             className={selectClass}
                         >
-                            <option value="">{isRTL ? 'اختر التصنيف' : 'Select category'}</option>
+                            <option value="">{isRTL ? 'ط§ط®طھط± ط§ظ„طھطµظ†ظٹظپ' : 'Select category'}</option>
                             {categories?.map(cat => (
                                 <option key={cat.id} value={cat.id}>
                                     {isRTL ? cat.name_ar : cat.name}
@@ -246,7 +242,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                     </div>
                     <div>
                         <label className={labelClass}>
-                            {t('assets.location')} (المبنى)
+                            {t('assets.location')} (ط§ظ„ظ…ط¨ظ†ظ‰)
                         </label>
                         <select
                             name="building_id"
@@ -254,7 +250,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                             onChange={handleChange}
                             className={selectClass}
                         >
-                            <option value="">{isRTL ? 'اختر المبنى' : 'Select building'}</option>
+                            <option value="">{isRTL ? 'ط§ط®طھط± ط§ظ„ظ…ط¨ظ†ظ‰' : 'Select building'}</option>
                             {buildings?.map(building => (
                                 <option key={building.id} value={building.id}>
                                     {isRTL ? building.name_ar : building.name}
@@ -264,12 +260,12 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                     </div>
                 </div>
 
-                {/* Floors & Rooms (New Row) */}
+                {/* Floor */}
                 {(formData.building_id) && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-top-2">
                         <div>
                             <label className={labelClass}>
-                                {isRTL ? 'الطابق' : 'Floor'}
+                                {isRTL ? 'ط§ظ„ط·ط§ط¨ظ‚' : 'Floor'}
                             </label>
                             <select
                                 name="floor_id"
@@ -278,29 +274,10 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                                 className={selectClass}
                                 disabled={!floors?.length}
                             >
-                                <option value="">{isRTL ? 'اختر الطابق' : 'Select floor'}</option>
+                                <option value="">{isRTL ? 'ط§ط®طھط± ط§ظ„ط·ط§ط¨ظ‚' : 'Select floor'}</option>
                                 {floors?.map(floor => (
                                     <option key={floor.id} value={floor.id}>
-                                        {isRTL ? (floor.name_ar || `الطابق ${floor.level}`) : floor.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className={labelClass}>
-                                {isRTL ? 'الغرفة' : 'Room'}
-                            </label>
-                            <select
-                                name="room_id"
-                                value={formData.room_id}
-                                onChange={handleChange}
-                                className={selectClass}
-                                disabled={!rooms?.length || !formData.floor_id}
-                            >
-                                <option value="">{isRTL ? 'اختر الغرفة' : 'Select room'}</option>
-                                {rooms?.map(room => (
-                                    <option key={room.id} value={room.id}>
-                                        {isRTL ? room.name_ar : room.name}
+                                        {isRTL ? (floor.name_ar || `ط§ظ„ط·ط§ط¨ظ‚ ${floor.level}`) : floor.name}
                                     </option>
                                 ))}
                             </select>
@@ -319,7 +296,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                             name="manufacturer"
                             value={formData.manufacturer}
                             onChange={handleChange}
-                            placeholder={isRTL ? 'اسم المصنع' : 'Manufacturer name'}
+                            placeholder={isRTL ? 'ط§ط³ظ… ط§ظ„ظ…طµظ†ط¹' : 'Manufacturer name'}
                             className={inputClass}
                         />
                     </div>
@@ -332,7 +309,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                             name="model"
                             value={formData.model}
                             onChange={handleChange}
-                            placeholder={isRTL ? 'رقم الموديل' : 'Model number'}
+                            placeholder={isRTL ? 'ط±ظ‚ظ… ط§ظ„ظ…ظˆط¯ظٹظ„' : 'Model number'}
                             className={inputClass}
                         />
                     </div>
@@ -348,7 +325,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                         name="serial_number"
                         value={formData.serial_number}
                         onChange={handleChange}
-                        placeholder={isRTL ? 'الرقم التسلسلي' : 'Serial number'}
+                        placeholder={isRTL ? 'ط§ظ„ط±ظ‚ظ… ط§ظ„طھط³ظ„ط³ظ„ظٹ' : 'Serial number'}
                         className={inputClass}
                     />
                 </div>
@@ -415,7 +392,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
-                        placeholder={isRTL ? 'وصف الأصل (اختياري)' : 'Asset description (optional)'}
+                        placeholder={isRTL ? 'ظˆطµظپ ط§ظ„ط£طµظ„ (ط§ط®طھظٹط§ط±ظٹ)' : 'Asset description (optional)'}
                         rows={3}
                         className={cn(inputClass, 'resize-none')}
                     />
@@ -442,7 +419,7 @@ export default function AddAssetModal({ isOpen, onClose }: AddAssetModalProps) {
                         {createAsset.isPending ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                {isRTL ? 'جاري الإضافة...' : 'Adding...'}
+                                {isRTL ? 'ط¬ط§ط±ظٹ ط§ظ„ط¥ط¶ط§ظپط©...' : 'Adding...'}
                             </>
                         ) : (
                             <>
