@@ -36,7 +36,7 @@ export default function MaintenancePage() {
     // Check maintenance features
     const { can } = usePermission()
     const canManage = can('maintenance.manage')
-    const isPlansEnabled = useFeatureEnabled('maintenance', 'plans')
+    const isPlansEnabled = useFeatureEnabled('maintenance', 'maintenance_plans')
     const isSchedulesEnabled = useFeatureEnabled('maintenance', 'schedules')
 
     // Data Fetching
