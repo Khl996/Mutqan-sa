@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
+import { usePermission } from '@/hooks/usePermission'
 import {
     ArrowRight,
     Calendar,
@@ -24,6 +25,9 @@ export default function MaintenancePlanDetailsPage() {
     const navigate = useNavigate()
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
+
+    const { can } = usePermission()
+    const canManage = can('maintenance.manage')
 
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
     const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null)
@@ -182,13 +186,15 @@ export default function MaintenancePlanDetailsPage() {
                         <Wrench className="w-5 h-5 text-primary" />
                         {isRTL ? 'مهام الخطة' : 'Plan Tasks'}
                     </h2>
-                    <button
-                        onClick={() => setIsAddTaskOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-cairo"
-                    >
-                        <Plus className="w-5 h-5" />
-                        {isRTL ? 'إضافة مهمة للخطة' : 'Add Task to Plan'}
-                    </button>
+                    {canManage && (
+                        <button
+                            onClick={() => setIsAddTaskOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-cairo"
+                        >
+                            <Plus className="w-5 h-5" />
+                            {isRTL ? 'إضافة مهمة للخطة' : 'Add Task to Plan'}
+                        </button>
+                    )}
                 </div>
 
                 {tasks && tasks.length > 0 ? (
@@ -240,12 +246,14 @@ export default function MaintenancePlanDetailsPage() {
                     <div className="text-center py-12 border-2 border-dashed rounded-xl bg-muted/10">
                         <Wrench className="w-12 h-12 mx-auto text-muted mb-3 opacity-20" />
                         <p className="font-cairo text-muted-foreground">{isRTL ? 'لا توجد مهام في هذه الخطة بعد' : 'No tasks in this plan yet'}</p>
-                        <button
-                            onClick={() => setIsAddTaskOpen(true)}
-                            className="mt-2 text-primary hover:underline font-cairo"
-                        >
-                            {isRTL ? 'إضافة أول مهمة' : 'Add first task'}
-                        </button>
+                        {canManage && (
+                            <button
+                                onClick={() => setIsAddTaskOpen(true)}
+                                className="mt-2 text-primary hover:underline font-cairo"
+                            >
+                                {isRTL ? 'إضافة أول مهمة' : 'Add first task'}
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

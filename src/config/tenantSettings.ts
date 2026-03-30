@@ -158,12 +158,12 @@ export const SETTINGS_CATEGORIES: SettingsCategoryDefinition[] = [
         settings: [
             {
                 key: 'auto_generate_work_orders',
-                name: 'Auto Generate Work Orders',
-                name_ar: 'توليد أوامر العمل تلقائياً',
-                description: 'Automatically create work orders from maintenance schedules',
-                description_ar: 'إنشاء أوامر عمل تلقائياً من جداول الصيانة',
+                name: 'Auto Generate Work Orders (Coming Soon)',
+                name_ar: 'توليد أوامر العمل تلقائياً (قريباً)',
+                description: 'Automatically create work orders from maintenance schedules — not yet active',
+                description_ar: 'إنشاء أوامر عمل تلقائياً من جداول الصيانة — غير مفعّل حالياً',
                 type: 'boolean',
-                default: true
+                default: false
             },
             {
                 key: 'advance_notice_days',
@@ -178,12 +178,12 @@ export const SETTINGS_CATEGORIES: SettingsCategoryDefinition[] = [
             },
             {
                 key: 'allow_postpone',
-                name: 'Allow Postpone',
-                name_ar: 'السماح بالتأجيل',
-                description: 'Allow postponing scheduled maintenance tasks',
-                description_ar: 'السماح بتأجيل مهام الصيانة المجدولة',
+                name: 'Allow Postpone (Coming Soon)',
+                name_ar: 'السماح بالتأجيل (قريباً)',
+                description: 'Allow postponing scheduled maintenance tasks — not yet active',
+                description_ar: 'السماح بتأجيل مهام الصيانة المجدولة — غير مفعّل حالياً',
                 type: 'boolean',
-                default: true
+                default: false
             }
         ]
     },

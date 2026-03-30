@@ -161,6 +161,16 @@ export default function MaintenancePage() {
                 </div>
             </div>
 
+            {/* Soft Launch Info Banner */}
+            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-sm font-cairo">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-500" />
+                <p>
+                    {isRTL
+                        ? 'الصيانة الوقائية في هذا الإصدار يدوية بالكامل. أنشئ خططًا ومهامًا وأوامر عمل بشكل يدوي. الجدولة التلقائية وتكرار المهام ستُضاف في إصدار قادم.'
+                        : 'Preventive Maintenance in this release is fully manual. Create plans, tasks, and work orders manually. Automatic scheduling and task recurrence will be added in a future release.'}
+                </p>
+            </div>
+
             {/* Stats Cards */}
             {/* Feature Warning - if both disabled */}
             {!isPlansEnabled && !isSchedulesEnabled && (
@@ -212,7 +222,7 @@ export default function MaintenancePage() {
             {(isPlansEnabled || isSchedulesEnabled) && (
                 <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
                     <div className="border-b px-4 flex gap-6">
-                        {/* Tasks/Schedules Tab */}
+                        {/* Tasks Tab */}
                         {isSchedulesEnabled && (
                             <button
                                 onClick={() => setActiveTab('tasks')}
@@ -224,7 +234,7 @@ export default function MaintenancePage() {
                                 )}
                             >
                                 <Wrench className="w-4 h-4" />
-                                {isRTL ? 'الجدول الزمني' : 'Schedule'}
+                                {isRTL ? 'مهام الصيانة' : 'Maintenance Tasks'}
                             </button>
                         )}
 

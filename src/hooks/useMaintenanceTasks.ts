@@ -66,10 +66,17 @@ export function useMaintenanceTasks() {
         mutationFn: async (newTask: any) => {
             const { shouldCreateWorkOrder, ...taskData } = newTask
 
+            // Normalize assigned_to: empty string must become null (FK cannot be empty string)
+            const assignedTo = taskData.assigned_to || null
+
             let workOrderId = null
 
             // 1. Create Work Order if requested
             if (shouldCreateWorkOrder) {
+                // Get the current user id for reported_by so WO has a valid reporter
+                const { data: { user } } = await supabase.auth.getUser()
+                const reportedBy = user?.id || null
+
                 // Generate a simple code
                 const code = `WO-${Date.now().toString().slice(-6)}`
 
@@ -80,10 +87,12 @@ export function useMaintenanceTasks() {
                         code: code,
                         title: taskData.title,
                         description: taskData.description,
-                        assigned_to: taskData.assigned_to,
-                        status: 'assigned',
+                        assigned_to: assignedTo,
+                        reported_by: reportedBy,
+                        status: assignedTo ? 'assigned' : 'pending',
                         priority: taskData.priority || 'medium',
-                        maintenance_plan_id: taskData.maintenance_plan_id
+                        maintenance_plan_id: taskData.maintenance_plan_id,
+                        source: 'preventive_maintenance'
                     })
                     .select()
                     .single()
@@ -97,6 +106,7 @@ export function useMaintenanceTasks() {
                 .from('maintenance_tasks')
                 .insert({
                     ...taskData,
+                    assigned_to: assignedTo,
                     tenant_id: tenantId,
                     related_work_order_id: workOrderId
                 })

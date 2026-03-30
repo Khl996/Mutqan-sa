@@ -106,8 +106,8 @@ export const SYSTEM_MODULES: SystemModule[] = [
         defaultEnabled: true,
         features: [
             { code: 'maintenance_plans', name: 'Maintenance Plans', name_ar: 'ط®ط·ط· ط§ظ„طµظٹط§ظ†ط©', defaultEnabled: true },
-            { code: 'schedules', name: 'Schedules', name_ar: 'ط§ظ„ط¬ط¯ط§ظˆظ„ ط§ظ„ط²ظ…ظ†ظٹط©', defaultEnabled: true },
-            { code: 'auto_generation', name: 'Auto Work Order Generation', name_ar: 'طھظˆظ„ظٹط¯ ط£ظˆط§ظ…ط± طھظ„ظ‚ط§ط¦ظٹ', defaultEnabled: true },
+            { code: 'schedules', name: 'Maintenance Tasks', name_ar: 'ظ…ظ‡ط§ظ… ط§ظ„طµظٹط§ظ†ط©', defaultEnabled: true },
+            { code: 'auto_generation', name: 'Auto Work Order Generation (Coming Soon)', name_ar: 'طھظˆظ„ظٹط¯ ط£ظˆط§ظ…ط± طھظ„ظ‚ط§ط¦ظٹ (ظ‚ط±ظٹط¨ط§ظ‹)', defaultEnabled: false },
         ]
     },
     {
