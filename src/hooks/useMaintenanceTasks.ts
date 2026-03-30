@@ -3,6 +3,13 @@ import { supabase } from '@/lib/supabase'
 import { useCurrentTenantId } from './useTenantQuery'
 import { workOrdersKeys } from './useWorkOrders'
 
+export interface ChecklistItem {
+    id: string
+    text: string
+    text_ar: string
+    checked: boolean
+}
+
 export interface MaintenanceTask {
     id: string
     title: string
@@ -17,6 +24,10 @@ export interface MaintenanceTask {
     due_date: string | null
     related_work_order_id: string | null
     maintenance_plan_id: string | null
+    recurrence_type: 'once' | 'daily' | 'weekly' | 'monthly' | 'custom'
+    recurrence_interval: number
+    checklist: ChecklistItem[]
+    completion_notes: string | null
 }
 
 export function useMaintenanceTasks() {
@@ -44,7 +55,7 @@ export function useMaintenanceTasks() {
         enabled: !!tenantId
     })
 
-    // Query Technicians (Simple fetch for dropdown)
+    // Query Technicians
     const techniciansQuery = useQuery({
         queryKey: ['technicians-list', tenantId],
         queryFn: async () => {
@@ -53,7 +64,7 @@ export function useMaintenanceTasks() {
                 .from('profiles')
                 .select('id, full_name, full_name_ar')
                 .eq('tenant_id', tenantId)
-                .in('role', ['technician', 'supervisor']) // Filter for roles capable of tasks
+                .in('role', ['technician', 'supervisor'])
 
             if (error) throw error
             return data
@@ -73,18 +84,15 @@ export function useMaintenanceTasks() {
 
             // 1. Create Work Order if requested
             if (shouldCreateWorkOrder) {
-                // Get the current user id for reported_by so WO has a valid reporter
                 const { data: { user } } = await supabase.auth.getUser()
                 const reportedBy = user?.id || null
-
-                // Generate a simple code
                 const code = `WO-${Date.now().toString().slice(-6)}`
 
                 const { data: wo, error: woError } = await supabase
                     .from('work_orders')
                     .insert({
                         tenant_id: tenantId,
-                        code: code,
+                        code,
                         title: taskData.title,
                         description: taskData.description,
                         assigned_to: assignedTo,
@@ -122,21 +130,16 @@ export function useMaintenanceTasks() {
         }
     })
 
-    // Update Task Mutation
+    // Update Task Status + optional completion notes
     const updateTask = useMutation({
-        mutationFn: async ({ id, status, notes }: { id: string, status: string, notes?: string }) => {
-            const updates: any = {
+        mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
+            const updates: Record<string, unknown> = {
                 status,
                 updated_at: new Date().toISOString()
             }
-            // If completing, maybe save the note somewhere? assuming description extension or new column. 
-            // For now let's just update status. If we want notes, we might need a 'completion_notes' column in DB or append to description.
-            // Let's assume we append to description for simplicity in this iteration or just update status.
 
-            if (notes) {
-                // Determine if we append to description or use a dedicated field (if added later).
-                // For now, let's just keep it simple status update. 
-                // Creating a completion log or comment would be better, but let's stick to status first.
+            if (notes !== undefined) {
+                updates.completion_notes = notes || null
             }
 
             const { data, error } = await supabase
@@ -156,6 +159,25 @@ export function useMaintenanceTasks() {
         }
     })
 
+    // Update Checklist (called on every checkbox toggle)
+    const updateChecklist = useMutation({
+        mutationFn: async ({ id, checklist }: { id: string; checklist: ChecklistItem[] }) => {
+            const { data, error } = await supabase
+                .from('maintenance_tasks')
+                .update({ checklist, updated_at: new Date().toISOString() })
+                .eq('id', id)
+                .select()
+                .single()
+
+            if (error) throw error
+            return data
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+            queryClient.invalidateQueries({ queryKey: ['plan-tasks'] })
+        }
+    })
+
     return {
         tasks: tasksQuery.data || [],
         isLoading: tasksQuery.isLoading,
@@ -163,6 +185,7 @@ export function useMaintenanceTasks() {
         error: tasksQuery.error,
         technicians: techniciansQuery.data || [],
         createTask,
-        updateTask
+        updateTask,
+        updateChecklist
     }
 }
