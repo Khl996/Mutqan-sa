@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMaintenanceTasks, MaintenanceTask, ChecklistItem } from '@/hooks/useMaintenanceTasks'
-import { X, PlayCircle, CheckCircle2, ExternalLink, Square, CheckSquare, RefreshCw } from 'lucide-react'
+import { X, PlayCircle, CheckCircle2, ExternalLink, Square, CheckSquare } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
@@ -36,18 +36,6 @@ export default function TaskExecutionModal({ task, isOpen, onClose }: TaskExecut
     const checkedCount = localChecklist.filter(i => i.checked).length
     const isTerminal = task.status === 'completed' || task.status === 'cancelled'
 
-    const getRecurrenceLabel = (): string | null => {
-        switch (task.recurrence_type) {
-            case 'daily':   return isRTL ? 'يومي' : 'Daily'
-            case 'weekly':  return isRTL ? 'أسبوعي' : 'Weekly'
-            case 'monthly': return isRTL ? 'شهري' : 'Monthly'
-            case 'custom':  return isRTL
-                ? `كل ${task.recurrence_interval} يوم`
-                : `Every ${task.recurrence_interval} days`
-            default:        return null
-        }
-    }
-
     const handleToggleItem = async (itemId: string) => {
         if (isTerminal) return
         const updated = localChecklist.map(item =>
@@ -77,7 +65,6 @@ export default function TaskExecutionModal({ task, isOpen, onClose }: TaskExecut
         }
     }
 
-    const recurrenceLabel = getRecurrenceLabel()
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -116,12 +103,6 @@ export default function TaskExecutionModal({ task, isOpen, onClose }: TaskExecut
                             )}>
                                 {task.status.replace(/_/g, ' ')}
                             </span>
-                            {recurrenceLabel && (
-                                <span className="px-2 py-1 rounded text-xs font-bold bg-purple-100 text-purple-700 flex items-center gap-1">
-                                    <RefreshCw className="w-3 h-3" />
-                                    {recurrenceLabel}
-                                </span>
-                            )}
                         </div>
                         <h3 className="text-xl font-bold font-cairo mb-1">{task.title}</h3>
                         {task.description && (

@@ -499,8 +499,8 @@ export default function MaintenancePage() {
                                                 onClick={() => setIsAddPlanOpen(true)}
                                                 className="mt-4 text-primary hover:underline font-cairo text-sm"
                                             >
-                                            {isRTL ? 'إنشاء خطة جديدة' : 'Create new plan'}
-                                                </button>
+                                                {isRTL ? 'إنشاء خطة جديدة' : 'Create new plan'}
+                                            </button>
                                         )}
                                     </div>
                                 )}

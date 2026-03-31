@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMaintenanceTasks, ChecklistItem } from '@/hooks/useMaintenanceTasks'
-import { X, User, FileOutput, Plus, RefreshCw } from 'lucide-react'
+import { X, User, FileOutput, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AddMaintenanceTaskDialogProps {
@@ -90,14 +90,6 @@ export default function AddMaintenanceTaskDialog({ isOpen, onClose, planId }: Ad
         }
     }
 
-    const recurrenceOptions: { value: RecurrenceType; labelAr: string; labelEn: string }[] = [
-        { value: 'once',    labelAr: 'مرة واحدة', labelEn: 'Once' },
-        { value: 'daily',   labelAr: 'يومياً',    labelEn: 'Daily' },
-        { value: 'weekly',  labelAr: 'أسبوعياً',  labelEn: 'Weekly' },
-        { value: 'monthly', labelAr: 'شهرياً',    labelEn: 'Monthly' },
-        { value: 'custom',  labelAr: 'مخصص',      labelEn: 'Custom' },
-    ]
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-card w-full max-w-lg rounded-2xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
@@ -175,44 +167,6 @@ export default function AddMaintenanceTaskDialog({ isOpen, onClose, planId }: Ad
                                 <option value="high">{isRTL ? 'عالية' : 'High'}</option>
                             </select>
                         </div>
-                    </div>
-
-                    {/* Recurrence */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium font-cairo flex items-center gap-1.5">
-                            <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-                            {isRTL ? 'التكرار' : 'Recurrence'}
-                        </label>
-                        <select
-                            value={formData.recurrence_type}
-                            onChange={e => setFormData(prev => ({ ...prev, recurrence_type: e.target.value as RecurrenceType }))}
-                            className="w-full p-2 border rounded-lg bg-background text-sm"
-                        >
-                            {recurrenceOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>
-                                    {isRTL ? opt.labelAr : opt.labelEn}
-                                </option>
-                            ))}
-                        </select>
-
-                        {formData.recurrence_type === 'custom' && (
-                            <div className={cn("flex items-center gap-2 mt-2", isRTL && "flex-row-reverse")}>
-                                <span className="text-sm text-muted-foreground font-cairo">
-                                    {isRTL ? 'كل' : 'Every'}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={365}
-                                    value={formData.recurrence_interval}
-                                    onChange={e => setFormData(prev => ({ ...prev, recurrence_interval: Math.max(1, parseInt(e.target.value) || 1) }))}
-                                    className="w-20 p-2 border rounded-lg bg-background text-sm text-center"
-                                />
-                                <span className="text-sm text-muted-foreground font-cairo">
-                                    {isRTL ? 'يوم' : 'days'}
-                                </span>
-                            </div>
-                        )}
                     </div>
 
                     {/* Description */}
