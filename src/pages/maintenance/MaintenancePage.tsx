@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useMaintenancePlans } from '@/hooks/useMaintenancePlans'
 import { useMaintenanceTasks, MaintenanceTask } from '@/hooks/useMaintenanceTasks'
-import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
+import { useModuleAccess } from '@/hooks/useTenantModules'
 import { usePermission } from '@/hooks/usePermission'
 import {
     Wrench,
@@ -31,11 +31,13 @@ export default function MaintenancePage() {
     const isRTL = i18n.language === 'ar'
     const navigate = useNavigate()
 
-    // Check maintenance features
+    // Check maintenance access — both tabs are part of the same module;
+    // no sub-feature gating needed for tab visibility.
     const { can } = usePermission()
     const canManage = can('maintenance.manage')
-    const isPlansEnabled = useFeatureEnabled('maintenance', 'maintenance_plans')
-    const isTasksEnabled = useFeatureEnabled('maintenance', 'schedules')
+    const isMaintenanceEnabled = useModuleAccess('maintenance')
+    const isPlansEnabled = isMaintenanceEnabled
+    const isTasksEnabled = isMaintenanceEnabled
 
     // Data Fetching
     const { tasks: tasksData, isLoading: tasksLoading, isError: isTasksError, error: tasksError } = useMaintenanceTasks()
