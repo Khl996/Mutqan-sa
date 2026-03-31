@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
 import { useMaintenancePlans } from '@/hooks/useMaintenancePlans'
 import { useMaintenanceTasks, MaintenanceTask } from '@/hooks/useMaintenanceTasks'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
-import { format } from 'date-fns'
 import {
     Wrench,
     FileText,
@@ -37,7 +35,7 @@ export default function MaintenancePage() {
     const { can } = usePermission()
     const canManage = can('maintenance.manage')
     const isPlansEnabled = useFeatureEnabled('maintenance', 'maintenance_plans')
-    const isSchedulesEnabled = useFeatureEnabled('maintenance', 'schedules')
+    const isTasksEnabled = useFeatureEnabled('maintenance', 'schedules')
 
     // Data Fetching
     const { tasks: tasksData, isLoading: tasksLoading, isError: isTasksError, error: tasksError } = useMaintenanceTasks()
@@ -59,14 +57,13 @@ export default function MaintenancePage() {
     const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
 
     // Ensure active tab corresponds to enabled feature
-    // Ensure active tab corresponds to enabled feature
     useEffect(() => {
-        if (activeTab === 'tasks' && !isSchedulesEnabled && isPlansEnabled) {
+        if (activeTab === 'tasks' && !isTasksEnabled && isPlansEnabled) {
             setActiveTab('plans')
-        } else if (activeTab === 'plans' && !isPlansEnabled && isSchedulesEnabled) {
+        } else if (activeTab === 'plans' && !isPlansEnabled && isTasksEnabled) {
             setActiveTab('tasks')
         }
-    }, [isSchedulesEnabled, isPlansEnabled, activeTab])
+    }, [isTasksEnabled, isPlansEnabled, activeTab])
 
     // Task Execution State
     const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null)
@@ -136,12 +133,12 @@ export default function MaintenancePage() {
     return (
         <div className="space-y-6">
             <AddMaintenanceTaskDialog
-                isOpen={isAddTaskOpen}
+                isOpen={canManage && isAddTaskOpen}
                 onClose={() => setIsAddTaskOpen(false)}
             />
 
             <AddMaintenancePlanDialog
-                isOpen={isAddPlanOpen}
+                isOpen={canManage && isAddPlanOpen}
                 onClose={() => setIsAddPlanOpen(false)}
             />
 
@@ -156,24 +153,25 @@ export default function MaintenancePage() {
                 <div>
                     <h1 className="text-3xl font-bold font-cairo text-primary">{t('maintenance.title')}</h1>
                     <p className="text-muted-foreground mt-1 font-cairo">
-                        {isRTL ? 'إدارة خطط ومهام الصيانة' : 'Manage maintenance plans and tasks'}
+                        {isRTL ? 'إدارة خطط ومهام الصيانة الوقائية يدويًا' : 'Manage preventive maintenance plans and tasks manually'}
                     </p>
                 </div>
             </div>
 
-            {/* Soft Launch Info Banner */}
-            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-sm font-cairo">
-                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-500" />
-                <p>
-                    {isRTL
-                        ? 'الصيانة الوقائية في هذا الإصدار يدوية بالكامل. أنشئ خططًا ومهامًا وأوامر عمل بشكل يدوي. الجدولة التلقائية وتكرار المهام ستُضاف في إصدار قادم.'
-                        : 'Preventive Maintenance in this release is fully manual. Create plans, tasks, and work orders manually. Automatic scheduling and task recurrence will be added in a future release.'}
-                </p>
-            </div>
-
             {/* Stats Cards */}
+            {(isPlansEnabled || isTasksEnabled) && (
+                <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-blue-700">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <p className="font-cairo text-sm">
+                        {isRTL
+                            ? 'إطلاق مبكر يدوي فقط: الخطط والمهام تُدار يدويًا، مع إمكانية إنشاء أمر عمل اختياري من المهمة. التكرار، الأتمتة، التأجيل، والعدادات المرتبطة بالأصول غير مفعلة هنا حاليًا.'
+                            : 'Soft launch scope: plans and tasks are managed manually, with optional work order creation from a task. Recurrence, automation, postponement, and asset-based PM counters are not active here yet.'}
+                    </p>
+                </div>
+            )}
+
             {/* Feature Warning - if both disabled */}
-            {!isPlansEnabled && !isSchedulesEnabled && (
+            {!isPlansEnabled && !isTasksEnabled && (
                 <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/20 rounded-xl text-warning mb-4">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="font-cairo text-sm">
@@ -184,8 +182,8 @@ export default function MaintenancePage() {
                 </div>
             )}
 
-            {/* Stats Cards - only if schedules enabled */}
-            {isSchedulesEnabled && (
+            {/* Stats Cards - only if tasks enabled */}
+            {isTasksEnabled && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard
                         title={isRTL ? 'إجمالي المهام' : 'Total Tasks'}
@@ -219,11 +217,11 @@ export default function MaintenancePage() {
             )}
 
             {/* Tabs - Only show if at least one feature is enabled */}
-            {(isPlansEnabled || isSchedulesEnabled) && (
+            {(isPlansEnabled || isTasksEnabled) && (
                 <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
                     <div className="border-b px-4 flex gap-6">
                         {/* Tasks Tab */}
-                        {isSchedulesEnabled && (
+                        {isTasksEnabled && (
                             <button
                                 onClick={() => setActiveTab('tasks')}
                                 className={cn(
@@ -234,7 +232,7 @@ export default function MaintenancePage() {
                                 )}
                             >
                                 <Wrench className="w-4 h-4" />
-                                {isRTL ? 'مهام الصيانة' : 'Maintenance Tasks'}
+                                {isRTL ? 'مهام الصيانة' : 'Tasks'}
                             </button>
                         )}
 
@@ -496,12 +494,14 @@ export default function MaintenancePage() {
                                     <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
                                         <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                         <p className="font-cairo">{isRTL ? 'لا توجد خطط صيانة' : 'No maintenance plans found'}</p>
-                                        <button
-                                            onClick={() => setIsAddPlanOpen(true)}
-                                            className="mt-4 text-primary hover:underline font-cairo text-sm"
-                                        >
+                                        {canManage && (
+                                            <button
+                                                onClick={() => setIsAddPlanOpen(true)}
+                                                className="mt-4 text-primary hover:underline font-cairo text-sm"
+                                            >
                                             {isRTL ? 'إنشاء خطة جديدة' : 'Create new plan'}
-                                        </button>
+                                                </button>
+                                        )}
                                     </div>
                                 )}
                             </div>

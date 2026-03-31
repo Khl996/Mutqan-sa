@@ -23,9 +23,8 @@ import { MaintenanceTask } from '@/hooks/useMaintenanceTasks'
 export default function MaintenancePlanDetailsPage() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const { t, i18n } = useTranslation()
+    const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
-
     const { can } = usePermission()
     const canManage = can('maintenance.manage')
 
@@ -33,7 +32,6 @@ export default function MaintenancePlanDetailsPage() {
     const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null)
     const [isTaskExecutionOpen, setIsTaskExecutionOpen] = useState(false)
 
-    // Fetch Plan Details
     const { data: plan, isLoading: planLoading } = useQuery({
         queryKey: ['maintenance-plan', id],
         queryFn: async () => {
@@ -42,12 +40,12 @@ export default function MaintenancePlanDetailsPage() {
                 .select('*')
                 .eq('id', id)
                 .single()
+
             if (error) throw error
             return data
         }
     })
 
-    // Fetch Linked Tasks
     const { data: tasks, isLoading: tasksLoading, refetch: refetchTasks } = useQuery({
         queryKey: ['plan-tasks', id],
         queryFn: async () => {
@@ -59,6 +57,7 @@ export default function MaintenancePlanDetailsPage() {
                 `)
                 .eq('maintenance_plan_id', id)
                 .order('created_at', { ascending: false })
+
             if (error) throw error
             return data as MaintenanceTask[]
         },
@@ -77,7 +76,6 @@ export default function MaintenancePlanDetailsPage() {
 
     if (!plan) return <div>Plan not found</div>
 
-    // Stats
     const totalTasks = tasks?.length || 0
     const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
@@ -90,12 +88,12 @@ export default function MaintenancePlanDetailsPage() {
     return (
         <div className="space-y-6">
             <AddMaintenanceTaskDialog
-                isOpen={isAddTaskOpen}
+                isOpen={canManage && isAddTaskOpen}
                 onClose={() => {
                     setIsAddTaskOpen(false)
                     refetchTasks()
                 }}
-                planId={id} // 重要: Pass the plan ID
+                planId={id}
             />
 
             <TaskExecutionModal
@@ -107,7 +105,6 @@ export default function MaintenancePlanDetailsPage() {
                 }}
             />
 
-            {/* Header with Back Button */}
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate('/maintenance')}
@@ -125,7 +122,6 @@ export default function MaintenancePlanDetailsPage() {
                 </div>
             </div>
 
-            {/* Plan Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-card border rounded-xl p-4 shadow-sm space-y-2">
                     <p className="text-sm text-muted-foreground font-cairo flex items-center gap-2">
@@ -168,18 +164,18 @@ export default function MaintenancePlanDetailsPage() {
                         <DollarSign className="w-4 h-4" />
                         {isRTL ? 'الميزانية' : 'Budget'}
                     </p>
-                    <p className="text-3xl font-bold">{plan.budget?.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">SAR</span></p>
+                    <p className="text-3xl font-bold">
+                        {plan.budget?.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">SAR</span>
+                    </p>
                 </div>
             </div>
 
-            {/* Stats Overview */}
             <div>
                 <p className="text-muted-foreground font-cairo mb-4 leading-relaxed bg-muted/30 p-4 rounded-xl">
                     {plan.description || (isRTL ? 'لا يوجد وصف للخطة' : 'No description available')}
                 </p>
             </div>
 
-            {/* Plan Tasks Section */}
             <div>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold font-cairo flex items-center gap-2">
@@ -217,16 +213,20 @@ export default function MaintenancePlanDetailsPage() {
                                     >
                                         <td className="p-3 font-medium">
                                             <div className="flex items-center gap-2">
-                                                {task.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Clock className="w-4 h-4 text-muted-foreground" />}
+                                                {task.status === 'completed'
+                                                    ? <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                                    : <Clock className="w-4 h-4 text-muted-foreground" />}
                                                 {task.title}
                                             </div>
                                         </td>
                                         <td className="p-3">
                                             <span className={cn(
-                                                "px-2 py-1 rounded text-xs font-bold capitalize",
-                                                task.status === 'completed' ? "bg-green-100 text-green-700" :
-                                                    task.status === 'in_progress' ? "bg-orange-100 text-orange-700" :
-                                                        "bg-gray-100 text-gray-700"
+                                                'px-2 py-1 rounded text-xs font-bold capitalize',
+                                                task.status === 'completed'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : task.status === 'in_progress'
+                                                        ? 'bg-orange-100 text-orange-700'
+                                                        : 'bg-gray-100 text-gray-700'
                                             )}>
                                                 {task.status.replace(/_/g, ' ')}
                                             </span>
@@ -245,7 +245,9 @@ export default function MaintenancePlanDetailsPage() {
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed rounded-xl bg-muted/10">
                         <Wrench className="w-12 h-12 mx-auto text-muted mb-3 opacity-20" />
-                        <p className="font-cairo text-muted-foreground">{isRTL ? 'لا توجد مهام في هذه الخطة بعد' : 'No tasks in this plan yet'}</p>
+                        <p className="font-cairo text-muted-foreground">
+                            {isRTL ? 'لا توجد مهام في هذه الخطة بعد' : 'No tasks in this plan yet'}
+                        </p>
                         {canManage && (
                             <button
                                 onClick={() => setIsAddTaskOpen(true)}

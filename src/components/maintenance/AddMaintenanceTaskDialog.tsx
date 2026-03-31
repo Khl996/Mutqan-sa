@@ -69,10 +69,13 @@ export default function AddMaintenanceTaskDialog({ isOpen, onClose, planId }: Ad
         e.preventDefault()
         if (!formData.title) return
 
+        const assignedTo = formData.assigned_to.trim() ? formData.assigned_to : null
+
         try {
             setIsSubmitting(true)
             await createTask.mutateAsync({
                 ...formData,
+                assigned_to: assignedTo,
                 maintenance_plan_id: planId
             })
             onClose()

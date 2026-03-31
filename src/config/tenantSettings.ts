@@ -152,7 +152,7 @@ export const SETTINGS_CATEGORIES: SettingsCategoryDefinition[] = [
         code: 'maintenance',
         name: 'Preventive Maintenance',
         name_ar: 'الصيانة الوقائية',
-        description: 'Configure preventive maintenance settings',
+        description: 'Manual preventive maintenance only in soft launch',
         description_ar: 'تكوين إعدادات الصيانة الوقائية',
         icon: 'Wrench',
         settings: [
@@ -172,8 +172,8 @@ export const SETTINGS_CATEGORIES: SettingsCategoryDefinition[] = [
                 description: 'Days before scheduled maintenance to create work order',
                 description_ar: 'عدد الأيام قبل موعد الصيانة لإنشاء أمر العمل',
                 type: 'number',
-                default: 3,
-                min: 1,
+                default: 0,
+                min: 0,
                 max: 14
             },
             {
@@ -387,9 +387,9 @@ export const DEFAULT_TENANT_SETTINGS: TenantSettings = {
         priority_escalation_enabled: true
     },
     maintenance: {
-        auto_generate_work_orders: true,
-        advance_notice_days: 3,
-        allow_postpone: true
+        auto_generate_work_orders: false,
+        advance_notice_days: 0,
+        allow_postpone: false
     },
     inventory: {
         low_stock_threshold_percent: 20,

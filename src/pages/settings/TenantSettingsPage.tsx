@@ -87,9 +87,9 @@ export default function TenantSettingsPage() {
             priority_escalation_enabled: true
         },
         maintenance: {
-            auto_generate_work_orders: true,
-            advance_notice_days: 3,
-            allow_postpone: true
+            auto_generate_work_orders: false,
+            advance_notice_days: 0,
+            allow_postpone: false
         },
         inventory: {
             low_stock_threshold_percent: 20,
@@ -118,6 +118,13 @@ export default function TenantSettingsPage() {
     }
 
     const activeCategoryDef = SETTINGS_CATEGORIES.find(c => c.code === activeCategory)
+    const isMaintenanceSoftLaunchCategory = activeCategoryDef?.code === 'maintenance'
+    const categorySettings = isMaintenanceSoftLaunchCategory ? [] : (activeCategoryDef?.settings || [])
+    const activeCategoryDescription = isMaintenanceSoftLaunchCategory
+        ? (isRTL
+            ? 'الصيانة الوقائية اليدوية فقط في الإطلاق المبكر'
+            : 'Manual preventive maintenance only in soft launch')
+        : (isRTL ? activeCategoryDef?.description_ar : activeCategoryDef?.description)
 
     return (
         <div className="space-y-6">
@@ -191,26 +198,28 @@ export default function TenantSettingsPage() {
                                         {isRTL ? activeCategoryDef.name_ar : activeCategoryDef.name}
                                     </h2>
                                     <p className="text-sm text-muted-foreground font-cairo">
-                                        {isRTL ? activeCategoryDef.description_ar : activeCategoryDef.description}
+                                        {activeCategoryDescription}
                                     </p>
                                 </div>
-                                <button
-                                    onClick={() => handleResetCategory(activeCategory)}
-                                    disabled={isResetting}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-primary hover:bg-muted/10 rounded-lg transition-colors"
-                                >
+                                {categorySettings.length > 0 && (
+                                    <button
+                                        onClick={() => handleResetCategory(activeCategory)}
+                                        disabled={isResetting}
+                                        className="flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-primary hover:bg-muted/10 rounded-lg transition-colors"
+                                    >
                                     {isResetting ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <RotateCcw className="w-4 h-4" />
                                     )}
                                     {isRTL ? 'إعادة للافتراضي' : 'Reset to Default'}
-                                </button>
+                                    </button>
+                                )}
                             </div>
 
                             {/* Settings List */}
                             <div className="p-4 space-y-4">
-                                {activeCategoryDef.settings.map(setting => (
+                                {categorySettings.map(setting => (
                                     <SettingItem
                                         key={setting.key}
                                         setting={setting}
@@ -220,6 +229,18 @@ export default function TenantSettingsPage() {
                                         isUpdating={updateSetting.isPending}
                                     />
                                 ))}
+                                {categorySettings.length === 0 && (
+                                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                                        <p className="font-bold font-cairo text-blue-700">
+                                            {isRTL ? 'الإطلاق المبكر للصيانة الوقائية يدوي فقط' : 'Preventive maintenance is manual-only in soft launch'}
+                                        </p>
+                                        <p className="mt-1 text-sm text-blue-700/80 font-cairo">
+                                            {isRTL
+                                                ? 'في هذه النسخة: الخطط اليدوية، المهام اليدوية، وإنشاء أمر عمل اختياري من المهمة فقط. التكرار، التوليد التلقائي، والتأجيل غير متاحة بعد.'
+                                                : 'This release supports manual plans, manual tasks, and optional work order creation from a task only. Recurrence, auto-generation, and postpone flows are not available yet.'}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

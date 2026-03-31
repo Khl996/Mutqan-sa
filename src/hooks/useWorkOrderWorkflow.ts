@@ -7,6 +7,9 @@ export const useWorkOrderWorkflow = () => {
 
     const invalidateAll = (workOrderId?: string) => {
         queryClient.invalidateQueries({ queryKey: workOrdersKeys.all })
+        queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
+        queryClient.invalidateQueries({ queryKey: ['maintenance-plans'] })
+        queryClient.invalidateQueries({ queryKey: ['plan-tasks'] })
         if (workOrderId) {
             queryClient.invalidateQueries({ queryKey: workOrdersKeys.workOrder(workOrderId) })
         }

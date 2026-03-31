@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
     useWorkOrdersReport,
-    useMaintenanceReport,
 } from '@/hooks/useReports'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
@@ -29,9 +28,10 @@ export default function ReportsPage() {
 
     // Fetch reports
     const { data: woReport, isLoading: woLoading } = useWorkOrdersReport()
-    const { data: maintReport, isLoading: maintLoading } = useMaintenanceReport()
+    const maintReport = null
+    const showMaintenanceCompliance = false
 
-    const isLoading = woLoading || maintLoading
+    const isLoading = woLoading
 
     if (isLoading) {
         return (
@@ -198,7 +198,7 @@ export default function ReportsPage() {
                         </ReportCard>
                     </div>
 
-                    {/* 4. Maintenance Compliance */}
+                    {showMaintenanceCompliance ? (
                     <div className="md:col-span-1">
                         <ReportCard title={isRTL ? 'الالتزام بخطط الصيانة' : 'Maintenance Compliance'} icon={Target}>
                             <div className="flex flex-col items-center justify-center py-4">
@@ -232,6 +232,7 @@ export default function ReportsPage() {
                             </div>
                         </ReportCard>
                     </div>
+                    ) : null}
 
                 </div>
             )}

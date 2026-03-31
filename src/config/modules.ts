@@ -98,16 +98,29 @@ export const SYSTEM_MODULES: SystemModule[] = [
         code: 'maintenance',
         name: 'Preventive Maintenance',
         name_ar: 'ط§ظ„طµظٹط§ظ†ط© ط§ظ„ظˆظ‚ط§ط¦ظٹط©',
-        description: 'Schedule and manage preventive maintenance plans',
-        description_ar: 'ط¬ط¯ظˆظ„ط© ظˆط¥ط¯ط§ط±ط© ط®ط·ط· ط§ظ„طµظٹط§ظ†ط© ط§ظ„ظˆظ‚ط§ط¦ظٹط©',
+        description: 'Create and manage manual preventive maintenance plans and tasks',
+        description_ar: 'إنشاء وإدارة خطط ومهام الصيانة الوقائية اليدوية',
         icon: 'Wrench',
         route: '/maintenance',
         isCore: false,
         defaultEnabled: true,
         features: [
-            { code: 'maintenance_plans', name: 'Maintenance Plans', name_ar: 'ط®ط·ط· ط§ظ„طµظٹط§ظ†ط©', defaultEnabled: true },
-            { code: 'schedules', name: 'Maintenance Tasks', name_ar: 'ظ…ظ‡ط§ظ… ط§ظ„طµظٹط§ظ†ط©', defaultEnabled: true },
-            { code: 'auto_generation', name: 'Auto Work Order Generation (Coming Soon)', name_ar: 'طھظˆظ„ظٹط¯ ط£ظˆط§ظ…ط± طھظ„ظ‚ط§ط¦ظٹ (ظ‚ط±ظٹط¨ط§ظ‹)', defaultEnabled: false },
+            {
+                code: 'maintenance_plans',
+                name: 'Manual Plans',
+                name_ar: 'الخطط اليدوية',
+                description: 'Create and track preventive maintenance plans manually',
+                description_ar: 'إنشاء وتتبع خطط الصيانة الوقائية يدويًا',
+                defaultEnabled: true
+            },
+            {
+                code: 'schedules',
+                name: 'Tasks',
+                name_ar: 'المهام',
+                description: 'Create and complete preventive maintenance tasks manually',
+                description_ar: 'إنشاء وإكمال مهام الصيانة الوقائية يدويًا',
+                defaultEnabled: true
+            },
         ]
     },
     {
