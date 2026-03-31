@@ -311,8 +311,10 @@ export function isFeatureEnabled(
     const module = getModuleByCode(moduleCode)
     const feature = module?.features.find(f => f.code === featureCode)
 
+    // If the module has no features object in DB (e.g. provisioned before feature flags were added),
+    // fall back to the code-defined default — do NOT return false just because features are missing.
     if (!tenantModules?.[moduleCode]?.features) {
-        return module?.isCore ? (feature?.defaultEnabled ?? false) : false
+        return feature?.defaultEnabled ?? false
     }
 
     return tenantModules[moduleCode].features?.[featureCode] ?? feature?.defaultEnabled ?? false
