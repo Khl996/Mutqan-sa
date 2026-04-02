@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useTenantModules } from '@/hooks/useTenantModules'
-import { isModuleEnabled } from '@/config/modules'
+import { isFeatureEnabled, isModuleEnabled } from '@/config/modules'
 import { usePermission } from '@/hooks/usePermission'
 import { Permission } from '@/config/permissions'
 import {
@@ -20,32 +20,36 @@ import {
     ChevronLeft,
     Shield,
     History,
-    CreditCard
+    CreditCard,
 } from 'lucide-react'
 
 interface SidebarProps {
     collapsed: boolean
+    mobileOpen: boolean
     onToggle: () => void
+    onNavigate: () => void
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }: SidebarProps) {
     const { t, i18n } = useTranslation()
     const location = useLocation()
     const isRTL = i18n.language === 'ar'
     const { can } = usePermission()
     const { data: tenantModules } = useTenantModules()
+    const compact = collapsed && !mobileOpen
 
     const allMenuItems: Array<{
         icon: React.ElementType
         label: string
         href: string
         moduleCode: string
+        featureCode?: string
         permission: Permission
     }> = [
         { icon: LayoutDashboard, label: t('sidebar.dashboard'), href: '/dashboard', moduleCode: 'dashboard', permission: 'dashboard.view' },
         { icon: Building2, label: t('sidebar.facilities'), href: '/facilities', moduleCode: 'facilities', permission: 'facilities.view' },
         { icon: Box, label: t('sidebar.assets'), href: '/assets', moduleCode: 'assets', permission: 'assets.view' },
-        { icon: History, label: isRTL ? 'سجل الإجراءات' : 'Operations Log', href: '/asset-logs', moduleCode: 'assets', permission: 'assets.view' },
+        { icon: History, label: isRTL ? 'سجل الإجراءات' : 'Operations Log', href: '/asset-logs', moduleCode: 'assets', featureCode: 'asset_history', permission: 'assets.view' },
         { icon: ClipboardList, label: t('sidebar.workOrders'), href: '/work-orders', moduleCode: 'work_orders', permission: 'work_orders.view' },
         { icon: Wrench, label: t('sidebar.maintenance'), href: '/maintenance', moduleCode: 'maintenance', permission: 'maintenance.view' },
         { icon: Package, label: t('sidebar.inventory'), href: '/inventory', moduleCode: 'inventory', permission: 'inventory.view' },
@@ -54,39 +58,44 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         { icon: FileText, label: t('sidebar.reports'), href: '/reports', moduleCode: 'reports', permission: 'reports.view' },
     ]
 
-    const menuItems = allMenuItems.filter(item =>
-        isModuleEnabled(tenantModules, item.moduleCode) && can(item.permission)
+    const menuItems = allMenuItems.filter((item) =>
+        isModuleEnabled(tenantModules, item.moduleCode) &&
+        (!item.featureCode || isFeatureEnabled(tenantModules, item.moduleCode, item.featureCode)) &&
+        can(item.permission)
     )
 
     const adminItems = [
         { icon: Settings, label: t('sidebar.settings'), href: '/settings', permission: 'settings.view' as Permission },
-        ...(can('subscription.manage') ? [{
-            icon: CreditCard,
-            label: isRTL ? 'الاشتراك' : 'Subscription',
-            href: '/subscription',
-            permission: 'subscription.manage' as Permission
-        }] : []),
+        ...(can('subscription.manage')
+            ? [{
+                icon: CreditCard,
+                label: isRTL ? 'الاشتراك' : 'Subscription',
+                href: '/subscription',
+                permission: 'subscription.manage' as Permission,
+            }]
+            : []),
         { icon: Shield, label: t('sidebar.admin'), href: '/admin', permission: 'settings.manage' as Permission },
-    ].filter(item => can(item.permission))
+    ].filter((item) => can(item.permission))
 
     const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/')
 
     return (
         <aside
             className={cn(
-                'fixed top-0 h-full bg-primary text-white transition-all duration-300 z-50',
-                collapsed ? 'w-20' : 'w-64',
+                'fixed top-0 h-full w-64 bg-primary text-white z-50 transition-transform duration-300 lg:transition-all',
+                compact ? 'lg:w-20' : 'lg:w-64',
+                mobileOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'),
                 isRTL ? 'right-0' : 'left-0'
             )}
         >
             <div className="h-16 flex items-center justify-center border-b border-white/10">
-                <Link to="/dashboard" className="flex items-center gap-3">
+                <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-3">
                     <img
                         src="/images/logo-white.png"
                         alt="Mutqan"
-                        className={cn('h-10 w-10 object-contain', collapsed && 'h-8 w-8')}
+                        className={cn('h-10 w-10 object-contain', compact && 'h-8 w-8')}
                     />
-                    {!collapsed && (
+                    {!compact && (
                         <span className="text-xl font-bold font-cairo">{t('app.name')}</span>
                     )}
                 </Link>
@@ -98,15 +107,16 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         <Link
                             key={item.href}
                             to={item.href}
+                            onClick={onNavigate}
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                 'hover:bg-white/10',
                                 isActive(item.href) && 'bg-secondary text-white',
-                                collapsed && 'justify-center'
+                                compact && 'justify-center'
                             )}
                         >
                             <item.icon className="w-5 h-5 flex-shrink-0" />
-                            {!collapsed && (
+                            {!compact && (
                                 <span className="font-cairo text-sm">{item.label}</span>
                             )}
                         </Link>
@@ -122,36 +132,37 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         <Link
                             key={item.href}
                             to={item.href}
+                            onClick={onNavigate}
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                 'hover:bg-white/10',
                                 isActive(item.href) && 'bg-secondary text-white',
-                                collapsed && 'justify-center'
+                                compact && 'justify-center'
                             )}
                         >
                             <item.icon className="w-5 h-5 flex-shrink-0" />
-                            {!collapsed && (
+                            {!compact && (
                                 <span className="font-cairo text-sm">{item.label}</span>
                             )}
                         </Link>
                     ))}
                 </div>
 
-                <div className="px-3 mt-4">
+                <div className="hidden lg:block px-3 mt-4">
                     <button
                         onClick={onToggle}
                         className={cn(
                             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
                             'hover:bg-white/10 transition-all duration-200',
-                            collapsed && 'justify-center'
+                            compact && 'justify-center'
                         )}
                     >
                         {isRTL ? (
-                            collapsed ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />
+                            compact ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />
                         ) : (
-                            collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />
+                            compact ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />
                         )}
-                        {!collapsed && (
+                        {!compact && (
                             <span className="font-cairo text-sm">
                                 {isRTL ? 'تصغير' : 'Collapse'}
                             </span>

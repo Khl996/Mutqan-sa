@@ -1,21 +1,31 @@
 import { useState, useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useCurrentTenantId } from '@/hooks/useTenantQuery'
+import { useTenantModules } from '@/hooks/useTenantModules'
+import { isFeatureEnabled } from '@/config/modules'
 import QRCode from 'react-qr-code'
 import { Copy, Printer, RefreshCw, Power, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 
 export default function PortalSettingsPage() {
-    const { t, i18n } = useTranslation()
+    const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const tenantId = useCurrentTenantId()
+    const { data: tenantModules, isLoading: isModulesLoading } = useTenantModules()
     const [loading, setLoading] = useState(true)
     const [token, setToken] = useState<string | null>(null)
     const [tokenId, setTokenId] = useState<string | null>(null)
+    const hasPublicPortalAccess =
+        isFeatureEnabled(tenantModules, 'public_portal', 'qr_portal') &&
+        isFeatureEnabled(tenantModules, 'public_portal', 'public_submission')
 
     const fetchToken = async () => {
         if (!tenantId) return
+
+        setLoading(true)
+
         try {
             const { data, error } = await (supabase.from('tenant_access_tokens') as any)
                 .select('*')
@@ -42,12 +52,18 @@ export default function PortalSettingsPage() {
     }
 
     useEffect(() => {
-        fetchToken()
-    }, [tenantId])
+        if (!tenantId || isModulesLoading || !hasPublicPortalAccess) {
+            return
+        }
+
+        void fetchToken()
+    }, [tenantId, isModulesLoading, hasPublicPortalAccess])
 
     const generateToken = async () => {
         if (!tenantId) return
+
         setLoading(true)
+
         try {
             const randomBytes = new Uint8Array(32)
             crypto.getRandomValues(randomBytes)
@@ -57,8 +73,8 @@ export default function PortalSettingsPage() {
                 .insert({
                     tenant_id: tenantId,
                     token: newToken,
-                    name: "Main QR Code",
-                    is_active: true
+                    name: 'Main QR Code',
+                    is_active: true,
                 })
                 .select()
                 .single()
@@ -70,7 +86,7 @@ export default function PortalSettingsPage() {
             toast.success(isRTL ? 'تم إنشاء كود البوابة بنجاح' : 'Portal code generated successfully')
         } catch (error) {
             console.error('Error:', error)
-            toast.error(isRTL ? 'حدث خطأ أثناء الإنشاء' : 'Error generating code')
+            toast.error(isRTL ? 'حدث خطأ أثناء إنشاء الكود' : 'Error generating code')
         } finally {
             setLoading(false)
         }
@@ -78,9 +94,13 @@ export default function PortalSettingsPage() {
 
     const deactivateToken = async () => {
         if (!tokenId) return
-        if (!confirm(isRTL ? 'هل أنت متأكد من تعطيل هذا الرابط؟ لن يتمكن أحد من استخدامه.' : 'Are you sure? This will disable the link.')) return
+
+        if (!confirm(isRTL ? 'هل أنت متأكد؟ سيتم إيقاف هذا الرابط.' : 'Are you sure? This will disable the link.')) {
+            return
+        }
 
         setLoading(true)
+
         try {
             const { error } = await (supabase.from('tenant_access_tokens') as any)
                 .delete()
@@ -92,7 +112,8 @@ export default function PortalSettingsPage() {
             setTokenId(null)
             toast.success(isRTL ? 'تم تعطيل الرابط' : 'Link disabled')
         } catch (error) {
-            toast.error('Error')
+            console.error('Error:', error)
+            toast.error(isRTL ? 'تعذر تعطيل الرابط' : 'Failed to disable link')
         } finally {
             setLoading(false)
         }
@@ -107,36 +128,47 @@ export default function PortalSettingsPage() {
 
     const handlePrint = () => {
         const printWindow = window.open('', '_blank')
-        if (printWindow) {
-            printWindow.document.write(`
-                <html dir="${isRTL ? 'rtl' : 'ltr'}">
-                <head>
-                    <title>${isRTL ? 'طباعة رمز الاستجابة السريعة' : 'Print QR Code'}</title>
-                    <style>
-                        body { font-family: sans-serif; text-align: center; padding: 40px; }
-                        h1 { color: #333; margin-bottom: 10px; }
-                        .qr { margin: 20px auto; }
-                        .url { color: #666; font-size: 14px; margin-top: 10px; }
-                        .note { margin-top: 30px; font-size: 12px; color: #999; }
-                    </style>
-                </head>
-                <body>
-                    <h1>${isRTL ? 'مسح الكود لتقديم بلاغ صيانة' : 'Scan to Report Issue'}</h1>
-                    <p>${isRTL ? 'قم بمسح الكود أدناه لتقديم طلب صيانة جديد' : 'Scan the QR code below to submit a new work request'}</p>
-                    <div class="qr">
-                        ${document.getElementById('qr-code-svg')?.outerHTML || ''}
-                    </div>
-                    <p class="url">${portalUrl}</p>
-                    <div class="note">Powered by Mutqan</div>
-                    <script>window.print();</script>
-                </body>
-                </html>
-            `)
-            printWindow.document.close()
-        }
+
+        if (!printWindow) return
+
+        printWindow.document.write(`
+            <html dir="${isRTL ? 'rtl' : 'ltr'}">
+            <head>
+                <title>${isRTL ? 'طباعة رمز QR' : 'Print QR Code'}</title>
+                <style>
+                    body { font-family: sans-serif; text-align: center; padding: 40px; }
+                    h1 { color: #333; margin-bottom: 10px; }
+                    .qr { margin: 20px auto; }
+                    .url { color: #666; font-size: 14px; margin-top: 10px; }
+                    .note { margin-top: 30px; font-size: 12px; color: #999; }
+                </style>
+            </head>
+            <body>
+                <h1>${isRTL ? 'امسح الكود لتقديم بلاغ صيانة' : 'Scan to Report Issue'}</h1>
+                <p>${isRTL ? 'امسح الكود أدناه لتقديم طلب صيانة جديد' : 'Scan the QR code below to submit a new work request'}</p>
+                <div class="qr">
+                    ${document.getElementById('qr-code-svg')?.outerHTML || ''}
+                </div>
+                <p class="url">${portalUrl}</p>
+                <div class="note">Powered by Mutqan</div>
+                <script>window.print();</script>
+            </body>
+            </html>
+        `)
+        printWindow.document.close()
     }
 
-    if (loading && !token) return <div className="p-8 font-cairo text-center">جاري التحميل...</div>
+    if (isModulesLoading) {
+        return <div className="p-8 font-cairo text-center">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</div>
+    }
+
+    if (!hasPublicPortalAccess) {
+        return <Navigate to="/settings" replace />
+    }
+
+    if (loading && !token) {
+        return <div className="p-8 font-cairo text-center">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</div>
+    }
 
     return (
         <div className="container max-w-4xl mx-auto p-6 space-y-8 font-cairo">
@@ -144,7 +176,7 @@ export default function PortalSettingsPage() {
                 <h1 className="text-3xl font-bold mb-2">{isRTL ? 'بوابة البلاغات العامة' : 'Public Reporting Portal'}</h1>
                 <p className="text-muted-foreground">
                     {isRTL
-                        ? 'إدارة الرابط العام والـ QR Code لتمكين الموظفين والزوار من تقديم بلاغات دون تسجيل دخول.'
+                        ? 'إدارة الرابط العام ورمز QR لتمكين الموظفين والزوار من تقديم البلاغات دون تسجيل دخول.'
                         : 'Manage public link and QR code to allow employees and guests to report issues without login.'}
                 </p>
             </div>
@@ -170,7 +202,6 @@ export default function PortalSettingsPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* QR Code Card */}
                     <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center space-y-6">
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100" id="qr-code-wrapper">
                             <QRCode
@@ -202,7 +233,6 @@ export default function PortalSettingsPage() {
                         </div>
                     </div>
 
-                    {/* Settings Card */}
                     <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm space-y-6 self-start">
                         <div>
                             <h3 className="text-lg font-bold mb-2">{isRTL ? 'إعدادات البوابة' : 'Portal Settings'}</h3>
@@ -219,12 +249,14 @@ export default function PortalSettingsPage() {
                                     <RefreshCw className="w-5 h-5 text-yellow-600" />
                                     <div className="text-sm">
                                         <p className="font-bold text-yellow-800">{isRTL ? 'تجديد الرابط' : 'Regenerate Link'}</p>
-                                        <p className="text-yellow-600 text-xs">{isRTL ? 'سيتم إيقاف الرابط السابق فوراً' : 'Old link will stop working'}</p>
+                                        <p className="text-yellow-600 text-xs">{isRTL ? 'سيتوقف الرابط السابق فورًا' : 'Old link will stop working'}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => {
-                                        if (confirm('Are you sure?')) deactivateToken().then(generateToken)
+                                        if (confirm(isRTL ? 'هل أنت متأكد؟' : 'Are you sure?')) {
+                                            void deactivateToken().then(generateToken)
+                                        }
                                     }}
                                     className="px-3 py-1 text-xs bg-white border border-yellow-200 text-yellow-700 rounded hover:bg-yellow-100"
                                 >

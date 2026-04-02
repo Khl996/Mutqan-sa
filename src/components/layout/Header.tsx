@@ -73,13 +73,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
     }, [])
 
     return (
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
+        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
             {/* Left side */}
             <div className="flex items-center gap-4">
                 {/* Mobile menu button */}
                 <button
                     onClick={onMenuClick}
                     className="lg:hidden p-2 rounded-lg hover:bg-muted/10 transition-colors"
+                    aria-label={isRTL ? 'فتح القائمة' : 'Open navigation'}
                 >
                     <Menu className="w-5 h-5" />
                 </button>

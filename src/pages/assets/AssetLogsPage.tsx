@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAssetLogs, AssetLog } from '@/hooks/useAssetOperations'
+import { useAssetLogs } from '@/hooks/useAssetOperations'
+import { useTenantModules } from '@/hooks/useTenantModules'
+import { isFeatureEnabled } from '@/config/modules'
 import { format } from 'date-fns'
-import { arSA } from 'date-fns/locale'
 import {
     History,
     Search,
@@ -15,16 +17,17 @@ import {
     CheckCircle2,
     XCircle,
     Wrench,
-    AlertTriangle,
     Power,
     Ban
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function AssetLogsPage() {
-    const { t, i18n } = useTranslation()
+    const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
+    const { data: tenantModules, isLoading: isModulesLoading } = useTenantModules()
     const { data: logs, isLoading } = useAssetLogs()
+    const hasAssetHistoryAccess = isFeatureEnabled(tenantModules, 'assets', 'asset_history')
 
     const [searchQuery, setSearchQuery] = useState('')
 
@@ -69,12 +72,16 @@ export default function AssetLogsPage() {
         }
     }
 
-    if (isLoading) {
+    if (isModulesLoading || isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="w-8 h-8 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
             </div>
         )
+    }
+
+    if (!hasAssetHistoryAccess) {
+        return <Navigate to="/assets" replace />
     }
 
     return (

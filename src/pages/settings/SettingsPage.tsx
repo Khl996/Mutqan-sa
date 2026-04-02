@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { usePermission } from '@/hooks/usePermission'
+import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import {
@@ -32,6 +33,9 @@ export default function SettingsPage() {
     const { user, profile, refreshProfile } = useAuth()
     const { theme, setTheme } = useTheme()
     const { can } = usePermission()
+    const isPublicPortalQrEnabled = useFeatureEnabled('public_portal', 'qr_portal')
+    const isPublicPortalSubmissionEnabled = useFeatureEnabled('public_portal', 'public_submission')
+    const hasPublicPortalAccess = isPublicPortalQrEnabled && isPublicPortalSubmissionEnabled
 
     const [fullName, setFullName] = useState('')
     const [fullNameAr, setFullNameAr] = useState('')
@@ -255,7 +259,7 @@ export default function SettingsPage() {
                 </div>
             </SettingsSection>
 
-            {can('settings.manage') && (
+            {can('settings.manage') && hasPublicPortalAccess && (
                 <SettingsSection
                     title={isRTL ? 'بوابة البلاغات العامة' : 'Public Reporting Portal'}
                     icon={Globe}

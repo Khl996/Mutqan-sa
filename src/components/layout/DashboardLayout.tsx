@@ -1,5 +1,5 @@
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenant } from '@/contexts/TenantContext'
 import { useTranslation } from 'react-i18next'
@@ -17,13 +17,38 @@ export default function DashboardLayout() {
     const location = useLocation()
     const { t, i18n } = useTranslation()
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
-    // Apply tenant display settings (language, date/time format, etc.)
     useTenantDisplaySettings()
 
     const isRTL = i18n.language === 'ar'
 
-    // Show loading spinner while checking auth
+    useEffect(() => {
+        setMobileSidebarOpen(false)
+    }, [location.pathname])
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setMobileSidebarOpen(false)
+            }
+        }
+
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
+    useEffect(() => {
+        if (!mobileSidebarOpen) return
+
+        const previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+
+        return () => {
+            document.body.style.overflow = previousOverflow
+        }
+    }, [mobileSidebarOpen])
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
@@ -35,7 +60,6 @@ export default function DashboardLayout() {
         )
     }
 
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />
     }
@@ -44,73 +68,65 @@ export default function DashboardLayout() {
         return <Navigate to="/register/complete" replace />
     }
 
-    // Guard: platform users without a selected tenant must go to /platform
     if (isPlatformRole(profile?.role) && !currentTenant) {
-        console.log('⛔ DashboardLayout: platform user without tenant → redirect to /platform')
+        console.log('DashboardLayout: platform user without tenant -> redirect to /platform')
         return <Navigate to="/platform" replace />
     }
 
-    // Check for subscription status
     const isTenantAdmin = profile?.role === 'tenant_admin'
 
-    // Redirect logic for expired subscriptions
     if (currentTenant && !isPlatformUser) {
-        // Check both the status field AND the actual period end date
         const statusExpired =
             currentTenant.subscription_status === 'expired' ||
             currentTenant.subscription_status === 'suspended' ||
             currentTenant.subscription_status === 'cancelled'
 
-        // Also check if subscription period has actually ended (real-time check)
         const endDateStr = currentTenant.subscription_ends_at || currentTenant.trial_ends_at
         const subscriptionEndDate = endDateStr ? new Date(endDateStr) : null
         const periodExpired = subscriptionEndDate ? subscriptionEndDate < new Date() : false
-
-        // Free plan check - if on free plan AND trial ended, treat as expired
         const isFreePlanExpired = currentTenant.subscription_status === 'trial' && periodExpired
-
         const isSubscriptionExpired = statusExpired || isFreePlanExpired
 
         if (isSubscriptionExpired) {
-            // If admin, force redirect to subscription page (unless already there)
             if (isTenantAdmin) {
                 if (location.pathname !== '/subscription' && location.pathname !== '/settings/tenant') {
                     return <Navigate to="/subscription" replace />
                 }
             } else {
-                // If regular user, show suspended screen
                 return <ServiceSuspended />
             }
         }
     }
 
-    // حساب margins بناءً على اتجاه اللغة وحالة الـ sidebar
-    const sidebarWidth = sidebarCollapsed ? 'w-20' : 'w-64'
     const marginClass = cn(
         'transition-all duration-300',
-        // RTL: margin-right (لأن الـ sidebar على اليمين)
-        // LTR: margin-left (لأن الـ sidebar على اليسار)
         isRTL
-            ? (sidebarCollapsed ? 'mr-20' : 'mr-64')
-            : (sidebarCollapsed ? 'ml-20' : 'ml-64')
+            ? (sidebarCollapsed ? 'lg:mr-20' : 'lg:mr-64')
+            : (sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
     )
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Sidebar */}
             <Sidebar
                 collapsed={sidebarCollapsed}
+                mobileOpen={mobileSidebarOpen}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                onNavigate={() => setMobileSidebarOpen(false)}
             />
 
-            {/* Main Content - مع margin ديناميكي */}
-            <div className={cn('flex flex-col min-h-screen', marginClass)}>
-                {/* Header */}
-                <Header onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)} />
+            <div
+                className={cn(
+                    'fixed inset-0 bg-black/50 transition-opacity duration-300 lg:hidden',
+                    mobileSidebarOpen ? 'opacity-100 pointer-events-auto z-40' : 'opacity-0 pointer-events-none'
+                )}
+                onClick={() => setMobileSidebarOpen(false)}
+                aria-hidden="true"
+            />
 
-                {/* Page Content */}
-                <main className="flex-1 p-6 pb-24 overflow-auto">
-                    {/* Expiration Banner for Admins */}
+            <div className={cn('flex flex-col min-h-screen', marginClass)}>
+                <Header onMenuClick={() => setMobileSidebarOpen((open) => !open)} />
+
+                <main className="flex-1 p-4 sm:p-6 pb-24 overflow-x-hidden">
                     {isTenantAdmin && (currentTenant?.subscription_status === 'trial' || currentTenant?.subscription_status === 'expired') && (
                         <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
                             <div className="flex items-center gap-3">
