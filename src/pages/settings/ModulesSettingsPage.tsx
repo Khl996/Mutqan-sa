@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
     useTenantModules,
     TENANT_MODULES_MANAGED_MESSAGE,
-    SYSTEM_MODULES
+    SYSTEM_MODULES,
 } from '@/hooks/useTenantModules'
 import { isFeatureEnabled, isModuleEnabled, SystemModule } from '@/config/modules'
 import { cn } from '@/lib/utils'
@@ -39,6 +39,113 @@ const iconMap: Record<string, React.ElementType> = {
     FileText,
     Globe,
     Settings2,
+}
+
+const arabicModuleCopy: Record<string, {
+    name: string
+    description: string
+    features: Record<string, string>
+}> = {
+    dashboard: {
+        name: 'لوحة التحكم',
+        description: 'لوحة التحكم الرئيسية مع المؤشرات والإحصائيات',
+        features: {
+            quick_stats: 'إحصائيات سريعة',
+            charts: 'الرسوم البيانية',
+            recent_activity: 'النشاط الأخير',
+        },
+    },
+    facilities: {
+        name: 'إدارة المرافق',
+        description: 'إدارة المباني والطوابق',
+        features: {
+            buildings: 'المباني',
+            floors: 'الطوابق',
+            departments: 'الأقسام',
+            rooms: 'الغرف',
+        },
+    },
+    assets: {
+        name: 'إدارة الأصول',
+        description: 'تتبع وإدارة جميع الأصول والمعدات',
+        features: {
+            asset_tracking: 'تتبع الأصول',
+            qr_codes: 'رموز QR',
+            asset_history: 'سجل الأصول',
+            warranty_tracking: 'تتبع الضمان',
+        },
+    },
+    work_orders: {
+        name: 'أوامر العمل',
+        description: 'إنشاء وإدارة أوامر العمل وطلبات الصيانة',
+        features: {
+            create_wo: 'إنشاء أوامر عمل',
+            workflow: 'سير العمل والاعتمادات',
+            assignment: 'تعيين الفرق',
+            parts_tracking: 'تتبع القطع',
+        },
+    },
+    maintenance: {
+        name: 'الصيانة الوقائية',
+        description: 'إنشاء وإدارة خطط ومهام الصيانة الوقائية اليدوية',
+        features: {
+            maintenance_plans: 'الخطط اليدوية',
+            schedules: 'المهام',
+        },
+    },
+    inventory: {
+        name: 'إدارة المخزون',
+        description: 'إدارة قطع الغيار والمخزون',
+        features: {
+            stock_tracking: 'تتبع المخزون',
+            low_stock_alerts: 'تنبيهات نقص المخزون',
+            consumption_reports: 'تقارير الاستهلاك',
+        },
+    },
+    employees: {
+        name: 'إدارة الموظفين',
+        description: 'إدارة حسابات الموظفين والصلاحيات',
+        features: {
+            user_management: 'إدارة المستخدمين',
+            role_assignment: 'تعيين الأدوار',
+        },
+    },
+    work_teams: {
+        name: 'فرق العمل',
+        description: 'إنشاء وإدارة فرق العمل المتخصصة',
+        features: {
+            team_creation: 'إنشاء الفرق',
+            member_assignment: 'تعيين الأعضاء',
+        },
+    },
+    reports: {
+        name: 'التقارير والتحليلات',
+        description: 'عرض التقارير والتحليلات',
+        features: {
+            operational_reports: 'التقارير التشغيلية',
+            export: 'تصدير التقارير',
+        },
+    },
+    public_portal: {
+        name: 'البوابة العامة',
+        description: 'السماح للمستخدمين العموميين برفع البلاغات',
+        features: {
+            public_submission: 'رفع بلاغات عامة',
+            qr_portal: 'روابط QR للبوابة',
+        },
+    },
+}
+
+function getModuleArabicName(module: SystemModule) {
+    return arabicModuleCopy[module.code]?.name || module.name_ar
+}
+
+function getModuleArabicDescription(module: SystemModule) {
+    return arabicModuleCopy[module.code]?.description || module.description_ar
+}
+
+function getFeatureArabicName(moduleCode: string, featureCode: string, fallback: string) {
+    return arabicModuleCopy[moduleCode]?.features?.[featureCode] || fallback
 }
 
 export default function ModulesSettingsPage() {
@@ -91,7 +198,7 @@ export default function ModulesSettingsPage() {
             </div>
 
             <div className="space-y-4">
-                {SYSTEM_MODULES.map(module => (
+                {SYSTEM_MODULES.map((module) => (
                     <ModuleCard
                         key={module.code}
                         module={module}
@@ -115,7 +222,7 @@ function ModuleCard({
     isExpanded,
     onToggleExpand,
     onPlanManagedAction,
-    isRTL
+    isRTL,
 }: {
     module: SystemModule
     isEnabled: boolean
@@ -128,25 +235,31 @@ function ModuleCard({
     const Icon = iconMap[module.icon] || Settings2
 
     return (
-        <div className={cn(
-            'bg-card rounded-xl border overflow-hidden transition-all',
-            isEnabled ? 'border-border' : 'border-muted/30 opacity-70'
-        )}>
+        <div
+            className={cn(
+                'bg-card rounded-xl border overflow-hidden transition-all',
+                isEnabled ? 'border-border' : 'border-muted/30 opacity-70'
+            )}
+        >
             <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
-                    <div className={cn(
-                        'p-3 rounded-xl',
-                        isEnabled ? 'bg-secondary/10' : 'bg-muted/10'
-                    )}>
-                        <Icon className={cn(
-                            'w-6 h-6',
-                            isEnabled ? 'text-secondary' : 'text-muted'
-                        )} />
+                    <div
+                        className={cn(
+                            'p-3 rounded-xl',
+                            isEnabled ? 'bg-secondary/10' : 'bg-muted/10'
+                        )}
+                    >
+                        <Icon
+                            className={cn(
+                                'w-6 h-6',
+                                isEnabled ? 'text-secondary' : 'text-muted'
+                            )}
+                        />
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold font-cairo">
-                                {isRTL ? module.name_ar : module.name}
+                                {isRTL ? getModuleArabicName(module) : module.name}
                             </h3>
                             {module.isCore && (
                                 <span className="flex items-center gap-1 px-2 py-0.5 bg-warning/10 text-warning text-xs rounded-full">
@@ -156,7 +269,7 @@ function ModuleCard({
                             )}
                         </div>
                         <p className="text-sm text-muted-foreground font-cairo">
-                            {isRTL ? module.description_ar : module.description}
+                            {isRTL ? getModuleArabicDescription(module) : module.description}
                         </p>
                     </div>
                 </div>
@@ -171,10 +284,12 @@ function ModuleCard({
                             isEnabled ? 'bg-success' : 'bg-muted/30'
                         )}
                     >
-                        <div className={cn(
-                            'absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform',
-                            isEnabled ? (isRTL ? 'left-1' : 'right-1') : (isRTL ? 'right-1' : 'left-1')
-                        )}>
+                        <div
+                            className={cn(
+                                'absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform',
+                                isEnabled ? (isRTL ? 'left-1' : 'right-1') : (isRTL ? 'right-1' : 'left-1')
+                            )}
+                        >
                             {isEnabled ? (
                                 <Check className="w-3 h-3 m-1 text-success" />
                             ) : (
@@ -204,8 +319,9 @@ function ModuleCard({
                         {isRTL ? 'الميزات الفرعية:' : 'Sub-features:'}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {module.features.map(feature => {
+                        {module.features.map((feature) => {
                             const featureEnabled = isFeatureEnabled(tenantModules, module.code, feature.code)
+
                             return (
                                 <div
                                     key={feature.code}
@@ -214,11 +330,15 @@ function ModuleCard({
                                         featureEnabled ? 'bg-card border-border' : 'bg-muted/5 border-muted/20'
                                     )}
                                 >
-                                    <span className={cn(
-                                        'font-cairo text-sm',
-                                        featureEnabled ? 'text-primary' : 'text-muted'
-                                    )}>
-                                        {isRTL ? feature.name_ar : feature.name}
+                                    <span
+                                        className={cn(
+                                            'font-cairo text-sm',
+                                            featureEnabled ? 'text-primary' : 'text-muted'
+                                        )}
+                                    >
+                                        {isRTL
+                                            ? getFeatureArabicName(module.code, feature.code, feature.name_ar)
+                                            : feature.name}
                                     </span>
                                     <button
                                         onClick={onPlanManagedAction}
@@ -230,12 +350,14 @@ function ModuleCard({
                                             !isEnabled && 'opacity-50'
                                         )}
                                     >
-                                        <div className={cn(
-                                            'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
-                                            featureEnabled
-                                                ? (isRTL ? 'left-0.5' : 'right-0.5')
-                                                : (isRTL ? 'right-0.5' : 'left-0.5')
-                                        )} />
+                                        <div
+                                            className={cn(
+                                                'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform',
+                                                featureEnabled
+                                                    ? (isRTL ? 'left-0.5' : 'right-0.5')
+                                                    : (isRTL ? 'right-0.5' : 'left-0.5')
+                                            )}
+                                        />
                                     </button>
                                 </div>
                             )
