@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom'
 import {
-    LayoutDashboard,
     ClipboardList,
     Box,
     BarChart3,
-    Smartphone,
     Zap,
     ArrowLeft,
     CheckCircle2,
@@ -14,278 +12,376 @@ import {
     Factory,
     MessagesSquare,
     FileWarning,
-    History
+    History,
+    Monitor,
+    RefreshCw,
+    Mail,
+    Smartphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
-import { useTranslation } from 'react-i18next'
+import { motion, type Variants } from 'framer-motion'
+
+// ─── Animation primitives ──────────────────────────────────────────────────────
+
+const stagger: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+}
+
+const rise: Variants = {
+    hidden: { opacity: 0, y: 22 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.55 } },
+}
+
+// ─── Landing Page ──────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-    const { t } = useTranslation()
-
-    // Animation variants for smooth entry
-    const fadeIn = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-    };
-
     return (
         <div className="min-h-screen bg-slate-50 font-cairo text-slate-900" dir="rtl">
 
-            {/* Navigation - Glass Effect */}
-            <nav className="fixed top-0 w-full z-50 border-b border-white/20 bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
-                <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        {/* Logo - تأكد من مسار الشعار */}
-                        <img src="/images/logo.png" alt="Mutqan Logo" className="h-12 w-auto object-contain" />
-                    </div>
-                    <div className="flex items-center gap-3 sm:gap-6">
-                        <Link to="/contact" className="text-sm font-bold text-slate-600 hover:text-primary transition-colors">
+            {/* ══════════════════════════════════════════════════════════════
+                NAV
+            ══════════════════════════════════════════════════════════════ */}
+            <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200/70">
+                <div className="max-w-7xl mx-auto px-5 sm:px-8 h-[66px] flex items-center justify-between">
+                    <img src="/images/logo.png" alt="متقن" className="h-10 w-auto" />
+
+                    <div className="flex items-center gap-2 sm:gap-5">
+                        <Link
+                            to="/contact"
+                            className="hidden sm:block text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+                        >
                             تواصل معنا
                         </Link>
-                        <Link to="/login" className="text-sm font-bold text-slate-600 hover:text-primary transition-colors">
+                        <Link
+                            to="/login"
+                            className="text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+                        >
                             تسجيل الدخول
                         </Link>
                         <Link
                             to="/register"
-                            className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5"
+                            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-[#2E3A45] hover:bg-[#3a4a57] text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-sm"
                         >
-                            جرب مُتقَن مجاناً
+                            جرب مجاناً
                         </Link>
                     </div>
                 </div>
             </nav>
 
-            {/* Hero Section - Abstract & Typographic Focus (بدون صور داشبورد) */}
-            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden flex flex-col items-center justify-center min-h-[85vh]">
+            {/* ══════════════════════════════════════════════════════════════
+                HERO
+            ══════════════════════════════════════════════════════════════ */}
+            <section className="relative pt-36 pb-24 lg:pt-52 lg:pb-36 overflow-hidden">
 
-                {/* Dynamic Background Elements - Animated Blobs */}
-                <motion.div
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 90, 0],
-                    }}
-                    transition={{ duration: 20, repeat: Infinity }}
-                    className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10 translate-x-1/3 -translate-y-1/4"
+                {/* Ambient glow orbs — very subtle */}
+                <div
+                    className="absolute -top-24 left-1/2 -translate-x-1/2 w-[900px] h-[420px] rounded-full blur-3xl pointer-events-none"
+                    style={{ background: 'radial-gradient(ellipse, rgba(58,175,169,0.08) 0%, transparent 70%)' }}
                 />
-                <motion.div
-                    animate={{
-                        scale: [1, 1.3, 1],
-                        rotate: [0, -90, 0],
-                    }}
-                    transition={{ duration: 25, repeat: Infinity }}
-                    className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[100px] -z-10 -translate-x-1/3 translate-y-1/3"
-                />
+                <div className="absolute top-28 right-[-80px] w-[320px] h-[320px] rounded-full blur-[100px] pointer-events-none bg-[#2E3A45]/5" />
+                <div className="absolute bottom-0 left-[-60px] w-[260px] h-[260px] rounded-full blur-[80px] pointer-events-none bg-[#3AAFA9]/7" />
 
-                <div className="container mx-auto px-4 text-center relative z-10">
+                <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center relative z-10">
+
+                    {/* Eyebrow badge */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.45 }}
+                        className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-sm text-sm font-semibold text-slate-600 mb-8"
+                    >
+                        <span className="w-2 h-2 rounded-full bg-[#3AAFA9] shrink-0" />
+                        الجيل الجديد من إدارة المرافق
+                    </motion.div>
+
+                    {/* Headline */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 0.61, 0.36, 1] }}
+                        className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black text-slate-900 leading-[1.1] tracking-tight mb-6 max-w-4xl mx-auto"
+                    >
+                        تحكم في منشأتك
+                        <br />
+                        <span style={{ color: '#3AAFA9' }}>بذكاء مطلق</span>
+                    </motion.h1>
+
+                    {/* Subheadline */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.22 }}
+                        className="max-w-2xl mx-auto mb-10 space-y-1.5"
+                    >
+                        <p className="text-lg md:text-xl text-slate-500 leading-relaxed">
+                            نظام سحابي يجمع لك الصيانة، الأصول، وفرق العمل في منصة واحدة.
+                        </p>
+                        <p className="text-lg md:text-xl font-bold text-slate-800">
+                            بدون تعقيد. بدون أوراق. بدون فوضى.
+                        </p>
+                    </motion.div>
+
+                    {/* CTA row */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.55, delay: 0.34 }}
+                        className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+                    >
+                        <Link
+                            to="/register"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-[17px] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 group"
+                            style={{
+                                background: '#3AAFA9',
+                                boxShadow: '0 8px 32px rgba(58,175,169,0.30)',
+                            }}
+                        >
+                            ابدأ تجربتك المجانية
+                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                        </Link>
+                        <p className="text-sm text-slate-400 font-medium">
+                            لا تحتاج لبطاقة ائتمان &nbsp;·&nbsp; 14 يوماً مجاناً
+                        </p>
+                    </motion.div>
+
+                    {/* Capability cards */}
                     <motion.div
                         initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true }}
-                        variants={fadeIn}
-                        className="max-w-5xl mx-auto space-y-10"
+                        animate="visible"
+                        variants={stagger}
+                        className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto"
                     >
-                        {/* New Minimal Badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-sm font-bold mb-6 hover:scale-105 transition-transform cursor-default">
-                            <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                            <span className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                                الجيل الجديد من إدارة المرافق
-                            </span>
-                        </div>
-
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 leading-normal tracking-tighter">
-                            تحكم في منشأتك <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-secondary">
-                                بذكاء مطلق
-                            </span>
-                        </h1>
-
-                        <p className="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto leading-relaxed font-medium">
-                            نظام سحابي يجمع لك الصيانة، الأصول، وفرق العمل في منصة واحدة.
-                            <span className="block mt-2 text-slate-900 font-bold">بدون تعقيد. بدون أوراق. بدون فوضى.</span>
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
-                            <Link
-                                to="/register"
-                                className="w-full sm:w-auto px-10 py-5 bg-slate-900 text-white rounded-2xl text-xl font-bold hover:bg-slate-800 transition-all shadow-2xl shadow-slate-900/30 hover:-translate-y-1 flex items-center justify-center gap-3 group"
+                        {[
+                            { label: "أوامر عمل منجزة", val: "+150", icon: ClipboardList, ic: "#3B82F6", ib: "#EFF6FF" },
+                            { label: "أصول مسجلة",      val: "100%", icon: Box,           ic: "#10B981", ib: "#ECFDF5" },
+                            { label: "كفاءة التشغيل",   val: "High", icon: BarChart3,      ic: "#8B5CF6", ib: "#F5F3FF" },
+                            { label: "توفير في التكاليف", val: "30%", icon: Zap,           ic: "#F59E0B", ib: "#FFFBEB" },
+                        ].map((s, i) => (
+                            <motion.div
+                                key={i}
+                                variants={rise}
+                                className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col items-center gap-3 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                             >
-                                <span>ابدأ تجربتك الآن</span>
-                                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                            </Link>
-                        </div>
-
-                        {/* Abstract Feature Cards - Floating Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto">
-                            {[
-                                { label: "أوامر عمل منجزة", val: "+150", icon: ClipboardList, col: "text-blue-500", bg: "bg-blue-50" },
-                                { label: "أصول مسجلة", val: "100%", icon: Box, col: "text-emerald-500", bg: "bg-emerald-50" },
-                                { label: "كفاءة التشغيل", val: "High", icon: BarChart3, col: "text-purple-500", bg: "bg-purple-50" },
-                                { label: "توفير في التكاليف", val: "30%", icon: Zap, col: "text-yellow-500", bg: "bg-yellow-50" },
-                            ].map((stat, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.1 + 0.5 }}
-                                    className="bg-white/80 backdrop-blur-md border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col items-center justify-center gap-3"
-                                >
-                                    <div className={`p-3 rounded-full ${stat.bg}`}>
-                                        <stat.icon className={`w-6 h-6 ${stat.col}`} />
-                                    </div>
-                                    <span className="font-bold text-slate-900 text-2xl">{stat.val}</span>
-                                    <span className="text-sm text-slate-500 font-medium">{stat.label}</span>
-                                </motion.div>
-                            ))}
-                        </div>
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: s.ib }}>
+                                    <s.icon className="w-5 h-5" style={{ color: s.ic }} />
+                                </div>
+                                <span className="text-2xl font-black text-slate-900">{s.val}</span>
+                                <span className="text-xs text-slate-500 font-medium text-center leading-snug">{s.label}</span>
+                            </motion.div>
+                        ))}
                     </motion.div>
                 </div>
             </section>
 
-            {/* Social Proof / Industries */}
-            <section className="py-12 border-y border-slate-100 bg-white">
-                <div className="container mx-auto px-4 text-center">
-                    <p className="text-sm font-bold text-slate-400 mb-8 tracking-wider">الحل الأمثل لإدارة المرافق في مختلف القطاعات</p>
-                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70 hover:opacity-100 transition-all duration-500">
-                        {/* Industry Icons */}
-                        <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                            <div className="p-4 rounded-full bg-slate-50 group-hover:bg-slate-100 transition-colors">
-                                <Building2 className="w-8 h-8 text-slate-600 group-hover:text-primary transition-colors" />
+            {/* ══════════════════════════════════════════════════════════════
+                INDUSTRIES STRIP
+            ══════════════════════════════════════════════════════════════ */}
+            <section className="py-10 border-y border-slate-200/70 bg-white">
+                <div className="max-w-7xl mx-auto px-5 sm:px-8">
+                    <p className="text-[11px] font-bold text-slate-400 text-center mb-7 tracking-[0.18em] uppercase">
+                        يخدم مختلف القطاعات
+                    </p>
+                    <div className="flex flex-wrap justify-center items-center gap-5 sm:gap-12">
+                        {[
+                            { icon: Building2,     label: "المجمعات التجارية" },
+                            { icon: Stethoscope,   label: "المرافق الطبية" },
+                            { icon: GraduationCap, label: "التعليم" },
+                            { icon: Factory,       label: "الصناعة" },
+                        ].map(({ icon: Icon, label }, i) => (
+                            <div key={i} className="flex items-center gap-2.5 group cursor-default">
+                                <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:border-[#3AAFA9]/30 group-hover:bg-[#3AAFA9]/5 transition-all duration-200">
+                                    <Icon className="w-4 h-4 text-slate-500 group-hover:text-[#3AAFA9] transition-colors duration-200" />
+                                </div>
+                                <span className="text-sm font-semibold text-slate-600 group-hover:text-slate-900 transition-colors duration-200">{label}</span>
                             </div>
-                            <span className="font-bold text-sm text-slate-600">المجمعات التجارية</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                            <div className="p-4 rounded-full bg-slate-50 group-hover:bg-slate-100 transition-colors">
-                                <Stethoscope className="w-8 h-8 text-slate-600 group-hover:text-primary transition-colors" />
-                            </div>
-                            <span className="font-bold text-sm text-slate-600">المرافق الطبية</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                            <div className="p-4 rounded-full bg-slate-50 group-hover:bg-slate-100 transition-colors">
-                                <GraduationCap className="w-8 h-8 text-slate-600 group-hover:text-primary transition-colors" />
-                            </div>
-                            <span className="font-bold text-sm text-slate-600">التعليم</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-3 group cursor-pointer">
-                            <div className="p-4 rounded-full bg-slate-50 group-hover:bg-slate-100 transition-colors">
-                                <Factory className="w-8 h-8 text-slate-600 group-hover:text-primary transition-colors" />
-                            </div>
-                            <span className="font-bold text-sm text-slate-600">الصناعة</span>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Pain Points - Bento Grid Style */}
+            {/* ══════════════════════════════════════════════════════════════
+                PAIN POINTS
+            ══════════════════════════════════════════════════════════════ */}
             <section className="py-24 bg-slate-50" id="features">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-16 max-w-3xl mx-auto">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">لماذا مُتقَن؟</h2>
-                        <p className="text-slate-600 text-lg">صممناه لأننا نعلم حجم المعاناة اليومية لمدراء المرافق والصيانة.</p>
-                    </div>
+                <div className="max-w-7xl mx-auto px-5 sm:px-8">
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Card 1 */}
-                        <motion.div
-                            whileHover={{ y: -5 }}
-                            className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group"
+                    {/* Section header */}
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-80px" }}
+                        variants={stagger}
+                        className="text-center mb-14 max-w-2xl mx-auto"
+                    >
+                        <motion.span
+                            variants={rise}
+                            className="inline-block text-[11px] font-bold text-[#3AAFA9] tracking-[0.18em] uppercase mb-4"
                         >
-                            <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <MessagesSquare className="w-7 h-7" />
-                            </div>
-                            <h3 className="text-xl font-bold mb-3 text-slate-900">قروبات الواتساب المزعجة</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                هل تضيع وقتك في تتبع البلاغات عبر مئات الرسائل الصوتية والنصية؟ مُتقَن ينظم لك كل شيء في تذاكر رسمية.
-                            </p>
-                        </motion.div>
-                        {/* Card 2 */}
-                        <motion.div
-                            whileHover={{ y: -5 }}
-                            className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group md:-mt-4 border-t-4 border-t-primary"
+                            لماذا مُتقَن
+                        </motion.span>
+                        <motion.h2
+                            variants={rise}
+                            className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-tight mb-4"
                         >
-                            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <FileWarning className="w-7 h-7" />
-                            </div>
-                            <h3 className="text-xl font-bold mb-3 text-slate-900">الأوراق الضائعة</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                وداعاً للفواتير المفقودة وأوامر العمل الورقية. كل شيء موثق رقمياً، ومحفوظ في السحابة للوصول إليه في أي وقت.
-                            </p>
-                        </motion.div>
-                        {/* Card 3 */}
-                        <motion.div
-                            whileHover={{ y: -5 }}
-                            className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group"
-                        >
-                            <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <History className="w-7 h-7" />
-                            </div>
-                            <h3 className="text-xl font-bold mb-3 text-slate-900">الصيانة التفاعلية المكلفة</h3>
-                            <p className="text-slate-500 leading-relaxed">
-                                لا تنتظر تعطل المعدة لتصلحها. تحول للصيانة الوقائية وجدول أعمالك لتقلل التكاليف المفاجئة.
-                            </p>
-                        </motion.div>
+                            صممناه لأننا نعلم
+                            <br />
+                            <span className="text-slate-400 font-semibold">حجم المعاناة اليومية</span>
+                        </motion.h2>
+                        <motion.p variants={rise} className="text-slate-500 text-lg leading-relaxed">
+                            مدراء المرافق والصيانة يعانون من نفس المشاكل. مُتقَن جاء ليحلها.
+                        </motion.p>
+                    </motion.div>
+
+                    {/* Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                icon: MessagesSquare,
+                                accent: "#EF4444", iconBg: "#FFF1F2",
+                                tag: "التواصل", featured: false,
+                                title: "قروبات الواتساب المزعجة",
+                                body: "هل تضيع وقتك في تتبع البلاغات عبر مئات الرسائل الصوتية والنصية؟ مُتقَن ينظم لك كل شيء في تذاكر رسمية.",
+                            },
+                            {
+                                icon: FileWarning,
+                                accent: "#3AAFA9", iconBg: "#EDFAFA",
+                                tag: "التوثيق", featured: true,
+                                title: "الأوراق الضائعة",
+                                body: "وداعاً للفواتير المفقودة وأوامر العمل الورقية. كل شيء موثق رقمياً، ومحفوظ في السحابة للوصول إليه في أي وقت.",
+                            },
+                            {
+                                icon: History,
+                                accent: "#F59E0B", iconBg: "#FFFBEB",
+                                tag: "الصيانة", featured: false,
+                                title: "الصيانة التفاعلية المكلفة",
+                                body: "لا تنتظر تعطل المعدة لتصلحها. تحول للصيانة الوقائية وجدول أعمالك لتقلل التكاليف المفاجئة.",
+                            },
+                        ].map((card, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 28 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-60px" }}
+                                transition={{ duration: 0.5, delay: i * 0.1 }}
+                                className={cn(
+                                    "relative bg-white rounded-3xl p-8 border transition-all duration-300 hover:-translate-y-2",
+                                    card.featured
+                                        ? "border-[#3AAFA9]/20 shadow-lg md:-mt-4 hover:shadow-2xl"
+                                        : "border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200"
+                                )}
+                            >
+                                {/* Featured accent line */}
+                                {card.featured && (
+                                    <div
+                                        className="absolute top-0 inset-x-0 h-[3px] rounded-t-3xl"
+                                        style={{ background: 'linear-gradient(90deg, #3AAFA9 0%, #2E3A45 100%)' }}
+                                    />
+                                )}
+
+                                <div className="flex items-start justify-between mb-6">
+                                    <div
+                                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                                        style={{ background: card.iconBg }}
+                                    >
+                                        <card.icon className="w-6 h-6" style={{ color: card.accent }} />
+                                    </div>
+                                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-50 text-slate-400 border border-slate-100 tracking-wide">
+                                        {card.tag}
+                                    </span>
+                                </div>
+
+                                <h3 className="text-xl font-bold text-slate-900 mb-3 leading-snug">{card.title}</h3>
+                                <p className="text-slate-500 text-[15px] leading-relaxed">{card.body}</p>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Features Showcase - PWA Focus (Code-Only Visual) */}
-            <section className="py-24 bg-slate-900 text-white overflow-hidden relative">
-                {/* Decoration */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+            {/* ══════════════════════════════════════════════════════════════
+                PWA FEATURES — dark section
+            ══════════════════════════════════════════════════════════════ */}
+            <section className="py-24 bg-[#1C2730] text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-[#3AAFA9]/10 rounded-full blur-[130px] pointer-events-none" />
+                <div className="absolute bottom-0 left-[-80px] w-[320px] h-[320px] bg-[#3AAFA9]/5 rounded-full blur-[80px] pointer-events-none" />
 
-                <div className="container mx-auto px-4">
+                <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        {/* Text Content */}
-                        <div>
-                            <span className="text-primary font-bold tracking-wider text-sm uppercase">وصول شامل</span>
-                            <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 leading-tight">معك في الميدان.. <br /> بدون تحميل تطبيقات</h2>
-                            <p className="text-slate-400 text-lg mb-8">
-                                مُتقَن يعمل كتطبيق ويب تقدمي (PWA). سواء كنت تستخدم لابتوب المكتب أو جوالك في الموقع، افتح المتصفح وابدأ العمل فوراً.
-                            </p>
 
-                            <div className="space-y-6">
+                        {/* Text content */}
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                            variants={stagger}
+                        >
+                            <motion.span
+                                variants={rise}
+                                className="block text-[11px] font-bold text-[#3AAFA9] tracking-[0.18em] uppercase mb-4"
+                            >
+                                وصول شامل
+                            </motion.span>
+                            <motion.h2 variants={rise} className="text-3xl md:text-4xl lg:text-5xl font-black leading-[1.2] mb-5">
+                                معك في الميدان
+                                <br />
+                                <span className="text-slate-400 font-medium text-2xl md:text-3xl">بدون تحميل تطبيقات</span>
+                            </motion.h2>
+                            <motion.p variants={rise} className="text-slate-400 text-lg mb-10 leading-relaxed max-w-md">
+                                مُتقَن يعمل كتطبيق ويب تقدمي (PWA). سواء كنت في المكتب أو الموقع، افتح المتصفح وابدأ العمل فوراً.
+                            </motion.p>
+
+                            <motion.div variants={stagger} className="space-y-1.5">
                                 {[
-                                    { title: "متجاوب 100%", desc: "واجهة تتكيف تلقائياً مع حجم شاشتك (جوال، تابلت، كمبيوتر)." },
-                                    { title: "دائماً محدث", desc: "لا حاجة لزيارة متجر التطبيقات، أنت دائماً على أحدث نسخة." },
-                                    { title: "تنبيهات بريدية فورية", desc: "وداعاً لـ 'ما شفت الرسالة'. إشعارات لحظية تصلك وتصل للفريق عند أي تحديث." },
-                                    { title: "خفيف وسريع", desc: "لا يستهلك مساحة تخزين جهازك، وسريع الاستجابة." }
+                                    { icon: Monitor,    title: "متجاوب 100%",           desc: "واجهة تتكيف تلقائياً مع جوالك وتابلتك وكمبيوترك." },
+                                    { icon: RefreshCw,  title: "دائماً محدث",            desc: "لا حاجة لزيارة متجر التطبيقات، أنت دائماً على أحدث نسخة." },
+                                    { icon: Mail,       title: "تنبيهات بريدية فورية",   desc: "إشعارات لحظية تصلك وتصل للفريق عند أي تحديث." },
+                                    { icon: Zap,        title: "خفيف وسريع",             desc: "لا يستهلك مساحة تخزين جهازك، وسريع الاستجابة." },
                                 ].map((item, idx) => (
-                                    <div key={idx} className="flex gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors cursor-default border border-transparent hover:border-white/10">
-                                        <div className="mt-1">
-                                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                                                <Smartphone className="w-6 h-6" />
-                                            </div>
+                                    <motion.div
+                                        key={idx}
+                                        variants={rise}
+                                        className="flex gap-4 p-4 rounded-2xl border border-transparent hover:bg-white/5 hover:border-white/10 transition-all duration-200 cursor-default group"
+                                    >
+                                        <div className="mt-0.5 w-10 h-10 rounded-xl bg-[#3AAFA9]/15 border border-[#3AAFA9]/20 flex items-center justify-center shrink-0 group-hover:bg-[#3AAFA9]/25 transition-colors">
+                                            <item.icon className="w-5 h-5 text-[#3AAFA9]" />
                                         </div>
                                         <div>
-                                            <h4 className="text-xl font-bold mb-1">{item.title}</h4>
+                                            <h4 className="font-bold text-white mb-0.5 text-base">{item.title}</h4>
                                             <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
 
-                        {/* Visual - Abstract Glowing Icon (No Image Needed) */}
-                        <div className="relative flex justify-center items-center h-80">
+                        {/* Abstract visual — desktop only */}
+                        <div className="hidden lg:flex justify-center items-center">
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.8 }}
+                                initial={{ opacity: 0, scale: 0.88 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.5 }}
-                                className="relative z-10"
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.65, ease: "easeOut" }}
+                                className="relative"
                             >
-                                {/* Glowing Circles */}
-                                <div className="absolute inset-0 bg-primary/30 blur-[60px] rounded-full animate-pulse"></div>
+                                {/* Glow */}
+                                <div className="absolute inset-0 bg-[#3AAFA9]/20 blur-[80px] rounded-full" />
 
-                                {/* Icon Container */}
-                                <div className="relative w-48 h-48 bg-gradient-to-tr from-slate-800 to-slate-700 rounded-[3rem] border border-slate-600 shadow-2xl flex items-center justify-center group hover:scale-105 transition-transform duration-500">
-                                    <Smartphone className="w-20 h-20 text-white opacity-80 group-hover:text-primary transition-colors duration-300" />
+                                {/* Icon box */}
+                                <div
+                                    className="relative w-56 h-56 rounded-[2.5rem] border border-white/10 shadow-2xl flex items-center justify-center"
+                                    style={{ background: 'linear-gradient(135deg, #2a3840 0%, #1C2730 100%)' }}
+                                >
+                                    <Smartphone className="w-24 h-24 text-white/60" />
 
-                                    {/* Small floating badges */}
-                                    <div className="absolute -right-4 -top-4 bg-slate-800 border border-slate-600 p-3 rounded-2xl shadow-lg animate-bounce delay-100">
-                                        <Zap className="w-6 h-6 text-yellow-500" />
+                                    {/* Floating chips */}
+                                    <div className="absolute -top-5 -right-6 bg-[#3AAFA9] text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        جاهز دائماً
                                     </div>
-                                    <div className="absolute -left-4 -bottom-4 bg-slate-800 border border-slate-600 p-3 rounded-2xl shadow-lg animate-bounce delay-300">
-                                        <CheckCircle2 className="w-6 h-6 text-green-500" />
+                                    <div className="absolute -bottom-5 -left-6 bg-[#1a2028] border border-white/15 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                                        <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                                        سريع وخفيف
                                     </div>
                                 </div>
                             </motion.div>
@@ -294,54 +390,113 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-24 relative overflow-hidden bg-white">
-                <div className="absolute inset-0 bg-primary/5"></div>
-                <div className="container mx-auto px-4 text-center relative z-10">
-                    <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">جاهز للبدء؟</h2>
-                    <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-                        انضم للمستقبل، ورتب منشأتك اليوم. التجربة مجانية بالكامل.
-                    </p>
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                        <Link
-                            to="/register"
-                            className="w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-xl text-lg font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/30 transform hover:-translate-y-1"
+            {/* ══════════════════════════════════════════════════════════════
+                CTA
+            ══════════════════════════════════════════════════════════════ */}
+            <section className="py-28 relative overflow-hidden" style={{ background: '#2E3A45' }}>
+                {/* Top glow */}
+                <div
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full blur-[100px] pointer-events-none"
+                    style={{ background: 'radial-gradient(ellipse, rgba(58,175,169,0.18) 0%, transparent 70%)' }}
+                />
+                {/* Dot grid texture */}
+                <div
+                    className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+                        backgroundSize: '28px 28px',
+                    }}
+                />
+
+                <div className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                        variants={stagger}
+                    >
+                        <motion.span
+                            variants={rise}
+                            className="inline-block text-[11px] font-bold text-[#3AAFA9] tracking-[0.18em] uppercase mb-6"
                         >
-                            أنشئ حساب منشأتك
-                        </Link>
-                        <p className="text-sm text-slate-500 mt-4 sm:mt-0 font-medium">لا تحتاج لبطاقة ائتمان • 14 يوم تجربة مجانية</p>
-                    </div>
+                            ابدأ اليوم
+                        </motion.span>
+                        <motion.h2
+                            variants={rise}
+                            className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight"
+                        >
+                            جاهز للبدء؟
+                        </motion.h2>
+                        <motion.p variants={rise} className="text-slate-300 text-xl mb-10 max-w-lg mx-auto leading-relaxed">
+                            انضم للمستقبل، ورتب منشأتك اليوم. التجربة مجانية بالكامل.
+                        </motion.p>
+                        <motion.div variants={rise} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <Link
+                                to="/register"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-9 py-4 text-white rounded-2xl text-lg font-bold transition-all duration-200 hover:-translate-y-0.5"
+                                style={{
+                                    background: '#3AAFA9',
+                                    boxShadow: '0 8px 32px rgba(58,175,169,0.25)',
+                                }}
+                            >
+                                أنشئ حساب منشأتك مجاناً
+                            </Link>
+                            <p className="text-slate-400 text-sm font-medium">
+                                لا تحتاج لبطاقة ائتمان &nbsp;·&nbsp; 14 يوم تجربة مجانية
+                            </p>
+                        </motion.div>
+                    </motion.div>
                 </div>
             </section>
 
-            {/* Clean Footer */}
-            <footer className="bg-white border-t border-slate-200 pt-16 pb-8">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                        <div className="col-span-1 md:col-span-1">
-                            {/* Logo Placeholder */}
-                            <img src="/images/logo.png" alt="Mutqan" className="h-10 w-auto mb-6 opacity-80" />
-                            <p className="text-slate-500 text-sm leading-relaxed">
+            {/* ══════════════════════════════════════════════════════════════
+                FOOTER
+            ══════════════════════════════════════════════════════════════ */}
+            <footer className="bg-white border-t border-slate-200 pt-14 pb-8">
+                <div className="max-w-7xl mx-auto px-5 sm:px-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+
+                        {/* Brand */}
+                        <div>
+                            <img src="/images/logo.png" alt="متقن" className="h-9 w-auto mb-5 opacity-75" />
+                            <p className="text-slate-500 text-sm leading-relaxed max-w-[260px]">
                                 مُتقَن هو الحل السحابي الأحدث لإدارة الصيانة والمرافق في المملكة العربية السعودية.
                             </p>
                         </div>
+
+                        {/* Links */}
                         <div>
-                            <h4 className="font-bold mb-4 text-slate-900">الشركة</h4>
-                            <ul className="space-y-2 text-sm text-slate-500">
-                                <li><Link to="/about" className="hover:text-primary transition-colors">من نحن</Link></li>
-                                <li><Link to="/contact" className="hover:text-primary transition-colors">اتصل بنا</Link></li>
-                                <li><Link to="/privacy" className="hover:text-primary transition-colors">سياسة الخصوصية</Link></li>
-                                <li><Link to="/terms" className="hover:text-primary transition-colors">سياسة الاستخدام</Link></li>
+                            <h4 className="font-bold text-slate-900 mb-4 text-sm">الشركة</h4>
+                            <ul className="space-y-2.5">
+                                {[
+                                    { to: "/about",   label: "من نحن" },
+                                    { to: "/contact", label: "اتصل بنا" },
+                                    { to: "/privacy", label: "سياسة الخصوصية" },
+                                    { to: "/terms",   label: "سياسة الاستخدام" },
+                                ].map(({ to, label }) => (
+                                    <li key={to}>
+                                        <Link to={to} className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
+                                            {label}
+                                        </Link>
+                                    </li>
+                                ))}
                             </ul>
                         </div>
+
+                        {/* Contact */}
                         <div>
-                            <h4 className="font-bold mb-4 text-slate-900">تواصل معنا</h4>
-                            <ul className="space-y-2 text-sm text-slate-500">
-                                <li className="font-mono dir-ltr">Info@mutqan-sa.com</li>
-                            </ul>
+                            <h4 className="font-bold text-slate-900 mb-4 text-sm">تواصل معنا</h4>
+                            <a
+                                href="mailto:Info@mutqan-sa.com"
+                                className="text-sm text-slate-500 hover:text-[#3AAFA9] transition-colors"
+                                dir="ltr"
+                            >
+                                Info@mutqan-sa.com
+                            </a>
                         </div>
                     </div>
-                    <div className="border-t border-slate-100 pt-8 text-center text-sm text-slate-400">
+
+                    <div className="border-t border-slate-100 pt-6 text-center text-xs text-slate-400">
                         © {new Date().getFullYear()} مُتقَن لتقنية المعلومات. جميع الحقوق محفوظة.
                     </div>
                 </div>

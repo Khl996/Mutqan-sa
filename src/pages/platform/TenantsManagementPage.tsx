@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode, type ElementType } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useTenant } from '@/contexts/TenantContext'
@@ -13,7 +13,14 @@ import {
     CreateTenantInput,
 } from '@/hooks/useTenants'
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans'
-import { useUpdateSubscription } from '@/hooks/useSubscription'
+import {
+    useAdminManageSubscription,
+    useTenantSubscription,
+    AdminManageSubscriptionInput,
+    SubscriptionStatus,
+    OverrideType,
+    DiscountType,
+} from '@/hooks/useSubscription'
 import { toast } from 'sonner'
 import {
     Building2,
@@ -31,6 +38,14 @@ import {
     X,
     ExternalLink,
     CreditCard,
+    Calendar,
+    Clock,
+    Tag,
+    FileText,
+    AlertTriangle,
+    Gift,
+    Infinity,
+    Loader2,
 } from 'lucide-react'
 
 export default function TenantsManagementPage() {
@@ -427,7 +442,7 @@ function InputField({
 }: {
     label: string
     required?: boolean
-    children: React.ReactNode
+    children: ReactNode
 }) {
     return (
         <div>
@@ -442,7 +457,7 @@ function InputField({
 function StatCard({ title, value, icon: Icon, color }: {
     title: string
     value: number
-    icon: React.ElementType
+    icon: ElementType
     color: string
 }) {
     const colorClasses: Record<string, string> = {
@@ -614,6 +629,37 @@ function TenantRow({
     )
 }
 
+// ─── Subscription Status Display Helpers ────────────────────────────────────
+
+const STATUS_META: Record<SubscriptionStatus, { labelAr: string; label: string; color: string; bg: string }> = {
+    trial:     { label: 'Trial',     labelAr: 'تجريبي',      color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200' },
+    active:    { label: 'Active',    labelAr: 'نشط',         color: 'text-green-700',  bg: 'bg-green-50 border-green-200' },
+    expired:   { label: 'Expired',   labelAr: 'منتهي',       color: 'text-red-700',    bg: 'bg-red-50 border-red-200' },
+    suspended: { label: 'Suspended', labelAr: 'معلق',        color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
+    cancelled: { label: 'Cancelled', labelAr: 'ملغي',        color: 'text-gray-700',   bg: 'bg-gray-50 border-gray-200' },
+}
+
+const OVERRIDE_META: Record<OverrideType, { labelAr: string; label: string }> = {
+    none:             { label: 'None',             labelAr: 'لا يوجد' },
+    trial_extension:  { label: 'Trial Extension',  labelAr: 'تمديد تجربة' },
+    one_time_discount:{ label: 'One-time Discount', labelAr: 'خصم مرة واحدة' },
+    complimentary:    { label: 'Complimentary',    labelAr: 'مجاني مؤقت' },
+    free_forever:     { label: 'Free Forever',     labelAr: 'مجاني دائم' },
+}
+
+function formatDate(iso: string | null | undefined): string {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function daysFromNow(iso: string | null | undefined): number | null {
+    if (!iso) return null
+    const diff = new Date(iso).getTime() - Date.now()
+    return Math.ceil(diff / 86_400_000)
+}
+
+// ─── ManageSubscriptionModal ─────────────────────────────────────────────────
+
 function ManageSubscriptionModal({
     tenant,
     isRTL,
@@ -623,33 +669,95 @@ function ManageSubscriptionModal({
     isRTL: boolean
     onClose: () => void
 }) {
-    const { data: plans } = useSubscriptionPlans()
-    const updateSubscription = useUpdateSubscription()
+    const { data: plans = [] } = useSubscriptionPlans()
+    const { data: existing, isLoading: subLoading } = useTenantSubscription(tenant.id)
+    const manageSubscription = useAdminManageSubscription()
 
+    // ── Form State ──────────────────────────────────────────────────────────
     const [selectedPlanId, setSelectedPlanId] = useState<string>('')
-    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+    const [status, setStatus] = useState<SubscriptionStatus>('trial')
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
+    const [periodEnd, setPeriodEnd] = useState<string>('')           // YYYY-MM-DD
+    const [overrideType, setOverrideType] = useState<OverrideType>('none')
+    const [discountType, setDiscountType] = useState<DiscountType>('none')
+    const [discountValue, setDiscountValue] = useState<string>('0')
+    const [discountNextOnly, setDiscountNextOnly] = useState(false)
+    const [adminNote, setAdminNote] = useState('')
+    const [initialized, setInitialized] = useState(false)
 
-    const handleSave = async () => {
-        if (!selectedPlanId) return
+    // Populate form from existing subscription once loaded
+    if (!subLoading && !initialized) {
+        if (existing) {
+            setSelectedPlanId(existing.plan_id || '')
+            setStatus(existing.status)
+            setBillingCycle(existing.billing_cycle || 'yearly')
+            if (existing.current_period_end) {
+                setPeriodEnd(existing.current_period_end.slice(0, 10))
+            }
+            setOverrideType(existing.override_type || 'none')
+            setDiscountType(existing.discount_type || 'none')
+            setDiscountValue(String(existing.discount_value ?? 0))
+            setDiscountNextOnly(existing.discount_applies_to_next_only ?? false)
+            setAdminNote(existing.admin_note || '')
+        } else {
+            // No existing subscription: default to trial
+            if (plans.length > 0) setSelectedPlanId(plans[0].id)
+        }
+        setInitialized(true)
+    }
 
-        try {
-            await updateSubscription.mutateAsync({
-                tenantId: tenant.id,
-                planId: selectedPlanId,
-                billingCycle,
-            })
-            toast.success(isRTL ? 'تم تحديث الاشتراك بنجاح' : 'Subscription updated successfully')
-            onClose()
-        } catch (error) {
-            const message = error instanceof Error ? error.message : (isRTL ? 'فشل تحديث الاشتراك' : 'Failed to update subscription')
-            toast.error(message)
+    // Auto-adjust: free_forever/complimentary → active + far future date
+    const handleOverrideTypeChange = (val: OverrideType) => {
+        setOverrideType(val)
+        if (val === 'free_forever' || val === 'complimentary') {
+            setStatus('active')
+            setPeriodEnd('2099-12-31')
+        }
+        if (val !== 'one_time_discount') {
+            setDiscountType('none')
+            setDiscountValue('0')
+            setDiscountNextOnly(false)
         }
     }
 
+    const handleSave = async () => {
+        if (!selectedPlanId) {
+            toast.error(isRTL ? 'يرجى اختيار باقة' : 'Please select a plan')
+            return
+        }
+
+        const input: AdminManageSubscriptionInput = {
+            tenantId:    tenant.id,
+            status,
+            planId:      selectedPlanId,
+            billingCycle,
+            periodEnd:   periodEnd || undefined,
+            overrideType,
+            discountType,
+            discountValue:               parseFloat(discountValue) || 0,
+            discountAppliesToNextOnly:   discountNextOnly,
+            adminNote:   adminNote || null,
+        }
+
+        try {
+            await manageSubscription.mutateAsync(input)
+            toast.success(isRTL ? 'تم تحديث الاشتراك بنجاح' : 'Subscription updated successfully')
+            onClose()
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err)
+            toast.error(isRTL ? `فشل التحديث: ${msg}` : `Update failed: ${msg}`)
+        }
+    }
+
+    const days = existing ? daysFromNow(existing.current_period_end) : null
+    const selectedPlan = plans.find(p => p.id === selectedPlanId)
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-card rounded-xl border shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b">
+            <div className="bg-card rounded-xl border shadow-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto">
+
+                {/* Header */}
+                <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card z-10">
                     <h3 className="font-bold font-cairo text-lg flex items-center gap-2">
                         <Crown className="w-5 h-5 text-warning" />
                         {isRTL ? 'إدارة اشتراك المنشأة' : 'Manage Tenant Subscription'}
@@ -659,97 +767,367 @@ function ManageSubscriptionModal({
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6">
-                    <div className="bg-muted/10 p-4 rounded-lg flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+                <div className="p-5 space-y-5">
+
+                    {/* Tenant Info */}
+                    <div className="flex items-center gap-3 p-3 bg-muted/10 rounded-lg border">
+                        <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
                             <Building2 className="w-5 h-5 text-secondary" />
                         </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold font-cairo truncate">{isRTL ? tenant.name_ar || tenant.name : tenant.name}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{tenant.slug}</p>
+                        </div>
+                        {existing && (
+                            <div className={cn('px-3 py-1 rounded-full border text-xs font-bold', STATUS_META[existing.status]?.bg, STATUS_META[existing.status]?.color)}>
+                                {isRTL ? STATUS_META[existing.status]?.labelAr : STATUS_META[existing.status]?.label}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Current Subscription Summary */}
+                    {subLoading ? (
+                        <div className="flex items-center justify-center py-4">
+                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : existing ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <SummaryItem
+                                icon={<Clock className="w-4 h-4" />}
+                                label={isRTL ? 'الحالة' : 'Status'}
+                                value={isRTL ? STATUS_META[existing.status]?.labelAr : STATUS_META[existing.status]?.label}
+                            />
+                            <SummaryItem
+                                icon={<Crown className="w-4 h-4" />}
+                                label={isRTL ? 'الباقة' : 'Plan'}
+                                value={isRTL ? existing.plan?.name_ar || existing.plan?.name || '—' : existing.plan?.name || '—'}
+                            />
+                            <SummaryItem
+                                icon={<Calendar className="w-4 h-4" />}
+                                label={isRTL ? 'ينتهي' : 'Ends'}
+                                value={formatDate(existing.current_period_end)}
+                            />
+                            <SummaryItem
+                                icon={<Clock className="w-4 h-4" />}
+                                label={isRTL ? 'متبقي' : 'Days Left'}
+                                value={days !== null ? (days > 0 ? `${days} ${isRTL ? 'يوم' : 'days'}` : (isRTL ? 'منتهي' : 'Expired')) : '—'}
+                                highlight={days !== null && days <= 7 && days > 0}
+                            />
+                        </div>
+                    ) : (
+                        <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm font-cairo text-warning-foreground flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                            {isRTL ? 'لا يوجد اشتراك مسجل لهذه المنشأة' : 'No subscription record found for this tenant'}
+                        </div>
+                    )}
+
+                    <hr />
+
+                    {/* Section: Status & Plan */}
+                    <SectionTitle icon={<Crown className="w-4 h-4" />} title={isRTL ? 'الحالة والباقة' : 'Status & Plan'} />
+
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <p className="font-bold font-cairo">{isRTL ? tenant.name_ar || tenant.name : tenant.name}</p>
-                            <p className="text-xs text-muted-foreground">{tenant.slug}</p>
+                            <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                                {isRTL ? 'حالة الاشتراك' : 'Subscription Status'}
+                            </label>
+                            <select
+                                value={status}
+                                onChange={e => setStatus(e.target.value as SubscriptionStatus)}
+                                className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none font-cairo"
+                            >
+                                <option value="trial">{isRTL ? 'تجريبي' : 'Trial'}</option>
+                                <option value="active">{isRTL ? 'نشط (مدفوع)' : 'Active (Paid)'}</option>
+                                <option value="suspended">{isRTL ? 'معلق' : 'Suspended'}</option>
+                                <option value="expired">{isRTL ? 'منتهي' : 'Expired'}</option>
+                                <option value="cancelled">{isRTL ? 'ملغي' : 'Cancelled'}</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                                {isRTL ? 'دورة الفوترة' : 'Billing Cycle'}
+                            </label>
+                            <select
+                                value={billingCycle}
+                                onChange={e => setBillingCycle(e.target.value as 'monthly' | 'yearly')}
+                                className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none font-cairo"
+                            >
+                                <option value="yearly">{isRTL ? 'سنوي' : 'Yearly'}</option>
+                                <option value="monthly">{isRTL ? 'شهري' : 'Monthly'}</option>
+                            </select>
                         </div>
                     </div>
 
+                    {/* Plan Selector */}
                     <div>
-                        <label className="block text-sm font-medium font-cairo mb-2">
-                            {isRTL ? 'اختر الباقة' : 'Select Plan'}
+                        <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                            {isRTL ? 'الباقة' : 'Plan'}
                         </label>
-                        <div className="grid gap-3">
-                            {plans?.map((plan) => (
-                                <div
+                        <div className="grid gap-2">
+                            {plans.map(plan => (
+                                <button
                                     key={plan.id}
+                                    type="button"
                                     onClick={() => setSelectedPlanId(plan.id)}
                                     className={cn(
-                                        'cursor-pointer border rounded-xl p-4 transition-all hover:border-secondary/50',
-                                        selectedPlanId === plan.id ? 'border-secondary bg-secondary/5 ring-1 ring-secondary' : 'bg-card',
+                                        'w-full text-start border rounded-lg p-3 transition-all hover:border-secondary/50',
+                                        selectedPlanId === plan.id
+                                            ? 'border-secondary bg-secondary/5 ring-1 ring-secondary'
+                                            : 'bg-background',
                                     )}
                                 >
-                                    <div className="flex justify-between items-center gap-4">
-                                        <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2">
                                             <div className={cn(
-                                                'w-4 h-4 rounded-full border flex items-center justify-center',
+                                                'w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0',
                                                 selectedPlanId === plan.id ? 'border-secondary' : 'border-muted',
                                             )}>
-                                                {selectedPlanId === plan.id && <div className="w-2 h-2 rounded-full bg-secondary" />}
+                                                {selectedPlanId === plan.id && <div className="w-1.5 h-1.5 rounded-full bg-secondary" />}
                                             </div>
-                                            <div>
-                                                <p className="font-bold font-cairo">{isRTL ? plan.name_ar : plan.name}</p>
-                                                <p className="text-xs text-muted-foreground font-cairo">{isRTL ? plan.description_ar : plan.description}</p>
-                                            </div>
+                                            <span className="font-medium font-cairo text-sm">{isRTL ? plan.name_ar || plan.name : plan.name}</span>
                                         </div>
-                                        <p className="font-bold">
-                                            {billingCycle === 'monthly' ? plan.price_monthly : plan.price_yearly}
-                                            <span className="text-xs font-normal text-muted-foreground"> {plan.currency}</span>
-                                        </p>
+                                        <span className="text-xs text-muted-foreground">
+                                            {billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly} {plan.currency}
+                                        </span>
                                     </div>
-                                </div>
+                                </button>
                             ))}
                         </div>
                     </div>
 
+                    {/* Section: Period End */}
+                    <SectionTitle icon={<Calendar className="w-4 h-4" />} title={isRTL ? 'تاريخ الانتهاء' : 'Period End Date'} />
+
                     <div>
-                        <label className="block text-sm font-medium font-cairo mb-2">
-                            {isRTL ? 'دورة الفوترة' : 'Billing Cycle'}
+                        <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                            {isRTL
+                                ? 'حدد تاريخ انتهاء الاشتراك (اتركه فارغاً للحساب التلقائي)'
+                                : 'Set subscription end date (leave blank to auto-calculate)'}
                         </label>
-                        <div className="flex p-1 bg-muted/10 rounded-lg border">
-                            <button
-                                onClick={() => setBillingCycle('monthly')}
-                                className={cn(
-                                    'flex-1 py-1.5 text-sm font-medium rounded-md transition-all font-cairo',
-                                    billingCycle === 'monthly' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground hover:text-primary',
-                                )}
-                            >
-                                {isRTL ? 'شهري' : 'Monthly'}
-                            </button>
-                            <button
-                                onClick={() => setBillingCycle('yearly')}
-                                className={cn(
-                                    'flex-1 py-1.5 text-sm font-medium rounded-md transition-all font-cairo',
-                                    billingCycle === 'yearly' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground hover:text-primary',
-                                )}
-                            >
-                                {isRTL ? 'سنوي (خصم)' : 'Yearly'}
-                            </button>
+                        <input
+                            type="date"
+                            value={periodEnd}
+                            onChange={e => setPeriodEnd(e.target.value)}
+                            min={new Date().toISOString().slice(0, 10)}
+                            className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                        />
+                        {status === 'trial' && (
+                            <p className="text-xs text-muted-foreground mt-1 font-cairo">
+                                {isRTL
+                                    ? 'للتجربة المجانية: تاريخ الانتهاء يحدد طول فترة التجربة. عدّله لتمديد أو تقصير التجربة.'
+                                    : 'For trial: this date sets the trial length. Edit to extend or shorten the trial.'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Quick-set trial shortcuts */}
+                    {status === 'trial' && (
+                        <div className="flex flex-wrap gap-2">
+                            {[7, 14, 30, 60].map(days => (
+                                <button
+                                    key={days}
+                                    type="button"
+                                    onClick={() => {
+                                        const d = new Date()
+                                        d.setDate(d.getDate() + days)
+                                        setPeriodEnd(d.toISOString().slice(0, 10))
+                                    }}
+                                    className="px-3 py-1.5 text-xs bg-muted/10 hover:bg-secondary/10 hover:text-secondary border rounded-lg transition-colors font-cairo"
+                                >
+                                    {days} {isRTL ? 'يوم' : 'days'}
+                                </button>
+                            ))}
                         </div>
+                    )}
+
+                    {/* Section: Override / Special Treatment */}
+                    <SectionTitle icon={<Gift className="w-4 h-4" />} title={isRTL ? 'نوع الاستثناء الإداري' : 'Admin Override Type'} />
+
+                    <div>
+                        <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                            {isRTL ? 'نوع الاستثناء (داخلي فقط، لا يظهر للعامة)' : 'Override type (internal only, not visible publicly)'}
+                        </label>
+                        <select
+                            value={overrideType}
+                            onChange={e => handleOverrideTypeChange(e.target.value as OverrideType)}
+                            className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none font-cairo"
+                        >
+                            {(Object.entries(OVERRIDE_META) as [OverrideType, typeof OVERRIDE_META[OverrideType]][]).map(([val, meta]) => (
+                                <option key={val} value={val}>{isRTL ? meta.labelAr : meta.label}</option>
+                            ))}
+                        </select>
+
+                        {overrideType === 'complimentary' && (
+                            <p className="mt-1.5 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg p-2 font-cairo flex items-center gap-2">
+                                <Gift className="w-3.5 h-3.5 shrink-0" />
+                                {isRTL
+                                    ? 'مجاني مؤقت: سيُضبط تلقائياً للحالة النشطة مع تاريخ انتهاء بعيد. يمكنك تغيير التاريخ.'
+                                    : 'Complimentary: auto-sets to active with a far future end date. You can adjust the date.'}
+                            </p>
+                        )}
+                        {overrideType === 'free_forever' && (
+                            <p className="mt-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded-lg p-2 font-cairo flex items-center gap-2">
+                                <Infinity className="w-3.5 h-3.5 shrink-0" />
+                                {isRTL
+                                    ? 'مجاني للأبد: اشتراك نشط دائم. لا توجد رسوم. يظهر للمنشأة كـ "مجاني".'
+                                    : 'Free Forever: permanently active, no charges. Shown to the tenant as "Free".'}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Discount Section – only for one_time_discount */}
+                    {overrideType === 'one_time_discount' && (
+                        <>
+                            <SectionTitle icon={<Tag className="w-4 h-4" />} title={isRTL ? 'تفاصيل الخصم' : 'Discount Details'} />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                                        {isRTL ? 'نوع الخصم' : 'Discount Type'}
+                                    </label>
+                                    <select
+                                        value={discountType}
+                                        onChange={e => setDiscountType(e.target.value as DiscountType)}
+                                        className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none font-cairo"
+                                    >
+                                        <option value="none">{isRTL ? 'بدون خصم' : 'No Discount'}</option>
+                                        <option value="percentage">{isRTL ? 'نسبة مئوية %' : 'Percentage %'}</option>
+                                        <option value="fixed_amount">{isRTL ? 'مبلغ ثابت SAR' : 'Fixed Amount SAR'}</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium font-cairo mb-1.5 text-muted-foreground">
+                                        {isRTL ? 'قيمة الخصم' : 'Discount Value'}
+                                        {discountType === 'percentage' && ' (%)'}
+                                        {discountType === 'fixed_amount' && ' (SAR)'}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max={discountType === 'percentage' ? 100 : undefined}
+                                        value={discountValue}
+                                        onChange={e => setDiscountValue(e.target.value)}
+                                        disabled={discountType === 'none'}
+                                        className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none disabled:opacity-40"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <input
+                                    id="next-only"
+                                    type="checkbox"
+                                    checked={discountNextOnly}
+                                    onChange={e => setDiscountNextOnly(e.target.checked)}
+                                    className="w-4 h-4 accent-secondary rounded"
+                                />
+                                <label htmlFor="next-only" className="text-sm font-cairo cursor-pointer select-none">
+                                    {isRTL
+                                        ? 'يسري على الاشتراك القادم فقط (لا يُطبَّق على الفترة الحالية)'
+                                        : 'Applies to next renewal only (not the current period)'}
+                                </label>
+                            </div>
+
+                            {selectedPlan && discountType !== 'none' && parseFloat(discountValue) > 0 && (
+                                <div className="p-3 bg-info/5 border border-info/20 rounded-lg text-sm font-cairo">
+                                    {(() => {
+                                        const base = billingCycle === 'yearly' ? selectedPlan.price_yearly : selectedPlan.price_monthly
+                                        const val = parseFloat(discountValue)
+                                        const discounted = discountType === 'percentage'
+                                            ? base * (1 - val / 100)
+                                            : Math.max(0, base - val)
+                                        return (
+                                            <span>
+                                                {isRTL ? 'السعر بعد الخصم:' : 'Price after discount:'}{' '}
+                                                <strong>{discounted.toFixed(2)} SAR</strong>
+                                                {' '}{isRTL ? `(بدلاً من ${base} SAR)` : `(instead of ${base} SAR)`}
+                                            </span>
+                                        )
+                                    })()}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* Section: Admin Note */}
+                    <SectionTitle icon={<FileText className="w-4 h-4" />} title={isRTL ? 'ملاحظة داخلية' : 'Internal Admin Note'} />
+
+                    <div>
+                        <textarea
+                            value={adminNote}
+                            onChange={e => setAdminNote(e.target.value)}
+                            rows={3}
+                            placeholder={isRTL
+                                ? 'سبب التعديل أو أي معلومات داخلية مفيدة...'
+                                : 'Reason for change or any useful internal context...'}
+                            className="w-full py-2 px-3 bg-background border rounded-lg text-sm focus:ring-2 focus:ring-secondary/20 outline-none resize-none font-cairo"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1 font-cairo">
+                            {isRTL
+                                ? 'هذه الملاحظة داخلية ولا تظهر للمنشأة.'
+                                : 'This note is internal and not visible to the tenant.'}
+                        </p>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 p-6 border-t bg-muted/5">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg border bg-background hover:bg-muted/10 font-cairo transition-colors"
-                    >
-                        {isRTL ? 'إلغاء' : 'Cancel'}
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={!selectedPlanId || updateSubscription.isPending}
-                        className="px-6 py-2 bg-secondary text-white rounded-lg font-cairo hover:bg-secondary/90 disabled:opacity-50"
-                    >
-                        {isRTL ? 'حفظ وتحديث' : 'Save & Update'}
-                    </button>
+                {/* Footer */}
+                <div className="flex items-center justify-between gap-3 p-5 border-t bg-muted/5 sticky bottom-0">
+                    <p className="text-xs text-muted-foreground font-cairo">
+                        {isRTL
+                            ? 'التجديد يدوي — لا يوجد تجديد تلقائي في النظام الحالي'
+                            : 'Renewal is manual — no auto-renewal in the current system'}
+                    </p>
+                    <div className="flex items-center gap-3 shrink-0">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 rounded-lg border bg-background hover:bg-muted/10 font-cairo transition-colors text-sm"
+                        >
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={!selectedPlanId || manageSubscription.isPending}
+                            className="px-5 py-2 bg-secondary text-white rounded-lg font-cairo hover:bg-secondary/90 disabled:opacity-50 flex items-center gap-2 text-sm"
+                        >
+                            {manageSubscription.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isRTL ? 'حفظ وتطبيق' : 'Save & Apply'}
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
+    )
+}
+
+// ─── Shared Sub-components ───────────────────────────────────────────────────
+
+function SectionTitle({ icon, title }: { icon: ReactNode; title: string }) {
+    return (
+        <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground font-cairo">
+            {icon}
+            <span>{title}</span>
+            <div className="flex-1 h-px bg-border" />
+        </div>
+    )
+}
+
+function SummaryItem({ icon, label, value, highlight }: {
+    icon: ReactNode
+    label: string
+    value: string
+    highlight?: boolean
+}) {
+    return (
+        <div className="bg-background border rounded-lg p-3">
+            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                {icon}
+                <span className="text-xs font-cairo">{label}</span>
+            </div>
+            <p className={cn('text-sm font-bold font-cairo truncate', highlight ? 'text-red-600' : 'text-primary')}>
+                {value}
+            </p>
         </div>
     )
 }

@@ -36,9 +36,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // 1. Find active subscriptions past their period end
         const { data: expiredSubs, error } = await supabase
             .from('tenant_subscriptions')
-            .select('id, tenant_id, plan_id, cancel_at_period_end, billing_cycle')
+            .select('id, tenant_id, plan_id, cancel_at_period_end, billing_cycle, override_type')
             .in('status', ['active', 'trial'])
             .lt('current_period_end', now)
+            .not('override_type', 'in', '(free_forever,complimentary)')
 
         if (error) {
             console.error('Query error:', error)

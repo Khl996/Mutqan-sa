@@ -24,12 +24,16 @@ export interface SubscriptionPlan {
     updated_at: string
 }
 
+export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled' | 'suspended'
+export type OverrideType = 'none' | 'trial_extension' | 'one_time_discount' | 'complimentary' | 'free_forever'
+export type DiscountType = 'none' | 'percentage' | 'fixed_amount'
+
 // Tenant Subscription Type
 export interface TenantSubscription {
     id: string
     tenant_id: string
     plan_id: string
-    status: 'active' | 'trial' | 'expired' | 'cancelled' | 'suspended'
+    status: SubscriptionStatus
     billing_cycle: 'monthly' | 'yearly'
     current_period_start: string
     current_period_end: string
@@ -38,6 +42,12 @@ export interface TenantSubscription {
     amount: number
     currency: string
     cancel_at_period_end: boolean
+    // Admin override fields (migration 099)
+    override_type: OverrideType
+    discount_type: DiscountType
+    discount_value: number
+    discount_applies_to_next_only: boolean
+    admin_note: string | null
     created_at: string
     updated_at: string
     // Joined
@@ -51,6 +61,20 @@ export interface TenantUsage {
     buildings_count: number
     assets_count: number
     work_orders_this_month: number
+}
+
+// Input for admin_manage_subscription RPC
+export interface AdminManageSubscriptionInput {
+    tenantId: string
+    status: SubscriptionStatus
+    planId?: string
+    periodEnd?: string          // ISO date string
+    billingCycle?: 'monthly' | 'yearly'
+    overrideType?: OverrideType
+    discountType?: DiscountType
+    discountValue?: number
+    discountAppliesToNextOnly?: boolean
+    adminNote?: string | null
 }
 
 // Query Keys
@@ -109,6 +133,12 @@ export function useTenantSubscription(tenantId: string) {
             }
             const subscription = data as TenantSubscription
 
+            // Normalize override fields (may be missing on older rows)
+            subscription.override_type = subscription.override_type ?? 'none'
+            subscription.discount_type = subscription.discount_type ?? 'none'
+            subscription.discount_value = subscription.discount_value ?? 0
+            subscription.discount_applies_to_next_only = subscription.discount_applies_to_next_only ?? false
+
             if (subscription.plan) {
                 subscription.plan = {
                     ...subscription.plan,
@@ -149,7 +179,36 @@ export function useTenantUsage(tenantId: string) {
     })
 }
 
-// Update Tenant Subscription
+// Admin: Comprehensive subscription management (migration 099)
+export function useAdminManageSubscription() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (input: AdminManageSubscriptionInput) => {
+            const { data, error } = await supabase.rpc('admin_manage_subscription', {
+                p_tenant_id:                    input.tenantId,
+                p_status:                       input.status,
+                p_plan_id:                      input.planId ?? null,
+                p_period_end:                   input.periodEnd ?? null,
+                p_billing_cycle:                input.billingCycle ?? null,
+                p_override_type:                input.overrideType ?? 'none',
+                p_discount_type:                input.discountType ?? 'none',
+                p_discount_value:               input.discountValue ?? 0,
+                p_discount_applies_to_next_only: input.discountAppliesToNextOnly ?? false,
+                p_admin_note:                   input.adminNote ?? null,
+            } as any)
+
+            if (error) throw error
+            return data
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: subscriptionKeys.tenantSubscription(variables.tenantId) })
+            queryClient.invalidateQueries({ queryKey: ['tenants'] })
+        },
+    })
+}
+
+// Legacy: Update Subscription (kept for backwards compat, delegates to admin_update_subscription)
 export function useUpdateSubscription() {
     const queryClient = useQueryClient()
 
@@ -199,7 +258,7 @@ export function useCancelSubscription() {
 
             if (error) throw error
 
-            // We DO NOT update tenant status to 'cancelled' immediately. 
+            // We DO NOT update tenant status to 'cancelled' immediately.
             // Access remains until the period ends.
         },
         onSuccess: (_, tenantId) => {
