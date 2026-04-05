@@ -487,11 +487,11 @@ export default function LandingPage() {
                         <div>
                             <h4 className="font-bold text-slate-900 mb-4 text-sm">تواصل معنا</h4>
                             <a
-                                href="mailto:Info@mutqan-sa.com"
+                                href="mailto:info@mutqan-sa.com"
                                 className="text-sm text-slate-500 hover:text-[#3AAFA9] transition-colors"
                                 dir="ltr"
                             >
-                                Info@mutqan-sa.com
+                                info@mutqan-sa.com
                             </a>
                         </div>
                     </div>

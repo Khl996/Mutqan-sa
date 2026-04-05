@@ -45,7 +45,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-slate-800">البريد الإلكتروني</h3>
-                                        <p className="text-slate-500 mt-1"><a href="mailto:Info@mutqan-sa.com" className="hover:text-primary font-mono dir-ltr">Info@mutqan-sa.com</a></p>
+                                        <p className="text-slate-500 mt-1"><a href="mailto:info@mutqan-sa.com" className="hover:text-primary font-mono dir-ltr">info@mutqan-sa.com</a></p>
                                     </div>
                                 </div>
                             </div>

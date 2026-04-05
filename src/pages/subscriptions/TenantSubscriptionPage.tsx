@@ -160,7 +160,7 @@ export default function TenantSubscriptionPage() {
                         : 'No subscription is linked to this account. Please contact support.'}
                 </p>
                 <a
-                    href="mailto:support@mutqan.sa"
+                    href="mailto:info@mutqan-sa.com"
                     className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg font-cairo text-sm hover:bg-secondary/90"
                 >
                     <PhoneCall className="w-4 h-4" />
@@ -241,7 +241,7 @@ export default function TenantSubscriptionPage() {
                         </p>
                     </div>
                     <a
-                        href="mailto:support@mutqan.sa"
+                        href="mailto:info@mutqan-sa.com"
                         className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-white/80 hover:bg-white rounded-lg border text-xs font-bold transition-colors"
                     >
                         <PhoneCall className="w-3.5 h-3.5" />
@@ -478,7 +478,7 @@ export default function TenantSubscriptionPage() {
                     </p>
                 </div>
                 <a
-                    href="mailto:support@mutqan.sa"
+                    href="mailto:info@mutqan-sa.com"
                     className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-xl font-cairo text-sm font-bold hover:bg-secondary/90 transition-colors"
                 >
                     <PhoneCall className="w-4 h-4" />

@@ -89,7 +89,7 @@ export default function TermsOfUsePage() {
 
                             <div className="pt-8 mt-8 border-t border-slate-100">
                                 <p className="text-sm text-slate-500">
-                                    لأي استفسارات قانونية، يرجى التواصل معنا عبر: <a href="mailto:Info@mutqan-sa.com" className="text-primary hover:underline font-mono dir-ltr">Info@mutqan-sa.com</a>
+                                    لأي استفسارات قانونية، يرجى التواصل معنا عبر: <a href="mailto:info@mutqan-sa.com" className="text-primary hover:underline font-mono dir-ltr">info@mutqan-sa.com</a>
                                 </p>
                             </div>
                         </div>
