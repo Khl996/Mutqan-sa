@@ -51,7 +51,7 @@ export default function AssetLogsPage() {
     }
 
     const formatStatus = (status: string | null) => {
-        if (!status) return isRTL ? 'غير ونعروف' : 'Unknown'
+        if (!status) return isRTL ? 'غير معروف' : 'Unknown'
         const statuses: Record<string, string> = {
             'operational': isRTL ? 'يعمل' : 'Operational',
             'out_of_service': isRTL ? 'خارج الخدمة' : 'Out of Service',
