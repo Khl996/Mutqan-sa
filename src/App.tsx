@@ -52,6 +52,7 @@ const TenantSubscriptionPage = lazy(() => import('@/pages/subscriptions/TenantSu
 const PlatformDashboardPage = lazy(() => import('@/pages/platform/PlatformDashboardPage'))
 const TenantsManagementPage = lazy(() => import('@/pages/platform/TenantsManagementPage'))
 const SubscriptionPage = lazy(() => import('@/pages/platform/SubscriptionPage'))
+const QuotesPage = lazy(() => import('@/pages/platform/QuotesPage'))
 const PlatformStaffPage = lazy(() => import('@/pages/platform/PlatformStaffPage'))
 const FinancialsPage = lazy(() => import('@/pages/platform/FinancialsPage'))
 const AuditLogsPage = lazy(() => import('@/pages/platform/AuditLogsPage'))
@@ -173,6 +174,7 @@ function AppRoutes() {
                 </Route>
                 <Route element={<ProtectedRoute permission="platform.subscriptions.manage" redirectPath="/platform" />}>
                     <Route path="subscriptions" element={renderLazyPage(SubscriptionPage)} />
+                    <Route path="quotes" element={renderLazyPage(QuotesPage)} />
                 </Route>
                 <Route element={<ProtectedRoute permission="platform.staff.manage" redirectPath="/platform" />}>
                     <Route path="staff" element={renderLazyPage(PlatformStaffPage)} />

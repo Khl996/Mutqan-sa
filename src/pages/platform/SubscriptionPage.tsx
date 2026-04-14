@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -25,8 +25,25 @@ import {
     ChevronDown,
     ChevronUp,
     Star,
-    Zap
+    Zap,
+    Tag,
+    Loader2,
 } from 'lucide-react'
+import {
+    useBillingAddOns,
+    useCreateBillingAddOn,
+    useUpdateBillingAddOn,
+    useDiscountPolicies,
+    useCreateDiscountPolicy,
+    useUpdateDiscountPolicy,
+    usePlatformTaxSettings,
+    useUpdatePlatformTaxSettings,
+    formatSAR,
+    fmtDate,
+    type BillingAddOn,
+    type DiscountPolicy,
+    type TaxConfig,
+} from '@/hooks/useBillingEngine'
 
 import {
     AlertDialog,
@@ -50,6 +67,7 @@ export default function SubscriptionManagementPage() {
     const updatePlan = useUpdatePlan()
     const deletePlan = useDeletePlan()
 
+    const [activeTab, setActiveTab] = useState<'plans' | 'addons' | 'discounts' | 'settings'>('plans')
     const [editingPlan, setEditingPlan] = useState<Partial<SubscriptionPlan> | null>(null)
     const [isAddingPlan, setIsAddingPlan] = useState(false)
     const [expandedPlan, setExpandedPlan] = useState<string | null>(null)
@@ -143,23 +161,50 @@ export default function SubscriptionManagementPage() {
     return (
         <div className="space-y-6 pb-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
-                        <Crown className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-primary font-cairo">
-                            {isRTL ? 'إدارة الاشتراكات' : 'Subscription Management'}
-                        </h1>
-                        <p className="text-muted-foreground font-cairo">
-                            {isRTL
-                                ? 'إدارة خطط الاشتراك والأسعار والميزات'
-                                : 'Manage subscription plans, pricing, and features'
-                            }
-                        </p>
-                    </div>
+            <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
+                    <Crown className="w-7 h-7 text-white" />
                 </div>
+                <div>
+                    <h1 className="text-2xl font-bold text-primary font-cairo">
+                        {isRTL ? 'إدارة الاشتراكات' : 'Subscription Management'}
+                    </h1>
+                    <p className="text-muted-foreground font-cairo">
+                        {isRTL
+                            ? 'إدارة خطط الاشتراك والأسعار والميزات والإضافات'
+                            : 'Manage subscription plans, pricing, add-ons, and discounts'
+                        }
+                    </p>
+                </div>
+            </div>
+
+            {/* Tab navigation */}
+            <div className="flex gap-1 border-b">
+                {([
+                    { id: 'plans',    label: 'Plans',            labelAr: 'الخطط',           icon: Crown },
+                    { id: 'addons',   label: 'Add-ons Catalog',  labelAr: 'كتالوج الإضافات', icon: Package },
+                    { id: 'discounts',label: 'Discount Policies',labelAr: 'سياسات الخصم',    icon: Tag },
+                    { id: 'settings', label: 'Settings',         labelAr: 'الإعدادات',        icon: Settings2 },
+                ] as const).map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                            'flex items-center gap-2 px-4 py-3 font-cairo text-sm font-medium border-b-2 transition-colors',
+                            activeTab === tab.id
+                                ? 'border-secondary text-secondary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        )}
+                    >
+                        <tab.icon className="w-4 h-4" />
+                        {isRTL ? tab.labelAr : tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Plans tab — Add Plan button + stats */}
+            {activeTab === 'plans' && (
+            <div className="flex justify-end">
                 <button
                     onClick={() => {
                         setEditingPlan({
@@ -190,7 +235,9 @@ export default function SubscriptionManagementPage() {
                     {isRTL ? 'إضافة خطة جديدة' : 'Add New Plan'}
                 </button>
             </div>
+            )}
 
+            {activeTab === 'plans' && (<>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-card rounded-xl border p-4">
@@ -479,6 +526,11 @@ export default function SubscriptionManagementPage() {
                     }}
                 />
             )}
+            </>)}
+
+            {activeTab === 'addons'    && <AddOnsSection    isRTL={isRTL} />}
+            {activeTab === 'discounts' && <DiscountsSection isRTL={isRTL} />}
+            {activeTab === 'settings'  && <TaxSettingsSection isRTL={isRTL} />}
         </div>
     )
 }
@@ -860,6 +912,488 @@ function LimitInput({
                     isUnlimited ? "opacity-50 cursor-not-allowed bg-muted" : "focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none"
                 )}
             />
+        </div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD-ONS SECTION
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AddOnsSection({ isRTL }: { isRTL: boolean }) {
+    const { data: addOns = [], isLoading } = useBillingAddOns(false)
+    const createAO = useCreateBillingAddOn()
+    const updateAO = useUpdateBillingAddOn()
+    const [editing, setEditing] = useState<Partial<BillingAddOn> | null>(null)
+
+    const emptyForm: Partial<BillingAddOn> = {
+        code: '', name: '', name_ar: '', description: null, description_ar: null,
+        billing_type: 'recurring', price: 0,
+        is_active: true, sort_order: 0,
+    }
+
+    const handleSave = async () => {
+        if (!editing) return
+        try {
+            if (editing.id) {
+                await updateAO.mutateAsync(editing as Partial<BillingAddOn> & { id: string })
+                toast.success(isRTL ? 'تم تحديث الإضافة' : 'Add-on updated')
+            } else {
+                await createAO.mutateAsync(editing as Omit<BillingAddOn, 'id' | 'created_at' | 'updated_at'>)
+                toast.success(isRTL ? 'تمت إضافة الخدمة' : 'Add-on created')
+            }
+            setEditing(null)
+        } catch (e: unknown) {
+            toast.error((e as Error).message)
+        }
+    }
+
+    if (editing !== null) {
+        return (
+            <div className="bg-card border rounded-xl p-5 max-w-2xl">
+                <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-base font-bold font-cairo">
+                        {editing.id ? (isRTL ? 'تعديل الإضافة' : 'Edit Add-on') : (isRTL ? 'إضافة خدمة جديدة' : 'New Add-on')}
+                    </h2>
+                    <button onClick={() => setEditing(null)} className="text-xs text-muted-foreground font-cairo hover:underline">
+                        {isRTL ? 'إلغاء' : 'Cancel'}
+                    </button>
+                </div>
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            { k: 'code' as const,    l: 'Code',       la: 'الكود' },
+                            { k: 'name' as const,    l: 'Name (EN)',  la: 'الاسم (إنجليزي)' },
+                            { k: 'name_ar' as const, l: 'Name (AR)',  la: 'الاسم (عربي)' },
+                        ].map(f => (
+                            <div key={f.k}>
+                                <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">
+                                    {isRTL ? f.la : f.l}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={(editing[f.k] as string) || ''}
+                                    onChange={e => setEditing({ ...editing, [f.k]: e.target.value })}
+                                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                                />
+                            </div>
+                        ))}
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">
+                                {isRTL ? 'النوع' : 'Billing Type'}
+                            </label>
+                            <select
+                                value={editing.billing_type}
+                                onChange={e => setEditing({ ...editing, billing_type: e.target.value as 'recurring' | 'one_time' })}
+                                className="w-full border rounded-lg px-3 py-2 text-sm bg-background font-cairo focus:ring-2 focus:ring-secondary/20 outline-none"
+                            >
+                                <option value="recurring">{isRTL ? 'متكرر' : 'Recurring'}</option>
+                                <option value="one_time">{isRTL ? 'دفعة واحدة' : 'One-time'}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">
+                            {isRTL ? 'السعر (ريال)' : 'Price (SAR)'}
+                        </label>
+                        <input
+                            type="number" min={0}
+                            value={editing.price || 0}
+                            onChange={e => setEditing({ ...editing, price: parseFloat(e.target.value) || 0 })}
+                            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                        />
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={editing.is_active ?? true}
+                            onChange={e => setEditing({ ...editing, is_active: e.target.checked })}
+                            className="accent-secondary"
+                        />
+                        <span className="text-sm font-cairo">{isRTL ? 'نشط' : 'Active'}</span>
+                    </label>
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            onClick={handleSave}
+                            disabled={createAO.isPending || updateAO.isPending}
+                            className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-xl font-cairo text-sm font-bold hover:bg-secondary/90 disabled:opacity-50"
+                        >
+                            {(createAO.isPending || updateAO.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            {isRTL ? 'حفظ' : 'Save'}
+                        </button>
+                        <button onClick={() => setEditing(null)} className="px-4 py-2.5 border rounded-xl font-cairo text-sm hover:bg-muted/10">
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground font-cairo">
+                    {isRTL
+                        ? 'كتالوج الخدمات والإضافات القابلة للفوترة.'
+                        : 'Catalog of billable add-ons used in pricing quotes.'}
+                </p>
+                <button
+                    onClick={() => setEditing({ ...emptyForm })}
+                    className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg text-sm font-cairo font-bold hover:bg-secondary/90"
+                >
+                    <Plus className="w-4 h-4" />
+                    {isRTL ? 'إضافة خدمة' : 'Add Service'}
+                </button>
+            </div>
+
+            {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-7 h-7 animate-spin text-secondary" />
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {addOns.map(ao => (
+                        <div key={ao.id} className={cn('bg-card border rounded-xl p-4', !ao.is_active && 'opacity-60')}>
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                                <div className="min-w-0">
+                                    <p className="font-bold text-sm font-cairo truncate">
+                                        {isRTL ? ao.name_ar || ao.name : ao.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{ao.code}</p>
+                                </div>
+                                <button onClick={() => setEditing({ ...ao })} className="p-1.5 rounded hover:bg-muted/10 shrink-0">
+                                    <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs bg-muted/20 text-muted-foreground px-2 py-0.5 rounded font-cairo">
+                                    {ao.billing_type === 'one_time' ? (isRTL ? 'مرة واحدة' : 'One-time') : (isRTL ? 'متكرر' : 'Recurring')}
+                                </span>
+                                <span className="text-sm font-bold text-secondary font-mono">{formatSAR(ao.price)}</span>
+                                {!ao.is_active && (
+                                    <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded font-cairo">
+                                        {isRTL ? 'معطل' : 'Inactive'}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DISCOUNTS SECTION
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DiscountsSection({ isRTL }: { isRTL: boolean }) {
+    const { data: policies = [], isLoading } = useDiscountPolicies()
+    const create = useCreateDiscountPolicy()
+    const update = useUpdateDiscountPolicy()
+    const [editing, setEditing] = useState<Record<string, unknown> | null>(null)
+
+    const emptyForm = {
+        code: '', name: '', name_ar: '', description: null, description_ar: null,
+        discount_type: 'percentage', discount_value: 10,
+        valid_from: '', valid_to: '', is_active: true,
+    }
+
+    const handleSave = async () => {
+        if (!editing) return
+        const payload = {
+            ...editing,
+            valid_from: (editing.valid_from as string) || null,
+            valid_to:   (editing.valid_to as string) || null,
+        }
+        try {
+            if (editing.id) {
+                await update.mutateAsync(payload as Parameters<typeof update.mutateAsync>[0])
+                toast.success(isRTL ? 'تم التحديث' : 'Policy updated')
+            } else {
+                await create.mutateAsync(payload as Parameters<typeof create.mutateAsync>[0])
+                toast.success(isRTL ? 'تمت الإضافة' : 'Policy created')
+            }
+            setEditing(null)
+        } catch (e: unknown) {
+            toast.error((e as Error).message)
+        }
+    }
+
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground font-cairo">
+                    {isRTL
+                        ? 'سياسات الخصم القابلة لإعادة الاستخدام.'
+                        : 'Named discount templates applied to quote totals.'}
+                </p>
+                <button
+                    onClick={() => setEditing({ ...emptyForm })}
+                    className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg text-sm font-cairo font-bold hover:bg-secondary/90"
+                >
+                    <Plus className="w-4 h-4" />
+                    {isRTL ? 'سياسة جديدة' : 'New Policy'}
+                </button>
+            </div>
+
+            {editing && (
+                <div className="bg-card border rounded-xl p-5 mb-5 max-w-2xl">
+                    <h3 className="font-bold font-cairo mb-4">
+                        {editing.id ? (isRTL ? 'تعديل السياسة' : 'Edit Policy') : (isRTL ? 'سياسة جديدة' : 'New Policy')}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            { k: 'code',    l: 'Code',       la: 'الكود' },
+                            { k: 'name',    l: 'Name (EN)',  la: 'الاسم إنجليزي' },
+                            { k: 'name_ar', l: 'Name (AR)',  la: 'الاسم عربي' },
+                        ].map(f => (
+                            <div key={f.k}>
+                                <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">{isRTL ? f.la : f.l}</label>
+                                <input
+                                    type="text"
+                                    value={(editing[f.k] as string) || ''}
+                                    onChange={e => setEditing({ ...editing, [f.k]: e.target.value })}
+                                    className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                                />
+                            </div>
+                        ))}
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">{isRTL ? 'نوع الخصم' : 'Type'}</label>
+                            <select
+                                value={editing.discount_type as string}
+                                onChange={e => setEditing({ ...editing, discount_type: e.target.value })}
+                                className="w-full border rounded-lg px-3 py-2 text-sm bg-background font-cairo focus:ring-2 focus:ring-secondary/20 outline-none"
+                            >
+                                <option value="percentage">{isRTL ? 'نسبة مئوية' : 'Percentage'}</option>
+                                <option value="fixed">{isRTL ? 'مبلغ ثابت' : 'Fixed Amount'}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">
+                                {isRTL ? 'القيمة' : 'Value'}
+                                {editing.discount_type === 'percentage' ? ' (%)' : ' (SAR)'}
+                            </label>
+                            <input
+                                type="number" min={0}
+                                value={(editing.discount_value as number) || 0}
+                                onChange={e => setEditing({ ...editing, discount_value: parseFloat(e.target.value) || 0 })}
+                                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">{isRTL ? 'صالح من' : 'Valid From'}</label>
+                            <input
+                                type="date"
+                                value={(editing.valid_from as string) || ''}
+                                onChange={e => setEditing({ ...editing, valid_from: e.target.value })}
+                                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-muted-foreground mb-1 font-cairo">{isRTL ? 'صالح حتى' : 'Valid To'}</label>
+                            <input
+                                type="date"
+                                value={(editing.valid_to as string) || ''}
+                                onChange={e => setEditing({ ...editing, valid_to: e.target.value })}
+                                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex gap-3 mt-4">
+                        <button
+                            onClick={handleSave}
+                            disabled={create.isPending || update.isPending}
+                            className="flex-1 flex items-center justify-center gap-2 px-5 py-2 bg-secondary text-white rounded-xl font-cairo text-sm font-bold hover:bg-secondary/90 disabled:opacity-50"
+                        >
+                            {isRTL ? 'حفظ' : 'Save'}
+                        </button>
+                        <button onClick={() => setEditing(null)} className="px-4 py-2 border rounded-xl font-cairo text-sm hover:bg-muted/10">
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-7 h-7 animate-spin text-secondary" />
+                </div>
+            ) : (
+                <div className="space-y-2">
+                    {policies.map((p: DiscountPolicy) => {
+                        const isExpired = p.valid_to && new Date(p.valid_to) < new Date()
+                        return (
+                            <div key={p.id} className={cn('bg-card border rounded-xl p-4 flex items-center gap-4', !p.is_active && 'opacity-60')}>
+                                <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                                    <Tag className="w-5 h-5 text-secondary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-bold text-sm font-cairo">{isRTL ? p.name_ar || p.name : p.name}</p>
+                                        {isExpired && (
+                                            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-cairo">
+                                                {isRTL ? 'منتهي' : 'Expired'}
+                                            </span>
+                                        )}
+                                        {!p.is_active && (
+                                            <span className="text-xs bg-muted/20 text-muted-foreground px-2 py-0.5 rounded font-cairo">
+                                                {isRTL ? 'معطل' : 'Inactive'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.code}</p>
+                                    <p className="text-xs text-muted-foreground font-cairo mt-0.5">
+                                        {p.valid_from && p.valid_to
+                                            ? `${fmtDate(p.valid_from)} → ${fmtDate(p.valid_to)}`
+                                            : isRTL ? 'بدون تاريخ انتهاء' : 'No expiry'}
+                                    </p>
+                                </div>
+                                <div className="text-end shrink-0">
+                                    <p className="font-bold text-lg text-secondary font-mono">
+                                        {p.discount_value}{p.discount_type === 'percentage' ? '%' : ' SAR'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground font-cairo">
+                                        {p.discount_type === 'percentage' ? (isRTL ? 'خصم نسبي' : 'Percentage') : (isRTL ? 'خصم ثابت' : 'Fixed')}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setEditing({ ...p, valid_from: p.valid_from || '', valid_to: p.valid_to || '' })}
+                                    className="p-2 rounded hover:bg-muted/10"
+                                >
+                                    <Edit2 className="w-4 h-4 text-muted-foreground" />
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ─── Tax Settings Section ─────────────────────────────────────────────────────
+
+function TaxSettingsSection({ isRTL }: { isRTL: boolean }) {
+    const { t } = useTranslation()
+    const { data: taxConfig, isLoading } = usePlatformTaxSettings()
+    const updateTax = useUpdatePlatformTaxSettings()
+
+    const [enabled, setEnabled] = useState(taxConfig?.enabled ?? false)
+    const [rateInput, setRateInput] = useState(String(Math.round((taxConfig?.rate ?? 0) * 100)))
+
+    // Sync once data arrives
+    useEffect(() => {
+        if (taxConfig) {
+            setEnabled(taxConfig.enabled)
+            setRateInput(String(Math.round(taxConfig.rate * 100)))
+        }
+    }, [taxConfig])
+
+    const handleSave = async () => {
+        const ratePercent = parseFloat(rateInput) || 0
+        if (ratePercent < 0 || ratePercent > 100) {
+            toast.error(isRTL ? 'النسبة يجب أن تكون بين 0 و 100' : 'Rate must be between 0 and 100')
+            return
+        }
+        const config: TaxConfig = {
+            enabled,
+            rate: ratePercent / 100,
+            label: taxConfig?.label || 'VAT',
+            label_ar: taxConfig?.label_ar || 'ضريبة القيمة المضافة',
+        }
+        await updateTax.mutateAsync(config)
+        toast.success(t('billing.settings.tax_saved'))
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center p-12">
+                <Loader2 className="w-6 h-6 animate-spin text-secondary" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="max-w-lg space-y-6">
+            <div>
+                <h2 className="text-base font-bold text-gray-900 font-cairo">
+                    {t('billing.settings.tax_title')}
+                </h2>
+                <p className="text-sm text-gray-500 font-cairo mt-1">
+                    {t('billing.settings.tax_warning')}
+                </p>
+            </div>
+
+            <div className="bg-white rounded-xl border p-5 space-y-5">
+                {/* Enable toggle */}
+                <div className="flex items-center justify-between">
+                    <label className="font-cairo font-medium text-sm text-gray-800">
+                        {t('billing.settings.tax_enabled')}
+                    </label>
+                    <button
+                        onClick={() => setEnabled(v => !v)}
+                        className={cn(
+                            'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                            enabled ? 'bg-secondary' : 'bg-gray-200'
+                        )}
+                    >
+                        <span
+                            className={cn(
+                                'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
+                                enabled ? (isRTL ? '-translate-x-6' : 'translate-x-6') : (isRTL ? '-translate-x-1' : 'translate-x-1')
+                            )}
+                        />
+                    </button>
+                </div>
+
+                {/* Rate input — only shown when enabled */}
+                {enabled && (
+                    <div className="space-y-1">
+                        <label className="block font-cairo text-sm font-medium text-gray-700">
+                            {t('billing.settings.tax_rate')}
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                step={0.1}
+                                value={rateInput}
+                                onChange={e => setRateInput(e.target.value)}
+                                className="w-28 py-2 px-3 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-secondary/30 outline-none"
+                            />
+                            <span className="text-gray-500 font-cairo text-sm">%</span>
+                            <span className="text-gray-400 font-cairo text-xs ms-2">
+                                = {((parseFloat(rateInput) || 0) / 100).toFixed(4)}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Disabled note */}
+                {!enabled && (
+                    <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-cairo">
+                        {t('billing.settings.tax_disabled_note')}
+                    </p>
+                )}
+
+                <button
+                    onClick={handleSave}
+                    disabled={updateTax.isPending}
+                    className="flex items-center gap-2 px-5 py-2 bg-secondary text-white rounded-lg font-cairo text-sm font-bold hover:bg-secondary/90 disabled:opacity-60 transition-colors"
+                >
+                    {updateTax.isPending
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Check className="w-4 h-4" />}
+                    {t('billing.settings.save')}
+                </button>
+            </div>
         </div>
     )
 }

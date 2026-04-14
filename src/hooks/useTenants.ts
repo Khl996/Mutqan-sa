@@ -319,11 +319,14 @@ export function useUpdateTenant() {
             const accessToken = getAccessToken()
             if (!accessToken) throw new Error('Not authenticated')
 
+            // subscription_status must only be changed via billing engine RPCs (engine_activate, engine_extend_trial, etc.)
+            const PROTECTED_FIELDS = new Set(['subscription_status'])
+
             const updateData: Record<string, unknown> = {
                 updated_at: new Date().toISOString(),
             }
             Object.entries(updates).forEach(([key, value]) => {
-                if (value !== undefined) {
+                if (value !== undefined && !PROTECTED_FIELDS.has(key)) {
                     updateData[key] = value
                 }
             })
@@ -464,7 +467,7 @@ export function usePlatformStats() {
             startOfMonth.setHours(0, 0, 0, 0)
 
             const invoicesData = await fetchJson<any[]>(
-                `${supabaseUrl}/rest/v1/platform_invoices?select=total&status=eq.paid&paid_at=gte.${startOfMonth.toISOString()}`,
+                `${supabaseUrl}/rest/v1/billing_invoices?select=total&status=eq.paid&paid_at=gte.${startOfMonth.toISOString()}`,
                 []
             )
             const monthlyRevenue = Array.isArray(invoicesData)

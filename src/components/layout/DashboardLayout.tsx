@@ -9,7 +9,7 @@ import ServiceSuspended from '@/components/ServiceSuspended'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import { cn } from '@/lib/utils'
-import { AlertCircle } from 'lucide-react'
+import { Clock, XCircle } from 'lucide-react'
 
 export default function DashboardLayout() {
     const { isAuthenticated, isLoading, profile } = useAuth()
@@ -76,27 +76,24 @@ export default function DashboardLayout() {
     const isTenantAdmin = profile?.role === 'tenant_admin'
 
     if (currentTenant && !isPlatformUser) {
-        const statusExpired =
-            currentTenant.subscription_status === 'expired' ||
-            currentTenant.subscription_status === 'suspended' ||
-            currentTenant.subscription_status === 'cancelled'
-
-        const endDateStr = currentTenant.subscription_ends_at || currentTenant.trial_ends_at
-        const subscriptionEndDate = endDateStr ? new Date(endDateStr) : null
-        const periodExpired = subscriptionEndDate ? subscriptionEndDate < new Date() : false
-        const isFreePlanExpired = currentTenant.subscription_status === 'trial' && periodExpired
-        const isSubscriptionExpired = statusExpired || isFreePlanExpired
-
-        if (isSubscriptionExpired) {
-            if (isTenantAdmin) {
-                if (location.pathname !== '/subscription' && location.pathname !== '/settings/tenant') {
-                    return <Navigate to="/subscription" replace />
-                }
-            } else {
-                return <ServiceSuspended />
-            }
+        const status = currentTenant.subscription_status
+        // Non-admins cannot self-service — hard block on expired/cancelled
+        if ((status === 'expired' || status === 'cancelled') && !isTenantAdmin) {
+            return <ServiceSuspended />
         }
     }
+
+    // Banner state computations (tenant admins only)
+    const status = currentTenant?.subscription_status
+    const trialEndStr = currentTenant?.trial_ends_at
+    const trialDaysLeft = trialEndStr
+        ? Math.max(0, Math.ceil((new Date(trialEndStr).getTime() - Date.now()) / 86_400_000))
+        : null
+    const showTrialWarning = !isPlatformUser && isTenantAdmin
+        && status === 'trial'
+        && trialDaysLeft !== null && trialDaysLeft <= 3
+    const showExpiredBanner = !isPlatformUser && isTenantAdmin
+        && (status === 'expired' || status === 'cancelled')
 
     const marginClass = cn(
         'transition-all duration-300',
@@ -127,35 +124,60 @@ export default function DashboardLayout() {
                 <Header onMenuClick={() => setMobileSidebarOpen((open) => !open)} />
 
                 <main className="flex-1 p-4 sm:p-6 pb-24 overflow-x-hidden">
-                    {isTenantAdmin && (currentTenant?.subscription_status === 'trial' || currentTenant?.subscription_status === 'expired') && (
-                        <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between">
+                    {/* Trial expiring soon (≤3 days) */}
+                    {showTrialWarning && (
+                        <div className="mb-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                    <AlertCircle className="w-5 h-5" />
+                                <div className="p-2 bg-amber-100 rounded-lg text-amber-600 shrink-0">
+                                    <Clock className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-blue-900 font-cairo">
-                                        {currentTenant.subscription_status === 'trial'
-                                            ? (isRTL ? 'نسخة تجريبية' : 'Trial Version')
-                                            : (isRTL ? 'الاشتراك منتهي' : 'Subscription Expired')}
+                                    <h4 className="font-bold text-amber-900 font-cairo">
+                                        {t('tenant.banner.trial_expiring_title')}
                                     </h4>
-                                    <p className="text-sm text-blue-700 font-cairo">
-                                        {isRTL
-                                            ? 'يرجى ترقية الباقة للاستمرار في استخدام جميع المميزات.'
-                                            : 'Please upgrade your plan to continue using all features.'}
+                                    <p className="text-sm text-amber-700 font-cairo">
+                                        {t('tenant.banner.trial_expiring_msg', { days: trialDaysLeft })}
                                     </p>
                                 </div>
                             </div>
                             {location.pathname !== '/subscription' && (
                                 <Link
                                     to="/subscription"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 font-cairo"
+                                    className="shrink-0 px-4 py-2 bg-amber-500 text-white rounded-lg font-bold text-sm hover:bg-amber-600 font-cairo"
                                 >
-                                    {isRTL ? 'ترقية الآن' : 'Upgrade Now'}
+                                    {t('tenant.banner.trial_expiring_cta')}
                                 </Link>
                             )}
                         </div>
                     )}
+
+                    {/* Expired / Cancelled — read-only banner */}
+                    {showExpiredBanner && (
+                        <div className="mb-6 bg-red-50 border border-red-200 p-4 rounded-xl flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-red-100 rounded-lg text-red-600 shrink-0">
+                                    <XCircle className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-red-900 font-cairo">
+                                        {t(status === 'cancelled' ? 'tenant.banner.cancelled_title' : 'tenant.banner.expired_title')}
+                                    </h4>
+                                    <p className="text-sm text-red-700 font-cairo">
+                                        {t('tenant.banner.read_only_note')}
+                                    </p>
+                                </div>
+                            </div>
+                            {location.pathname !== '/subscription' && (
+                                <Link
+                                    to="/subscription"
+                                    className="shrink-0 px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 font-cairo"
+                                >
+                                    {t(status === 'cancelled' ? 'tenant.banner.cancelled_cta' : 'tenant.banner.expired_cta')}
+                                </Link>
+                            )}
+                        </div>
+                    )}
+
                     <Outlet />
                 </main>
             </div>

@@ -1,4 +1,4 @@
-import { PlatformInvoice } from "@/hooks/usePlatformManagement";
+import type { BillingInvoice } from "@/hooks/useBillingEngine";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -26,7 +26,7 @@ const fetchFileAsBase64 = async (url: string): Promise<string> => {
     }
 };
 
-export const generateInvoicePDF = async (invoice: PlatformInvoice, tenantName: string, tenantAddress?: string | null) => {
+export const generateInvoicePDF = async (invoice: BillingInvoice, tenantName: string, tenantAddress?: string | null) => {
     const doc = new jsPDF();
 
     // -- 1. إعداد الخط العربي والقوالب (اللوجو) --
@@ -131,15 +131,27 @@ export const generateInvoicePDF = async (invoice: PlatformInvoice, tenantName: s
     }
 
     // -- 4. الجدول (Table) --
+    const periodLabel = (invoice.billing_period_start && invoice.billing_period_end)
+        ? `${new Date(invoice.billing_period_start).toLocaleDateString('en-GB')} – ${new Date(invoice.billing_period_end).toLocaleDateString('en-GB')}`
+        : null
+
+    const tableBody: [string, string][] = [
+        [
+            invoice.notes || 'Platform Subscription',
+            `${Number(invoice.subtotal).toFixed(2)} SAR`
+        ]
+    ]
+    if (periodLabel) {
+        tableBody.push([`Billing period: ${periodLabel}`, ''])
+    }
+    if (invoice.discount_amount && Number(invoice.discount_amount) > 0) {
+        tableBody.push([`Discount`, `-${Number(invoice.discount_amount).toFixed(2)} SAR`])
+    }
+
     autoTable(doc, {
         startY: 115,
         head: [['Description', 'Amount']],
-        body: [
-            [
-                invoice.plan_name || 'System Subscription',
-                `${Number(invoice.total).toFixed(2)} ${invoice.currency}`
-            ]
-        ],
+        body: tableBody,
         theme: 'grid',
         headStyles: {
             fillColor: [43, 140, 135],
@@ -168,20 +180,26 @@ export const generateInvoicePDF = async (invoice: PlatformInvoice, tenantName: s
 
     // Subtotal
     doc.text("Subtotal:", 140, finalY);
-    doc.text(`${Number(invoice.total).toFixed(2)} ${invoice.currency}`, 190, finalY, { align: "right" });
+    doc.text(`${Number(invoice.subtotal).toFixed(2)} SAR`, 190, finalY, { align: "right" });
 
-    // VAT
-    doc.text("VAT (0%):", 140, finalY + 7);
-    doc.text(`0.00 ${invoice.currency}`, 190, finalY + 7, { align: "right" });
+    const hasTax = Number(invoice.tax_amount) > 0
+    let totalsY = finalY
+
+    if (hasTax) {
+        const taxRate = Math.round((invoice.tax_rate ?? 0) * 100)
+        doc.text(`VAT / ضريبة القيمة المضافة (${taxRate}%):`, 140, totalsY + 7);
+        doc.text(`${Number(invoice.tax_amount).toFixed(2)} SAR`, 190, totalsY + 7, { align: "right" });
+        totalsY += 7
+    }
 
     doc.setDrawColor(220, 220, 220);
-    doc.line(140, finalY + 12, 190, finalY + 12);
+    doc.line(140, totalsY + 5, 190, totalsY + 5);
 
     doc.setFontSize(14);
     if (!fontBase64) doc.setFont("helvetica", "bold");
     doc.setTextColor(43, 140, 135);
-    doc.text("Total:", 140, finalY + 22);
-    doc.text(`${Number(invoice.total).toFixed(2)} ${invoice.currency}`, 190, finalY + 22, { align: "right" });
+    doc.text("Total:", 140, totalsY + 15);
+    doc.text(`${Number(invoice.total).toFixed(2)} SAR`, 190, totalsY + 15, { align: "right" });
 
     // -- 6. التذييل (Footer) --
     const pageHeight = doc.internal.pageSize.height;
@@ -189,7 +207,9 @@ export const generateInvoicePDF = async (invoice: PlatformInvoice, tenantName: s
     doc.setTextColor(120, 120, 120);
     if (!fontBase64) doc.setFont("helvetica", "italic");
 
-    doc.text("* Not subject to VAT (Freelance Document).", 105, pageHeight - 15, { align: "center" });
+    if (!hasTax) {
+        doc.text("* Not subject to VAT (Freelance Document).", 105, pageHeight - 15, { align: "center" });
+    }
 
     if (!fontBase64) doc.setFont("helvetica", "normal");
     doc.text("Thank you for trusting Mutqan.", 105, pageHeight - 10, { align: "center" });

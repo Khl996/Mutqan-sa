@@ -14,6 +14,7 @@ import {
     BarChart3,
     LogOut,
     Megaphone,
+    FileText,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePermission } from '@/hooks/usePermission'
@@ -31,75 +32,25 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
     const { can } = usePermission()
     const isRTL = i18n.language === 'ar'
 
-    const platformMenuItems: Array<{
-        icon: React.ElementType
-        label: string
-        href: string
-        permission: Permission
-    }> = [
-        {
-            icon: LayoutDashboard,
-            label: isRTL ? 'لوحة المنصة' : 'Platform Dashboard',
-            href: '/platform',
-            permission: 'platform.dashboard.view',
-        },
-        {
-            icon: Building2,
-            label: isRTL ? 'إدارة المنشآت' : 'Institutions',
-            href: '/platform/tenants',
-            permission: 'platform.tenants.view',
-        },
-        {
-            icon: CreditCard,
-            label: isRTL ? 'الاشتراكات' : 'Subscriptions',
-            href: '/platform/subscriptions',
-            permission: 'platform.subscriptions.manage',
-        },
-        {
-            icon: Users,
-            label: isRTL ? 'موظفو المنصة' : 'Platform Staff',
-            href: '/platform/staff',
-            permission: 'platform.staff.manage',
-        },
-        {
-            icon: DollarSign,
-            label: isRTL ? 'الإدارة المالية' : 'Financials',
-            href: '/platform/financials',
-            permission: 'platform.financials.view',
-        },
-        {
-            icon: Megaphone,
-            label: isRTL ? 'التعاميم' : 'Announcements',
-            href: '/platform/announcements',
-            permission: 'platform.announcements.manage',
-        },
-        {
-            icon: Activity,
-            label: isRTL ? 'سجلات النظام' : 'Audit Logs',
-            href: '/platform/logs',
-            permission: 'platform.audit.view',
-        },
-        {
-            icon: BarChart3,
-            label: isRTL ? 'التقارير' : 'Reports',
-            href: '/platform/reports',
-            permission: 'platform.reports.view',
-        },
-    ].filter(item => can(item.permission))
+    type NavItem = { icon: React.ElementType; label: string; href: string; permission: Permission }
 
-    const settingsItems: Array<{
-        icon: React.ElementType
-        label: string
-        href: string
-        permission: Permission
-    }> = [
-        {
-            icon: Settings,
-            label: isRTL ? 'إعدادات المنصة' : 'Platform Settings',
-            href: '/platform/settings',
-            permission: 'platform.settings.manage',
-        },
-    ].filter(item => can(item.permission))
+    const allPlatformItems: NavItem[] = [
+        { icon: LayoutDashboard, label: isRTL ? 'لوحة المنصة' : 'Platform Dashboard', href: '/platform', permission: 'platform.dashboard.view' },
+        { icon: Building2, label: isRTL ? 'إدارة المنشآت' : 'Institutions', href: '/platform/tenants', permission: 'platform.tenants.view' },
+        { icon: CreditCard, label: isRTL ? 'الاشتراكات' : 'Subscriptions', href: '/platform/subscriptions', permission: 'platform.subscriptions.manage' },
+        { icon: FileText, label: isRTL ? 'عروض الأسعار' : 'Quotes', href: '/platform/quotes', permission: 'platform.subscriptions.manage' },
+        { icon: Users, label: isRTL ? 'موظفو المنصة' : 'Platform Staff', href: '/platform/staff', permission: 'platform.staff.manage' },
+        { icon: DollarSign, label: isRTL ? 'الإدارة المالية' : 'Financials', href: '/platform/financials', permission: 'platform.financials.view' },
+        { icon: Megaphone, label: isRTL ? 'التعاميم' : 'Announcements', href: '/platform/announcements', permission: 'platform.announcements.manage' },
+        { icon: Activity, label: isRTL ? 'سجلات النظام' : 'Audit Logs', href: '/platform/logs', permission: 'platform.audit.view' },
+        { icon: BarChart3, label: isRTL ? 'التقارير' : 'Reports', href: '/platform/reports', permission: 'platform.reports.view' },
+    ]
+    const platformMenuItems = allPlatformItems.filter(item => can(item.permission))
+
+    const allSettingsItems: NavItem[] = [
+        { icon: Settings, label: isRTL ? 'إعدادات المنصة' : 'Platform Settings', href: '/platform/settings', permission: 'platform.settings.manage' },
+    ]
+    const settingsItems = allSettingsItems.filter(item => can(item.permission))
 
     const isActive = (href: string) =>
         location.pathname === href || (href !== '/platform' && location.pathname.startsWith(href + '/'))

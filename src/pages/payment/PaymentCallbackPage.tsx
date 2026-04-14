@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { usePayment } from '@/hooks/usePayment'
 import { useTenant } from '@/contexts/TenantContext'
 
@@ -10,18 +11,23 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export default function PaymentCallbackPage() {
     const [searchParams] = useSearchParams()
+    const navigate = useNavigate()
     const { verifyPayment } = usePayment()
     const { refreshTenant } = useTenant()
+    const { t, i18n } = useTranslation()
+    const isRTL = i18n.language === 'ar'
 
     const [status, setStatus] = useState<PaymentStatus>('loading')
     const [message, setMessage] = useState('')
+    const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const [countdown, setCountdown] = useState(3)
 
     useEffect(() => {
         const tapId = searchParams.get('tap_id')
 
         if (!tapId) {
             setStatus('failed')
-            setMessage('لم يتم العثور على معرف عملية الدفع.')
+            setMessage(t('payment.not_found'))
             return
         }
 
@@ -34,24 +40,33 @@ export default function PaymentCallbackPage() {
             if (result.success) {
                 for (let attempt = 0; attempt < 4; attempt++) {
                     await refreshTenant()
-
-                    if (attempt < 3) {
-                        await wait(750)
-                    }
+                    if (attempt < 3) await wait(750)
                 }
 
                 if (!isMounted) return
 
                 setStatus('success')
-                setMessage('تم تفعيل اشتراكك بنجاح، ويمكنك المتابعة إلى لوحة التحكم الآن.')
+                setMessage(t('payment.success_msg'))
+
+                // Auto-redirect to /subscription after 3 seconds
+                let secs = 3
+                setCountdown(secs)
+                countdownRef.current = setInterval(() => {
+                    secs -= 1
+                    setCountdown(secs)
+                    if (secs <= 0) {
+                        clearInterval(countdownRef.current!)
+                        navigate('/subscription', { replace: true })
+                    }
+                }, 1000)
                 return
             }
 
             setStatus('failed')
             setMessage(
                 result.status === 'CANCELLED'
-                    ? 'تم إلغاء عملية الدفع.'
-                    : result.message || 'تعذر التحقق من عملية الدفع. حاول مرة أخرى أو تواصل مع الدعم.'
+                    ? t('payment.cancelled')
+                    : (result.message || t('payment.verify_failed'))
             )
         }
 
@@ -59,11 +74,16 @@ export default function PaymentCallbackPage() {
 
         return () => {
             isMounted = false
+            if (countdownRef.current) clearInterval(countdownRef.current)
         }
-    }, [refreshTenant, searchParams, verifyPayment])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
-        <div className="min-h-screen bg-slate-50 font-cairo flex items-center justify-center" dir="rtl">
+        <div
+            className="min-h-screen bg-slate-50 font-cairo flex items-center justify-center"
+            dir={isRTL ? 'rtl' : 'ltr'}
+        >
             <div className="max-w-md w-full mx-4">
                 <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 text-center space-y-6">
                     {status === 'loading' && (
@@ -74,8 +94,12 @@ export default function PaymentCallbackPage() {
                                 </div>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">جارٍ التحقق من عملية الدفع...</h2>
-                                <p className="text-slate-500 mt-2">نحدّث حالة الاشتراك ونزامن بيانات المنشأة قبل تحويلك للوحة التحكم.</p>
+                                <h2 className="text-2xl font-bold text-slate-800">
+                                    {t('payment.verifying')}
+                                </h2>
+                                <p className="text-slate-500 mt-2">
+                                    {t('payment.verifying_sub')}
+                                </p>
                             </div>
                         </>
                     )}
@@ -88,14 +112,19 @@ export default function PaymentCallbackPage() {
                                 </div>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">تم الدفع بنجاح</h2>
+                                <h2 className="text-2xl font-bold text-slate-800">
+                                    {t('payment.success_title')}
+                                </h2>
                                 <p className="text-slate-500 mt-2">{message}</p>
+                                <p className="text-slate-400 text-sm mt-3">
+                                    {t('payment.redirecting', { count: countdown })}
+                                </p>
                             </div>
                             <Link
-                                to="/dashboard"
+                                to="/subscription"
                                 className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-xl font-bold transition-colors"
                             >
-                                الانتقال إلى لوحة التحكم
+                                {t('payment.go_to_subscription')}
                                 <ArrowRight className="w-4 h-4" />
                             </Link>
                         </>
@@ -109,7 +138,9 @@ export default function PaymentCallbackPage() {
                                 </div>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">تعذر إتمام العملية</h2>
+                                <h2 className="text-2xl font-bold text-slate-800">
+                                    {t('payment.failed_title')}
+                                </h2>
                                 <p className="text-slate-500 mt-2">{message}</p>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -117,13 +148,13 @@ export default function PaymentCallbackPage() {
                                     to="/subscription"
                                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
                                 >
-                                    العودة للاشتراكات
+                                    {t('payment.back_to_subscription')}
                                 </Link>
                                 <Link
                                     to="/dashboard"
                                     className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-bold transition-colors"
                                 >
-                                    العودة للوحة التحكم
+                                    {t('payment.go_to_dashboard')}
                                 </Link>
                             </div>
                         </>
