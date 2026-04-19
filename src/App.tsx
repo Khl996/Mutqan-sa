@@ -35,7 +35,8 @@ const AssetDetailsPage = lazy(() => import('@/pages/assets/AssetDetailsPage'))
 const AssetLogsPage = lazy(() => import('@/pages/assets/AssetLogsPage'))
 const WorkOrdersPage = lazy(() => import('@/pages/work-orders/WorkOrdersPage'))
 const MaintenancePage = lazy(() => import('@/pages/maintenance/MaintenancePage'))
-const MaintenancePlanDetailsPage = lazy(() => import('@/pages/maintenance/MaintenancePlanDetailsPage'))
+const PMJobPlanDetailsPage = lazy(() => import('@/pages/maintenance/PMJobPlanDetailsPage'))
+const PMScheduleDetailsPage = lazy(() => import('@/pages/maintenance/PMScheduleDetailsPage'))
 const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage'))
 const WorkOrderDetailsPage = lazy(() => import('@/pages/work-orders/WorkOrderDetailsPage'))
 const TeamsPage = lazy(() => import('@/pages/teams/TeamsPage'))
@@ -218,7 +219,9 @@ function AppRoutes() {
 
                 <Route element={<ProtectedRoute permission="maintenance.view" />}>
                     <Route path="/maintenance" element={renderLazyPage(MaintenancePage)} />
-                    <Route path="/maintenance/plans/:id" element={renderLazyPage(MaintenancePlanDetailsPage)} />
+                    <Route path="/maintenance/job-plans/:id" element={renderLazyPage(PMJobPlanDetailsPage)} />
+                    <Route path="/maintenance/schedules/:id" element={renderLazyPage(PMScheduleDetailsPage)} />
+                    <Route path="/maintenance/plans/:id" element={<Navigate to="/maintenance" replace />} />
                 </Route>
 
                 <Route element={<ProtectedRoute permission="inventory.view" />}>

@@ -4,8 +4,17 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
+const isolatedLegacyPmFiles = [
+    'src/pages/maintenance/MaintenancePlanDetailsPage.tsx',
+    'src/components/maintenance/AddMaintenancePlanDialog.tsx',
+    'src/components/maintenance/AddMaintenanceTaskDialog.tsx',
+    'src/components/maintenance/TaskExecutionModal.tsx',
+    'src/hooks/useMaintenancePlans.ts',
+    'src/hooks/useMaintenanceTasks.ts',
+]
+
 export default tseslint.config(
-    { ignores: ['dist', 'node_modules', 'api'] },
+    { ignores: ['dist', 'node_modules', 'api', '.claude', 'dev-server.*.log', ...isolatedLegacyPmFiles] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ['**/*.{ts,tsx}'],

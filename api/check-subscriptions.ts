@@ -8,7 +8,6 @@ const CRON_SECRET = process.env.CRON_SECRET
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // =====================================================
     // FAIL-CLOSED: Always require CRON_SECRET
-    // If CRON_SECRET is not set, reject ALL requests
     // =====================================================
     if (!CRON_SECRET) {
         console.error('CRON_SECRET is not configured — blocking request')
@@ -29,17 +28,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     const now = new Date().toISOString()
-    let cancelled = 0
     let expired = 0
 
     try {
-        // 1. Find active subscriptions past their period end
+        // Find active/trial subscriptions that have passed their period end.
+        // Note: cancel_at_period_end and override_type columns were removed in migration 101.
+        // The sync trigger on tenant_subscriptions automatically keeps the tenants
+        // table in sync — no manual tenants update is required here.
         const { data: expiredSubs, error } = await supabase
             .from('tenant_subscriptions')
-            .select('id, tenant_id, plan_id, cancel_at_period_end, billing_cycle, override_type')
+            .select('id, tenant_id')
             .in('status', ['active', 'trial'])
             .lt('current_period_end', now)
-            .not('override_type', 'in', '(free_forever,complimentary)')
 
         if (error) {
             console.error('Query error:', error)
@@ -47,55 +47,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         if (!expiredSubs || expiredSubs.length === 0) {
-            return res.status(200).json({ message: 'No expired subscriptions found', cancelled: 0, expired: 0 })
+            return res.status(200).json({ message: 'No expired subscriptions found', expired: 0 })
         }
 
         for (const sub of expiredSubs) {
-            const newStatus = sub.cancel_at_period_end ? 'cancelled' : 'expired'
-
-            // Update tenant_subscriptions
-            const subUpdate: Record<string, unknown> = {
-                status: newStatus,
-                updated_at: now,
-            }
-            if (newStatus === 'cancelled') {
-                subUpdate.cancelled_at = now
-            }
-            const { error: subUpdateError } = await supabase
+            const { error: updateError } = await supabase
                 .from('tenant_subscriptions')
-                .update(subUpdate)
+                .update({ status: 'expired', updated_at: now })
                 .eq('id', sub.id)
 
-            if (subUpdateError) {
-                throw new Error(`Failed to update subscription ${sub.id}: ${subUpdateError.message}`)
+            if (updateError) {
+                // Log and continue — don't abort the entire batch for one failure
+                console.error(`Failed to expire subscription ${sub.id}:`, updateError.message)
+                continue
             }
 
-            // =====================================================
-            // Update ALL related fields on tenants table consistently
-            // This prevents drift between subscription status sources
-            // =====================================================
-            const { error: tenantUpdateError } = await supabase
-                .from('tenants')
-                .update({
-                    subscription_status: newStatus,
-                    subscription_tier: newStatus === 'cancelled' ? 'free' : undefined,
-                    updated_at: now,
-                })
-                .eq('id', sub.tenant_id)
-
-            if (tenantUpdateError) {
-                throw new Error(`Failed to sync tenant ${sub.tenant_id}: ${tenantUpdateError.message}`)
-            }
-
-            if (newStatus === 'cancelled') cancelled++
-            else expired++
+            // The AFTER UPDATE trigger on tenant_subscriptions automatically syncs
+            // tenants.subscription_status = 'expired'. No additional update needed.
+            expired++
         }
 
-        console.log(`Cron completed: ${cancelled} cancelled, ${expired} expired`)
+        console.log(`Cron completed: ${expired} expired (of ${expiredSubs.length} found)`)
         return res.status(200).json({
             message: 'Subscription check completed',
             total: expiredSubs.length,
-            cancelled,
             expired,
         })
 

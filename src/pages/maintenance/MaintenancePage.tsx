@@ -1,536 +1,579 @@
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMaintenancePlans } from '@/hooks/useMaintenancePlans'
-import { useMaintenanceTasks, MaintenanceTask } from '@/hooks/useMaintenanceTasks'
-import { useModuleAccess } from '@/hooks/useTenantModules'
-import { usePermission } from '@/hooks/usePermission'
+import type * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
-    Wrench,
-    FileText,
-    Plus,
-    Search,
-    LayoutGrid,
-    List,
-    GitCommit,
-    CheckCircle2,
-    Clock,
-    User,
-    ExternalLink,
     AlertTriangle,
-    AlertCircle
+    CalendarClock,
+    CheckCircle2,
+    ClipboardCheck,
+    FileText,
+    Loader2,
+    PlayCircle,
+    Route,
+    Search,
+    ShieldCheck,
+    Timer,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import ExecutionDialog from '@/components/maintenance/ExecutionDialog'
+import {
+    DashboardPanel,
+    JobPlansPanel,
+    ReportsPanel,
+    SchedulesPanel,
+    WorkOrdersPanel,
+} from '@/components/maintenance/FoundationPMPanels'
+import JobPlanDialog from '@/components/maintenance/JobPlanDialog'
+import ScheduleDialog from '@/components/maintenance/ScheduleDialog'
+import { ar, displayName, en, fillCount, statusLabel } from '@/components/maintenance/foundationPmUtils'
+import { useAssets } from '@/hooks/useAssets'
+import { useModuleAccess, useTenantModules } from '@/hooks/useTenantModules'
+import { usePermission } from '@/hooks/usePermission'
+import type { PMGenerateResult, PMJobPlan, PMJobPlanInput, PMSchedule, PMScheduleInput, PMWorkOrder } from '@/hooks/usePMFoundation'
+import {
+    fetchPMWorkOrderDetail,
+    usePMComplianceStats,
+    usePMGenerateWorkOrders,
+    usePMJobPlans,
+    usePMSchedules,
+    usePMWorkOrders,
+} from '@/hooks/usePMFoundation'
 import { cn } from '@/lib/utils'
+import {
+    openPMPrintWindow,
+    printPMOperationalReport,
+    printPMWorkOrder,
+} from '@/utils/pmFoundationPrint'
 
-import AddMaintenancePlanDialog from '@/components/maintenance/AddMaintenancePlanDialog'
-import AddMaintenanceTaskDialog from '@/components/maintenance/AddMaintenanceTaskDialog'
-import TaskExecutionModal from '@/components/maintenance/TaskExecutionModal'
+type TabKey = 'dashboard' | 'job-plans' | 'schedules' | 'work-orders' | 'reports'
+
+function dateOnlyTime(value: string | null | undefined) {
+    if (!value) return null
+    const date = new Date(`${value.slice(0, 10)}T00:00:00`)
+    return Number.isNaN(date.getTime()) ? null : date.getTime()
+}
 
 export default function MaintenancePage() {
-    const { t, i18n } = useTranslation()
-    const isRTL = i18n.language === 'ar'
     const navigate = useNavigate()
-
-    // Check maintenance access — both tabs are part of the same module;
-    // no sub-feature gating needed for tab visibility.
+    const { i18n } = useTranslation()
+    const isAr = i18n.language === 'ar'
+    const copy = isAr ? ar : en
+    const locale = isAr ? 'ar-SA' : 'en-US'
     const { can } = usePermission()
     const canManage = can('maintenance.manage')
-    const isMaintenanceEnabled = useModuleAccess('maintenance')
-    const isPlansEnabled = isMaintenanceEnabled
-    const isTasksEnabled = isMaintenanceEnabled
+    const { isLoading: modulesLoading } = useTenantModules()
+    const maintenanceEnabled = useModuleAccess('maintenance')
 
-    // Data Fetching
-    const { tasks: tasksData, isLoading: tasksLoading, isError: isTasksError, error: tasksError } = useMaintenanceTasks()
-    const { plans, isLoading: plansLoading, isError: isPlansError, error: plansError } = useMaintenancePlans()
+    const [activeTab, setActiveTab] = useState<TabKey>('dashboard')
+    const [search, setSearch] = useState('')
+    const [planDialogOpen, setPlanDialogOpen] = useState(false)
+    const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
+    const [editingPlan, setEditingPlan] = useState<PMJobPlan | null>(null)
+    const [editingSchedule, setEditingSchedule] = useState<PMSchedule | null>(null)
+    const [executingWorkOrder, setExecutingWorkOrder] = useState<PMWorkOrder | null>(null)
+    const [lastGenerateResult, setLastGenerateResult] = useState<PMGenerateResult | null>(null)
+    const [workOrderStatusFilter, setWorkOrderStatusFilter] = useState('all')
+    const [workOrderModeFilter, setWorkOrderModeFilter] = useState('all')
+    const [workOrderAssetFilter, setWorkOrderAssetFilter] = useState('all')
+    const [pdfLoadingId, setPdfLoadingId] = useState<string | null>(null)
+    const [archiveTarget, setArchiveTarget] = useState<{ type: 'plan' | 'schedule'; id: string; label: string } | null>(null)
 
-    const tasks = tasksData || []
-    const isLoading = tasksLoading || plansLoading
-    const isError = isTasksError || isPlansError
+    const { data: assets = [], isLoading: assetsLoading } = useAssets()
+    const {
+        jobPlans,
+        isLoading: plansLoading,
+        error: plansError,
+        createJobPlan,
+        updateJobPlan,
+        archiveJobPlan,
+        isSaving: planSaving,
+    } = usePMJobPlans()
+    const {
+        schedules,
+        isLoading: schedulesLoading,
+        error: schedulesError,
+        createSchedule,
+        updateSchedule,
+        archiveSchedule,
+        isSaving: scheduleSaving,
+    } = usePMSchedules()
+    const { generateDueWorkOrders, isGenerating } = usePMGenerateWorkOrders()
+    const { data: workOrders = [], isLoading: workOrdersLoading, error: workOrdersError } = usePMWorkOrders()
+    const { data: complianceStats, isLoading: statsLoading } = usePMComplianceStats()
 
-    // State
-    const [searchQuery, setSearchQuery] = useState('')
-    const [statusFilter, setStatusFilter] = useState('all')
-    const [priorityFilter, setPriorityFilter] = useState('all')
-    const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table')
-    const [activeTab, setActiveTab] = useState<'tasks' | 'plans'>('tasks')
+    const lowerSearch = search.trim().toLowerCase()
+    const filteredPlans = useMemo(() => jobPlans.filter((plan) => {
+        if (!lowerSearch) return true
+        return [plan.code, plan.name, plan.name_ar, plan.category, plan.required_skill, plan.required_role]
+            .some((value) => value?.toLowerCase().includes(lowerSearch))
+    }), [jobPlans, lowerSearch])
 
-    // Modals State
-    const [isAddPlanOpen, setIsAddPlanOpen] = useState(false)
-    const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
+    const filteredSchedules = useMemo(() => schedules.filter((schedule) => {
+        if (!lowerSearch) return true
+        return [schedule.code, schedule.name, schedule.name_ar, schedule.job_plan?.name, schedule.job_plan?.name_ar]
+            .some((value) => value?.toLowerCase().includes(lowerSearch))
+    }), [lowerSearch, schedules])
 
-    // Ensure active tab corresponds to enabled feature
-    useEffect(() => {
-        if (activeTab === 'tasks' && !isTasksEnabled && isPlansEnabled) {
-            setActiveTab('plans')
-        } else if (activeTab === 'plans' && !isPlansEnabled && isTasksEnabled) {
-            setActiveTab('tasks')
+    const pmAssets = useMemo(() => {
+        const map = new Map<string, { id: string; label: string }>()
+        workOrders.forEach((wo) => {
+            wo.work_order_assets?.forEach((assetRow) => {
+                if (!assetRow.asset) return
+                map.set(assetRow.asset.id, {
+                    id: assetRow.asset.id,
+                    label: `${assetRow.asset.code} - ${displayName(assetRow.asset, isAr)}`,
+                })
+            })
+        })
+        return Array.from(map.values())
+    }, [isAr, workOrders])
+
+    const filteredWorkOrders = useMemo(() => workOrders.filter((wo) => {
+        const generationMode = wo.source_schedule?.generation_mode ?? (wo.source_schedule_asset_id ? 'per_asset' : 'batch_route')
+        const matchesSearch = !lowerSearch || [wo.code, wo.title, wo.source_schedule_id, wo.source_schedule?.name, wo.source_schedule?.name_ar]
+            .some((value) => value?.toLowerCase().includes(lowerSearch))
+        const matchesStatus = workOrderStatusFilter === 'all' || wo.status === workOrderStatusFilter
+        const matchesMode = workOrderModeFilter === 'all' || generationMode === workOrderModeFilter
+        const matchesAsset = workOrderAssetFilter === 'all' || wo.work_order_assets?.some((asset) => asset.asset_id === workOrderAssetFilter)
+        return matchesSearch && matchesStatus && matchesMode && matchesAsset
+    }), [lowerSearch, workOrderAssetFilter, workOrderModeFilter, workOrderStatusFilter, workOrders])
+
+    const dashboard = useMemo(() => {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const todayTime = today.getTime()
+        const activeSchedules = schedules.filter((schedule) => schedule.status === 'active')
+        const completedLate = workOrders.filter((wo) =>
+            wo.status === 'completed' &&
+            wo.completed_at &&
+            wo.compliance_deadline &&
+            new Date(wo.completed_at).setHours(0, 0, 0, 0) > new Date(wo.compliance_deadline).setHours(0, 0, 0, 0)
+        ).length
+        const overdueWorkOrders = workOrders.filter((wo) => {
+            if (wo.status === 'completed' || wo.status === 'cancelled' || wo.status === 'auto_closed') return false
+            const deadline = dateOnlyTime(wo.compliance_deadline)
+            return deadline !== null && deadline < todayTime
+        }).length
+
+        return {
+            activePlans: jobPlans.filter((plan) => plan.status === 'active').length,
+            activeSchedules: activeSchedules.length,
+            dueToday: activeSchedules.filter((schedule) => dateOnlyTime(schedule.next_due_date) === todayTime).length,
+            overdue: complianceStats?.overdue ?? overdueWorkOrders,
+            dueSoon: complianceStats?.due_soon ?? 0,
+            workOrdersGenerated: workOrders.length,
+            completedOnTime: complianceStats?.completed_on_time ?? 0,
+            completedLate,
+            complianceRate: complianceStats?.compliance_rate,
         }
-    }, [isTasksEnabled, isPlansEnabled, activeTab])
+    }, [complianceStats, jobPlans, schedules, workOrders])
 
-    // Task Execution State
-    const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null)
-    const [isTaskExecutionOpen, setIsTaskExecutionOpen] = useState(false)
+    const isLoading = modulesLoading || plansLoading || schedulesLoading || workOrdersLoading || statsLoading || assetsLoading
+    const error = plansError || schedulesError || (workOrdersError instanceof Error ? workOrdersError.message : null)
 
-    // Filtering Logic
-    const filteredTasks = tasks.filter(task => {
-        const matchesSearch =
-            task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
-
-        const matchesStatus = statusFilter === 'all' || task.status === statusFilter
-        const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter
-
-        return matchesSearch && matchesStatus && matchesPriority
-    })
-
-    const filteredPlans = plans.filter(plan =>
-        plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        plan.code.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-
-    // Stats Calculation
-    const stats = {
-        total: tasks.length,
-        completed: tasks.filter(t => t.status === 'completed').length,
-        inProgress: tasks.filter(t => t.status === 'in_progress').length,
-        pending: tasks.filter(t => t.status === 'pending').length,
-        highPriority: tasks.filter(t => t.priority === 'high').length
+    const handleSavePlan = async (input: PMJobPlanInput) => {
+        try {
+            if (editingPlan) {
+                await updateJobPlan({ id: editingPlan.id, input })
+                toast.success(isAr ? 'تم تحديث القالب' : 'Job plan updated')
+            } else {
+                await createJobPlan(input)
+                toast.success(isAr ? 'تم إنشاء القالب' : 'Job plan created')
+            }
+            setPlanDialogOpen(false)
+            setEditingPlan(null)
+        } catch (saveError) {
+            const message = saveError instanceof Error && saveError.message === 'JOB_PLAN_ITEMS_LOCKED_BY_OPEN_WORK_ORDERS'
+                ? copy.checklistLockedByOpenWos
+                : saveError instanceof Error ? saveError.message : copy.executionError
+            toast.error(message)
+        }
     }
 
-    const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
+    const handleSaveSchedule = async (input: PMScheduleInput) => {
+        if (editingSchedule) {
+            await updateSchedule({ id: editingSchedule.id, input })
+            toast.success(isAr ? 'تم تحديث الجدول' : 'Schedule updated')
+        } else {
+            await createSchedule(input)
+            toast.success(isAr ? 'تم إنشاء الجدول' : 'Schedule created')
+        }
+        setScheduleDialogOpen(false)
+        setEditingSchedule(null)
+    }
 
-    const handleTaskClick = (task: MaintenanceTask) => {
-        setSelectedTask(task)
-        setIsTaskExecutionOpen(true)
+    const handleGenerateNow = async () => {
+        try {
+            const result = await generateDueWorkOrders()
+            const generated = result.generated ?? 0
+            setLastGenerateResult(result)
+
+            if (generated > 0) {
+                toast.success(fillCount(copy.generatedWorkOrdersMessage, generated))
+                setActiveTab('work-orders')
+                return
+            }
+
+            toast(copy.noWorkOrdersGeneratedMessage)
+        } catch (generateError) {
+            const message = generateError instanceof Error ? generateError.message : copy.generationFailed
+            toast.error(`${copy.generationFailed}: ${message}`)
+        }
+    }
+
+    const handlePrintWorkOrder = async (wo: PMWorkOrder, kind: 'work_order' | 'execution') => {
+        const title = kind === 'execution' ? copy.executionReportPdf : copy.workOrderPdf
+        const printWindow = openPMPrintWindow(title)
+        if (!printWindow) {
+            toast.error(isAr ? 'تعذر فتح نافذة الطباعة' : 'Could not open print window')
+            return
+        }
+
+        setPdfLoadingId(wo.id)
+        try {
+            const detail = await fetchPMWorkOrderDetail(wo.id)
+            printPMWorkOrder(printWindow, detail, kind, { copy, isAr, locale })
+        } catch (printError) {
+            printWindow.close()
+            const message = printError instanceof Error ? printError.message : copy.executionError
+            toast.error(message)
+        } finally {
+            setPdfLoadingId(null)
+        }
+    }
+
+    const handlePrintPMReport = () => {
+        const printWindow = openPMPrintWindow(copy.pmReport)
+        if (!printWindow) {
+            toast.error(isAr ? 'تعذر فتح نافذة الطباعة' : 'Could not open print window')
+            return
+        }
+
+        printPMOperationalReport(printWindow, {
+            copy,
+            isAr,
+            locale,
+            metrics: dashboard,
+            stats: complianceStats,
+            workOrders,
+        })
+    }
+
+    const handleArchiveConfirm = async () => {
+        if (!archiveTarget) return
+
+        try {
+            if (archiveTarget.type === 'plan') {
+                await archiveJobPlan(archiveTarget.id)
+                toast.success(isAr ? 'تمت أرشفة القالب' : 'Job plan archived')
+            } else {
+                await archiveSchedule(archiveTarget.id)
+                toast.success(isAr ? 'تمت أرشفة الجدول' : 'Schedule archived')
+            }
+        } finally {
+            setArchiveTarget(null)
+        }
     }
 
     if (isLoading) {
+        return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /><span className="ms-3 font-cairo">{copy.loading}</span></div>
+    }
+
+    if (!maintenanceEnabled) {
         return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
+            <Card>
+                <CardContent className="py-12 text-center">
+                    <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-amber-600" />
+                    <p className="font-cairo text-muted-foreground">{copy.moduleDisabled}</p>
+                </CardContent>
+            </Card>
         )
     }
 
-    if (isError) {
+    if (error) {
         return (
-            <div className="flex flex-col items-center justify-center h-[50vh] space-y-4 text-center">
-                <div className="p-4 bg-red-100 rounded-full">
-                    <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-                <h2 className="text-xl font-bold text-red-600 font-cairo">
-                    {isRTL ? 'حدث خطأ أثناء تحميل البيانات' : 'Error loading data'}
-                </h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                    {(tasksError as any)?.message || (plansError as any)?.message || 'Unknown error'}
-                </p>
-                <div className="p-4 bg-gray-50 border rounded-lg text-sm text-left font-mono max-w-lg mx-auto" dir="ltr">
-                    <p className="font-bold text-red-500">Action Required:</p>
-                    <p>It seems the database tables are missing. Please run the migration files <b>042_maintenance_plans.sql</b> and <b>043_maintenance_tasks.sql</b> in your Supabase SQL Editor.</p>
-                </div>
-            </div>
+            <Card>
+                <CardContent className="py-12 text-center">
+                    <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-destructive" />
+                    <p className="font-cairo text-muted-foreground">{error}</p>
+                </CardContent>
+            </Card>
         )
     }
 
     return (
-        <div className="space-y-6">
-            <AddMaintenanceTaskDialog
-                isOpen={canManage && isAddTaskOpen}
-                onClose={() => setIsAddTaskOpen(false)}
+        <>
+            <JobPlanDialog
+                open={planDialogOpen}
+                onOpenChange={(open) => {
+                    setPlanDialogOpen(open)
+                    if (!open) setEditingPlan(null)
+                }}
+                plan={editingPlan}
+                copy={copy}
+                isAr={isAr}
+                isSaving={planSaving}
+                onSave={handleSavePlan}
             />
-
-            <AddMaintenancePlanDialog
-                isOpen={canManage && isAddPlanOpen}
-                onClose={() => setIsAddPlanOpen(false)}
+            <ScheduleDialog
+                open={scheduleDialogOpen}
+                onOpenChange={(open) => {
+                    setScheduleDialogOpen(open)
+                    if (!open) setEditingSchedule(null)
+                }}
+                schedule={editingSchedule}
+                copy={copy}
+                isAr={isAr}
+                isSaving={scheduleSaving}
+                jobPlans={jobPlans.filter((plan) => plan.status === 'active')}
+                assets={assets.map((asset) => ({
+                    id: asset.id,
+                    code: asset.code,
+                    name: asset.name,
+                    name_ar: asset.name_ar,
+                    building_id: asset.building_id,
+                    building: asset.building ?? null,
+                }))}
+                onSave={handleSaveSchedule}
             />
-
-            <TaskExecutionModal
-                task={selectedTask}
-                isOpen={isTaskExecutionOpen}
-                onClose={() => setIsTaskExecutionOpen(false)}
+            <ExecutionDialog
+                open={!!executingWorkOrder}
+                onOpenChange={(open) => !open && setExecutingWorkOrder(null)}
+                workOrder={executingWorkOrder}
+                copy={copy}
+                isAr={isAr}
+                locale={locale}
             />
+            <AlertDialog open={!!archiveTarget} onOpenChange={(open) => !open && setArchiveTarget(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="font-cairo">{copy.archiveConfirmTitle}</AlertDialogTitle>
+                        <AlertDialogDescription className="font-cairo">
+                            {copy.archiveConfirmDescription}
+                            {archiveTarget?.label ? <span className="mt-2 block font-medium text-foreground">{archiveTarget.label}</span> : null}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{copy.cancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => void handleArchiveConfirm()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {copy.archiveConfirmAction}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold font-cairo text-primary">{t('maintenance.title')}</h1>
-                    <p className="text-muted-foreground mt-1 font-cairo">
-                        {isRTL ? 'إدارة خطط ومهام الصيانة الوقائية يدويًا' : 'Manage preventive maintenance plans and tasks manually'}
-                    </p>
-                </div>
-            </div>
-
-            {/* Stats Cards */}
-            {(isPlansEnabled || isTasksEnabled) && (
-                <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-blue-700">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <p className="font-cairo text-sm">
-                        {isRTL
-                            ? 'إطلاق مبكر يدوي فقط: الخطط والمهام تُدار يدويًا، مع إمكانية إنشاء أمر عمل اختياري من المهمة. التكرار، الأتمتة، التأجيل، والعدادات المرتبطة بالأصول غير مفعلة هنا حاليًا.'
-                            : 'Soft launch scope: plans and tasks are managed manually, with optional work order creation from a task. Recurrence, automation, postponement, and asset-based PM counters are not active here yet.'}
-                    </p>
-                </div>
-            )}
-
-            {/* Feature Warning - if both disabled */}
-            {!isPlansEnabled && !isTasksEnabled && (
-                <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/20 rounded-xl text-warning mb-4">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <p className="font-cairo text-sm">
-                        {isRTL
-                            ? 'تم تعطيل جميع ميزات الصيانة الوقائية. يرجى مراجعة مدير النظام لتفعيلها.'
-                            : 'All preventive maintenance features are disabled. Please contact admin to enable them.'}
-                    </p>
-                </div>
-            )}
-
-            {/* Stats Cards - only if tasks enabled */}
-            {isTasksEnabled && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard
-                        title={isRTL ? 'إجمالي المهام' : 'Total Tasks'}
-                        value={stats.total}
-                        icon={Wrench}
-                        color="text-blue-500"
-                        bg="bg-blue-500/10"
-                    />
-                    <StatCard
-                        title={isRTL ? 'مكتملة' : 'Completed'}
-                        value={stats.completed}
-                        icon={CheckCircle2}
-                        color="text-green-500"
-                        bg="bg-green-500/10"
-                    />
-                    <StatCard
-                        title={isRTL ? 'قيد التنفيذ' : 'In Progress'}
-                        value={stats.inProgress}
-                        icon={Clock}
-                        color="text-orange-500"
-                        bg="bg-orange-500/10"
-                    />
-                    <StatCard
-                        title={isRTL ? 'معدل الإنجاز' : 'Completion Rate'}
-                        value={`${completionRate}%`}
-                        icon={GitCommit}
-                        color="text-purple-500"
-                        bg="bg-purple-500/10"
-                    />
-                </div>
-            )}
-
-            {/* Tabs - Only show if at least one feature is enabled */}
-            {(isPlansEnabled || isTasksEnabled) && (
-                <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
-                    <div className="border-b px-4 flex gap-6">
-                        {/* Tasks Tab */}
-                        {isTasksEnabled && (
-                            <button
-                                onClick={() => setActiveTab('tasks')}
-                                className={cn(
-                                    "py-4 border-b-2 font-bold font-cairo transition-colors flex items-center gap-2",
-                                    activeTab === 'tasks'
-                                        ? "border-primary text-primary"
-                                        : "border-transparent text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <Wrench className="w-4 h-4" />
-                                {isRTL ? 'مهام الصيانة' : 'Tasks'}
-                            </button>
-                        )}
-
-                        {/* Plans Tab */}
-                        {isPlansEnabled && (
-                            <button
-                                onClick={() => setActiveTab('plans')}
-                                className={cn(
-                                    "py-4 border-b-2 font-bold font-cairo transition-colors flex items-center gap-2",
-                                    activeTab === 'plans'
-                                        ? "border-primary text-primary"
-                                        : "border-transparent text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <FileText className="w-4 h-4" />
-                                {isRTL ? 'خطط الصيانة' : 'Maintenance Plans'}
-                            </button>
-                        )}
+            <div className="space-y-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold text-primary font-cairo">{copy.title}</h1>
+                        <p className="max-w-3xl text-sm text-muted-foreground font-cairo">{copy.subtitle}</p>
                     </div>
+                    <div className="flex flex-wrap gap-2">
+                        {canManage ? (
+                            <Button onClick={handleGenerateNow} disabled={isGenerating}>
+                                <PlayCircle className="me-2 h-4 w-4" />
+                                {isGenerating ? copy.generating : copy.generateNow}
+                            </Button>
+                        ) : null}
+                        {canManage ? (
+                            <Button variant="outline" onClick={() => { setEditingPlan(null); setPlanDialogOpen(true); setActiveTab('job-plans') }}>
+                                <FileText className="me-2 h-4 w-4" />{copy.createJobPlan}
+                            </Button>
+                        ) : null}
+                        {canManage ? (
+                            <Button variant="outline" onClick={() => { setEditingSchedule(null); setScheduleDialogOpen(true); setActiveTab('schedules') }}>
+                                <CalendarClock className="me-2 h-4 w-4" />{copy.createSchedule}
+                            </Button>
+                        ) : null}
+                    </div>
+                </div>
 
-                    <div className="p-6 space-y-6">
-                        {/* Controls Row */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-                            <div className="relative w-full sm:w-72">
-                                <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground", isRTL ? "right-3" : "left-3")} />
-                                <input
-                                    placeholder={isRTL ? 'بحث...' : 'Search...'}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className={cn(
-                                        "w-full h-10 border rounded-lg bg-background text-sm focus:ring-2 focus:ring-primary/20 outline-none",
-                                        isRTL ? "pr-9 pl-3" : "pl-9 pr-3"
-                                    )}
-                                />
+                <div className="grid gap-2 rounded-lg border bg-card p-3 shadow-sm md:grid-cols-4">
+                    {[
+                        { label: copy.workflowPlan, icon: FileText },
+                        { label: copy.workflowSchedule, icon: CalendarClock },
+                        { label: copy.workflowGenerate, icon: PlayCircle },
+                        { label: copy.workflowExecute, icon: Route },
+                    ].map((step, index) => {
+                        const StepIcon = step.icon
+                        return (
+                            <div key={step.label} className="flex items-center gap-3 rounded-md bg-muted/40 px-3 py-2">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground" dir="ltr">
+                                    {index + 1}
+                                </div>
+                                <StepIcon className="h-4 w-4 shrink-0 text-primary" />
+                                <span className="text-sm font-medium font-cairo">{step.label}</span>
                             </div>
+                        )
+                    })}
+                </div>
 
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                {activeTab === 'tasks' && (
-                                    <>
-                                        <div className="flex border rounded-lg overflow-hidden shrink-0">
-                                            <button
-                                                onClick={() => setViewMode('table')}
-                                                className={cn("p-2 hover:bg-muted", viewMode === 'table' && "bg-muted")}
-                                            >
-                                                <List className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => setViewMode('kanban')}
-                                                className={cn("p-2 hover:bg-muted", viewMode === 'kanban' && "bg-muted")}
-                                            >
-                                                <LayoutGrid className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value)}
-                                            className="h-10 px-3 border rounded-lg bg-background text-sm outline-none font-cairo"
-                                        >
-                                            <option value="all">{isRTL ? 'جميع الحالات' : 'All Status'}</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="completed">Completed</option>
-                                        </select>
-                                    </>
-                                )}
-                                {canManage && (
-                                    <button
-                                        onClick={() => activeTab === 'tasks' ? setIsAddTaskOpen(true) : setIsAddPlanOpen(true)}
-                                        className="h-10 px-4 bg-primary text-primary-foreground rounded-lg font-bold font-cairo flex items-center gap-2 hover:bg-primary/90 transition-colors shrink-0"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        {isRTL
-                                            ? (activeTab === 'tasks' ? 'مهمة جديدة' : 'خطة جديدة')
-                                            : (activeTab === 'tasks' ? 'Add Task' : 'Add Plan')
-                                        }
-                                    </button>
-                                )}
-                            </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+                    <Metric title={copy.activeSchedules} value={dashboard.activeSchedules} description={copy.activeSchedulesHint} icon={CalendarClock} />
+                    <Metric title={copy.dueToday} value={dashboard.dueToday} description={copy.dueTodayHint} icon={Timer} tone={dashboard.dueToday > 0 ? 'warning' : 'default'} />
+                    <Metric title={copy.overdue} value={dashboard.overdue} description={copy.overdueHint} icon={AlertTriangle} tone={dashboard.overdue > 0 ? 'danger' : 'default'} />
+                    <Metric title={copy.generatedWorkOrders} value={dashboard.workOrdersGenerated} description={copy.generatedWorkOrdersHint} icon={ClipboardCheck} />
+                    <Metric title={copy.completedOnTime} value={dashboard.completedOnTime} description={copy.completedOnTimeHint} icon={CheckCircle2} tone="success" />
+                    <Metric title={copy.completedLate} value={dashboard.completedLate} description={copy.completedLateHint} icon={ShieldCheck} tone={dashboard.completedLate > 0 ? 'warning' : 'default'} />
+                </div>
+
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabKey)} className="space-y-5">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                        <TabsList className="grid w-full max-w-4xl grid-cols-5">
+                            <TabsTrigger value="dashboard">{copy.dashboard}</TabsTrigger>
+                            <TabsTrigger value="job-plans">{copy.jobPlans}</TabsTrigger>
+                            <TabsTrigger value="schedules">{copy.schedules}</TabsTrigger>
+                            <TabsTrigger value="work-orders">{copy.workOrders}</TabsTrigger>
+                            <TabsTrigger value="reports">{copy.reports}</TabsTrigger>
+                        </TabsList>
+                        <div className="relative w-full xl:max-w-sm">
+                            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={copy.search} className="ps-9" />
                         </div>
-
-                        {/* Content */}
-                        {activeTab === 'tasks' ? (
-                            viewMode === 'table' ? (
-                                <div className="border rounded-lg overflow-hidden">
-                                    <table className="w-full text-sm">
-                                        <thead className="bg-muted/50">
-                                            <tr>
-                                                <th className="p-3 text-start font-bold font-cairo">{isRTL ? 'العنوان' : 'Title'}</th>
-                                                <th className="p-3 text-start font-bold font-cairo">{isRTL ? 'الفني المكلف' : 'Assigned To'}</th>
-                                                <th className="p-3 text-start font-bold font-cairo">{isRTL ? 'الأولوية' : 'Priority'}</th>
-                                                <th className="p-3 text-start font-bold font-cairo">{isRTL ? 'الحالة' : 'Status'}</th>
-                                                <th className="p-3 text-start font-bold font-cairo">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}</th>
-                                                <th className="p-3 text-start font-bold font-cairo">{isRTL ? 'أمر عمل' : 'Work Order'}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y">
-                                            {filteredTasks.map(task => (
-                                                <tr
-                                                    key={task.id}
-                                                    className="hover:bg-muted/5 transition-colors cursor-pointer"
-                                                    onClick={() => handleTaskClick(task)}
-                                                >
-                                                    <td className="p-3 font-medium">
-                                                        <div className="flex items-center gap-2">
-                                                            <Clock className="w-4 h-4 text-muted-foreground" />
-                                                            {task.title}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {task.assignee ? (
-                                                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                                <User className="w-3.5 h-3.5" />
-                                                                <span>{isRTL ? task.assignee.full_name_ar : task.assignee.full_name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-muted-foreground text-xs italic">{isRTL ? 'غير مكلف' : 'Unassigned'}</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <span className={cn(
-                                                            "px-2 py-1 rounded text-xs font-bold capitalize",
-                                                            task.priority === 'high' ? "bg-red-100 text-red-700" :
-                                                                task.priority === 'medium' ? "bg-yellow-100 text-yellow-700" :
-                                                                    "bg-blue-100 text-blue-700"
-                                                        )}>
-                                                            {task.priority || 'medium'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <span className={cn(
-                                                            "px-2 py-1 rounded text-xs font-bold capitalize",
-                                                            task.status === 'completed' ? "bg-green-100 text-green-700" :
-                                                                task.status === 'in_progress' ? "bg-orange-100 text-orange-700" :
-                                                                    "bg-gray-100 text-gray-700"
-                                                        )}>
-                                                            {task.status.replace(/_/g, ' ')}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3 text-muted-foreground font-mono text-xs">
-                                                        {task.due_date || '-'}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {task.related_work_order_id ? (
-                                                            <span className="text-blue-500 flex items-center gap-1 text-xs">
-                                                                <ExternalLink className="w-3 h-3" />
-                                                                {isRTL ? 'مربوط' : 'Linked'}
-                                                            </span>
-                                                        ) : '-'}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {filteredTasks.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={6} className="p-8 text-center text-muted-foreground font-cairo">
-                                                        {isRTL ? 'لا توجد مهام مطابقة' : 'No tasks found'}
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    {/* Simple Kanban Placeholder */}
-                                    {['pending', 'in_progress', 'completed'].map(status => (
-                                        <div key={status} className="bg-muted/30 p-4 rounded-xl space-y-3">
-                                            <h3 className="font-bold font-cairo capitalize flex justify-between">
-                                                {status.replace('_', ' ')}
-                                                <span className="bg-background px-2 rounded text-sm border">
-                                                    {filteredTasks.filter(t => t.status === status).length}
-                                                </span>
-                                            </h3>
-                                            <div className="space-y-2">
-                                                {filteredTasks
-                                                    .filter(t => t.status === status)
-                                                    .map(task => (
-                                                        <div
-                                                            key={task.id}
-                                                            onClick={() => handleTaskClick(task)}
-                                                            className="p-3 bg-card border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2"
-                                                        >
-                                                            <div className="flex justify-between items-start">
-                                                                <p className="font-medium text-sm line-clamp-2">{task.title}</p>
-                                                                <span className={cn(
-                                                                    "w-2 h-2 rounded-full flex-shrink-0 mt-1",
-                                                                    task.priority === 'high' ? "bg-red-500" : "bg-blue-500"
-                                                                )} />
-                                                            </div>
-                                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                                {task.assignee ? (
-                                                                    <span>{isRTL ? task.assignee.full_name_ar : task.assignee.full_name}</span>
-                                                                ) : <span>-</span>}
-
-                                                                {task.related_work_order_id && (
-                                                                    <span className="text-blue-500 flex items-center gap-1">
-                                                                        <FileText className="w-3 h-3" />
-                                                                        WO
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {filteredPlans.map(plan => (
-                                    <div
-                                        key={plan.id}
-                                        onClick={() => navigate(`/maintenance/plans/${plan.id}`)}
-                                        className="bg-card border rounded-xl p-5 shadow-sm hover:border-primary/50 transition-colors group cursor-pointer"
-                                    >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="font-bold text-lg font-cairo group-hover:text-primary transition-colors">
-                                                    {isRTL ? (plan.name_ar || plan.name) : plan.name}
-                                                </h3>
-                                                <span className="text-xs text-muted-foreground font-mono">{plan.code}</span>
-                                            </div>
-                                            {plan.status !== 'draft' && (
-                                                <span className={cn(
-                                                    "px-2 py-0.5 rounded text-xs border capitalize",
-                                                    plan.status === 'active' ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200"
-                                                )}>
-                                                    {plan.status}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-muted-foreground font-cairo">{isRTL ? 'السنة' : 'Year'}</span>
-                                                <span className="font-bold">{plan.year}</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-muted-foreground font-cairo">{isRTL ? 'الميزانية' : 'Budget'}</span>
-                                                <span className="font-bold">{plan.budget?.toLocaleString()} SAR</span>
-                                            </div>
-
-                                            <div className="space-y-1 pt-2">
-                                                <div className="flex justify-between text-xs">
-                                                    <span className="text-muted-foreground">{isRTL ? 'الإنجاز' : 'Progress'}</span>
-                                                    <span className="font-bold">{plan.completion_rate}%</span>
-                                                </div>
-                                                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-primary transition-all duration-500"
-                                                        style={{ width: `${plan.completion_rate}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {filteredPlans.length === 0 && (
-                                    <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-                                        <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                        <p className="font-cairo">{isRTL ? 'لا توجد خطط صيانة' : 'No maintenance plans found'}</p>
-                                        {canManage && (
-                                            <button
-                                                onClick={() => setIsAddPlanOpen(true)}
-                                                className="mt-4 text-primary hover:underline font-cairo text-sm"
-                                            >
-                                                {isRTL ? 'إنشاء خطة جديدة' : 'Create new plan'}
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
-                </div>
-            )}
-        </div>
+
+                    <TabsContent value="dashboard">
+                        <DashboardPanel copy={copy} metrics={dashboard} stats={complianceStats} />
+                    </TabsContent>
+
+                    <TabsContent value="job-plans">
+                        <JobPlansPanel
+                            copy={copy}
+                            isAr={isAr}
+                            canManage={canManage}
+                            plans={filteredPlans}
+                            hasAnyPlans={jobPlans.length > 0}
+                            onOpen={(plan) => navigate(`/maintenance/job-plans/${plan.id}`)}
+                            onEdit={(plan) => { setEditingPlan(plan); setPlanDialogOpen(true) }}
+                            onArchive={(plan) => setArchiveTarget({ type: 'plan', id: plan.id, label: displayName(plan, isAr) })}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="schedules">
+                        <SchedulesPanel
+                            copy={copy}
+                            isAr={isAr}
+                            locale={locale}
+                            canManage={canManage}
+                            schedules={filteredSchedules}
+                            hasAnySchedules={schedules.length > 0}
+                            lastGenerateResult={lastGenerateResult}
+                            isGenerating={isGenerating}
+                            onGenerate={handleGenerateNow}
+                            onOpen={(schedule) => navigate(`/maintenance/schedules/${schedule.id}`)}
+                            onEdit={(schedule) => { setEditingSchedule(schedule); setScheduleDialogOpen(true) }}
+                            onArchive={(schedule) => setArchiveTarget({ type: 'schedule', id: schedule.id, label: displayName(schedule, isAr) })}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="work-orders" className="space-y-4">
+                        <div className="grid gap-3 md:grid-cols-3 xl:flex xl:flex-wrap">
+                            <Select value={workOrderStatusFilter} onValueChange={setWorkOrderStatusFilter}>
+                                <SelectTrigger className="xl:w-[190px]"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{copy.all}</SelectItem>
+                                    {Array.from(new Set(workOrders.map((wo) => wo.status))).map((status) => (
+                                        <SelectItem key={status} value={status}>{statusLabel(status, copy)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={workOrderModeFilter} onValueChange={setWorkOrderModeFilter}>
+                                <SelectTrigger className="xl:w-[190px]"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{copy.all}</SelectItem>
+                                    <SelectItem value="batch_route">{copy.modeBatch}</SelectItem>
+                                    <SelectItem value="per_asset">{copy.modePerAsset}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={workOrderAssetFilter} onValueChange={setWorkOrderAssetFilter}>
+                                <SelectTrigger className="xl:w-[240px]"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{copy.all}</SelectItem>
+                                    {pmAssets.map((asset) => <SelectItem key={asset.id} value={asset.id}>{asset.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <WorkOrdersPanel
+                            copy={copy}
+                            isAr={isAr}
+                            locale={locale}
+                            workOrders={filteredWorkOrders}
+                            hasAnyWorkOrders={workOrders.length > 0}
+                            canGenerate={canManage}
+                            isGenerating={isGenerating}
+                            onGenerate={handleGenerateNow}
+                            onExecute={setExecutingWorkOrder}
+                            onPrintWorkOrder={(wo) => void handlePrintWorkOrder(wo, 'work_order')}
+                            onPrintExecutionReport={(wo) => void handlePrintWorkOrder(wo, 'execution')}
+                            pdfLoadingId={pdfLoadingId}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="reports">
+                        <ReportsPanel
+                            copy={copy}
+                            isAr={isAr}
+                            locale={locale}
+                            metrics={dashboard}
+                            stats={complianceStats}
+                            workOrders={workOrders}
+                            onPrintReport={handlePrintPMReport}
+                        />
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </>
     )
 }
 
-function StatCard({ title, value, icon: Icon, color, bg }: {
+function Metric({
+    title,
+    value,
+    description,
+    icon: Icon,
+    tone = 'default',
+}: {
     title: string
-    value: number | string
+    value: string | number
+    description?: string
     icon: React.ElementType
-    color: string
-    bg: string
+    tone?: 'default' | 'success' | 'warning' | 'danger'
 }) {
+    const toneClass = tone === 'success' ? 'bg-emerald-500/10 text-emerald-700' : tone === 'warning' ? 'bg-amber-500/10 text-amber-700' : tone === 'danger' ? 'bg-rose-500/10 text-rose-700' : 'bg-primary/10 text-primary'
     return (
-        <div className="bg-card border rounded-xl p-4 shadow-sm flex items-center justify-between">
-            <div>
-                <p className="text-sm text-muted-foreground font-cairo mb-1">{title}</p>
-                <p className="text-2xl font-bold font-mono">{value}</p>
-            </div>
-            <div className={cn("p-3 rounded-lg", bg, color)}>
-                <Icon className="w-6 h-6" />
-            </div>
-        </div>
+        <Card className="overflow-hidden">
+            <CardContent className="flex min-h-[132px] items-start justify-between gap-4 p-5">
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground font-cairo">{title}</p>
+                    <p className="mt-1 text-3xl font-bold" dir="ltr">{value}</p>
+                    {description ? <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground font-cairo">{description}</p> : null}
+                </div>
+                <div className={cn('shrink-0 rounded-lg p-3', toneClass)}>
+                    <Icon className="h-5 w-5" />
+                </div>
+            </CardContent>
+        </Card>
     )
 }

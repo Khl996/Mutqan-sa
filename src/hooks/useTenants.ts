@@ -74,7 +74,7 @@ export const tenantsKeys = {
 }
 
 // Note: Subscription tiers/plans are fetched from DB via useSubscriptionPlans hook.
-// No hardcoded tiers here â€” DB (subscription_plans table) is the single source of truth.
+// No hardcoded tiers here; DB (subscription_plans table) is the single source of truth.
 
 // Helper to get token
 const getAccessToken = () => {
@@ -195,7 +195,7 @@ export function useCreateTenant() {
 
     return useMutation({
         mutationFn: async (input: CreateTenantInput) => {
-            console.log('ًں“‌ Creating tenant via provision_tenant RPC...', input)
+            console.log('Creating tenant via provision_tenant RPC...', input)
 
             const { admin_name, admin_email, admin_password, ...tenantFields } = input
 
@@ -231,12 +231,12 @@ export function useCreateTenant() {
 
             if (!rpcResponse.ok) {
                 const errorData = await rpcResponse.json().catch(() => ({}))
-                console.error('â‌Œ provision_tenant RPC error:', errorData)
+                console.error('provision_tenant RPC error:', errorData)
                 throw new Error(errorData.message || errorData.error || `HTTP ${rpcResponse.status}`)
             }
 
             const rpcResult = await rpcResponse.json()
-            console.log('âœ… Tenant provisioned:', rpcResult)
+            console.log('Tenant provisioned:', rpcResult)
 
             const newTenantId = rpcResult.tenant_id
 

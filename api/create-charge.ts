@@ -28,7 +28,6 @@ function getBaseUrl(req: VercelRequest) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Only allow POST
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' })
     }
@@ -41,10 +40,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             tenantId,
             customerEmail,
             customerName,
-            customerPhone
+            customerPhone,
         } = req.body
 
-        // Validate required fields (amount is NO LONGER accepted from client)
         if (!planId || !tenantId) {
             return res.status(400).json({ error: 'Missing required fields: planId, tenantId' })
         }
@@ -58,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // =====================================================
-        // AUTH CHECK — Verify caller is admin/owner of this tenant
+        // AUTH CHECK — Verify caller is tenant_admin of this tenant
         // =====================================================
         const authHeader = req.headers.authorization
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -77,8 +75,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ error: 'Invalid or expired token' })
         }
 
-        // Verify user belongs to this tenant and has tenant admin role
-        // We use userSupabase because RLS allows the user to read their own profile natively
         const { data: profile, error: profileError } = await userSupabase
             .from('profiles')
             .select('role, tenant_id')
@@ -86,10 +82,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .single()
 
         if (profileError || !profile) {
-            console.error('Profile fetch error:', profileError, 'User:', user.id)
             return res.status(403).json({
                 error: 'User profile not found',
-                details: profileError?.message || 'Row not found'
+                details: profileError?.message || 'Row not found',
             })
         }
 
@@ -102,36 +97,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // =====================================================
-        // SERVER-SIDE PRICE LOOKUP — Never trust client amount
-        // We use userSupabase so it respects RLS automatically
+        // SERVER-SIDE PRICE CALCULATION via engine_calculate
+        // Never trust client-supplied amounts.
+        // engine_calculate is STABLE SECURITY DEFINER — safe for
+        // authenticated callers. Returns total including 15% VAT.
         // =====================================================
+        const { data: calcResult, error: calcError } = await userSupabase.rpc('engine_calculate', {
+            p_plan_id: planId,
+            p_billing_cycle: billingCycle,
+            p_add_on_ids: [],
+            p_discount_policy_id: null,
+        })
 
-        const { data: plan, error: planError } = await userSupabase
-            .from('subscription_plans')
-            .select('id, code, name, name_ar, price_monthly, price_yearly, is_active')
-            .eq('id', planId)
-            .single()
-
-        if (planError || !plan) {
-            console.error('Plan fetch error:', planError, 'Plan ID:', planId)
-            return res.status(400).json({ error: 'Invalid subscription plan selected' })
+        if (calcError || !calcResult) {
+            console.error('engine_calculate error:', calcError, 'Plan ID:', planId)
+            // Surface the DB error (plan not found / inactive) as a 400
+            return res.status(400).json({
+                error: calcError?.message?.includes('not found')
+                    ? 'Invalid or inactive subscription plan'
+                    : 'Failed to calculate plan price',
+                details: calcError?.message,
+            })
         }
 
-        if (!plan.is_active) {
-            return res.status(400).json({ error: 'This plan is not currently available' })
-        }
-
-        // Determine price from DB (not from client!)
-        const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly
-        const currency = 'SAR'
-        const planName = plan.name
+        const amount: number = calcResult.total
+        const planName: string = calcResult.breakdown?.[0]?.name || 'Subscription'
+        const planCode: string = calcResult.breakdown?.[0]?.code || ''
 
         if (!amount || amount <= 0) {
-            return res.status(400).json({ error: 'This plan has no price configured for the selected billing cycle' })
+            return res.status(400).json({
+                error: 'This plan has no price configured for the selected billing cycle',
+            })
         }
 
         // =====================================================
-        // Verify tenant exists
+        // Verify tenant exists (RLS ensures user can only see their own)
         // =====================================================
         const { data: tenant, error: tenantError } = await userSupabase
             .from('tenants')
@@ -140,12 +140,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .single()
 
         if (tenantError || !tenant) {
-            console.error('Tenant fetch error:', tenantError, 'Tenant ID:', tenantId)
             return res.status(400).json({ error: 'Invalid tenant ID or you lack permissions' })
         }
 
         // =====================================================
-        // Create charge via Tap API with server-verified data
+        // Create Tap charge with server-verified amount
         // =====================================================
         const response = await fetch('https://api.tap.company/v2/charges', {
             method: 'POST',
@@ -155,8 +154,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
-                amount: amount,
-                currency: currency,
+                amount,
+                currency: 'SAR',
                 customer_initiated: true,
                 threeDSecure: true,
                 save_card: false,
@@ -164,10 +163,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 metadata: {
                     plan_id: planId,
                     plan_name: planName,
-                    plan_code: plan.code,
+                    plan_code: planCode,
                     billing_cycle: billingCycle,
                     tenant_id: tenantId,
-                    // Store server-verified amount in metadata for double-check in verify
+                    // Server-computed amount — used for verification in verify-payment / webhook
                     verified_amount: amount,
                 },
                 receipt: {
@@ -177,20 +176,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 customer: {
                     first_name: customerName || 'Customer',
                     email: customerEmail || '',
-                    phone: customerPhone ? {
-                        country_code: '966',
-                        number: customerPhone,
-                    } : undefined,
+                    phone: customerPhone
+                        ? { country_code: '966', number: customerPhone }
+                        : undefined,
                 },
-                source: {
-                    id: 'src_all',  // Allow all payment methods
-                },
-                redirect: {
-                    url: `${baseUrl}/payment/callback`,
-                },
-                post: {
-                    url: `${baseUrl}/api/payment-webhook`,
-                },
+                source: { id: 'src_all' },
+                redirect: { url: `${baseUrl}/payment/callback` },
+                post: { url: `${baseUrl}/api/payment-webhook` },
             }),
         })
 
@@ -204,7 +196,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             })
         }
 
-        // Return the charge ID and redirect URL
         return res.status(200).json({
             id: data.id,
             status: data.status,

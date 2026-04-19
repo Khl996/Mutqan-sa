@@ -28,6 +28,10 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+dev-server*.log
+
+# Local agent/worktree state
+.claude/
 
 # TypeScript cache
 *.tsbuildinfo

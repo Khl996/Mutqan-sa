@@ -169,6 +169,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     technician: [
         'dashboard.view',
         'work_orders.view', 'work_orders.update',
+        'maintenance.view',
         'inventory.view'
     ],
     reporter: [

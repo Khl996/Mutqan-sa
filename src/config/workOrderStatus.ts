@@ -1,17 +1,8 @@
 /**
- * ============================================
  * CANONICAL Work Order Status Model
- * ============================================
- * Single source of truth for work order statuses.
- * Must match the SQL CHECK constraint on work_orders.status
  *
- * Flow:
- *   pending → assigned → in_progress
- *     → pending_supervisor_approval → pending_engineer_review → pending_reporter_closure → completed
- *     ↑ (reject returns to in_progress from any pending_* state)
- *
- * Terminal statuses: completed, cancelled, archived
- * ============================================
+ * Keep this list aligned with the work_orders.status SQL CHECK constraint.
+ * "overdue" is intentionally not a persisted status; it is derived from due_date.
  */
 
 export const WORK_ORDER_STATUSES = [
@@ -22,30 +13,28 @@ export const WORK_ORDER_STATUSES = [
     'pending_engineer_review',
     'pending_reporter_closure',
     'completed',
+    'auto_closed',
     'rejected_by_technician',
     'cancelled',
+    'on_hold',
     'archived',
 ] as const
 
 export type WorkOrderStatus = (typeof WORK_ORDER_STATUSES)[number]
 
-/**
- * Status groups for filtering and display
- */
 export const STATUS_GROUPS = {
-    /** Open/active statuses — work is ongoing */
-    active: ['pending', 'assigned', 'in_progress'] as WorkOrderStatus[],
-    /** Awaiting approval/review */
-    approval: ['pending_supervisor_approval', 'pending_engineer_review', 'pending_reporter_closure'] as WorkOrderStatus[],
-    /** Terminal statuses — work is done */
-    closed: ['completed', 'cancelled', 'archived', 'rejected_by_technician'] as WorkOrderStatus[],
+    open: ['pending', 'assigned'] as WorkOrderStatus[],
+    inProgress: ['in_progress'] as WorkOrderStatus[],
+    waiting: ['on_hold'] as WorkOrderStatus[],
+    approval: [
+        'pending_supervisor_approval',
+        'pending_engineer_review',
+        'pending_reporter_closure',
+    ] as WorkOrderStatus[],
+    closed: ['completed', 'auto_closed', 'archived'] as WorkOrderStatus[],
+    cancelled: ['cancelled', 'rejected_by_technician'] as WorkOrderStatus[],
 }
 
-/**
- * Reject behavior for early launch:
- * - reject_work_order always returns the WO to 'in_progress'
- * - It can be called from any pending_* status
- */
 export const REJECTABLE_STATUSES: WorkOrderStatus[] = [
     'pending_supervisor_approval',
     'pending_engineer_review',
@@ -54,16 +43,12 @@ export const REJECTABLE_STATUSES: WorkOrderStatus[] = [
 
 export const REJECT_TARGET_STATUS: WorkOrderStatus = 'in_progress'
 
-/**
- * Status display configuration
- * Used by WorkOrdersPage, WorkOrderHeader, etc.
- */
 export interface StatusDisplayConfig {
-    label: string       // i18n key suffix (e.g. 'pending' → t('workOrders.pending'))
-    labelAr: string     // Arabic label for direct display
-    color: string       // Tailwind text color class
-    bg: string          // Tailwind bg color class
-    borderColor: string // Tailwind border color class
+    label: string
+    labelAr: string
+    color: string
+    bg: string
+    borderColor: string
 }
 
 export const STATUS_DISPLAY: Record<WorkOrderStatus, StatusDisplayConfig> = {
@@ -98,13 +83,13 @@ export const STATUS_DISPLAY: Record<WorkOrderStatus, StatusDisplayConfig> = {
     pending_engineer_review: {
         label: 'pendingReview',
         labelAr: 'بانتظار مراجعة المهندس',
-        color: 'text-purple-500',
-        bg: 'bg-purple-500/10',
-        borderColor: 'border-purple-500/20',
+        color: 'text-indigo-500',
+        bg: 'bg-indigo-500/10',
+        borderColor: 'border-indigo-500/20',
     },
     pending_reporter_closure: {
         label: 'pendingClosure',
-        labelAr: 'بانتظار إغلاق المُبلّغ',
+        labelAr: 'بانتظار إغلاق المبلغ',
         color: 'text-cyan-500',
         bg: 'bg-cyan-500/10',
         borderColor: 'border-cyan-500/20',
@@ -112,6 +97,13 @@ export const STATUS_DISPLAY: Record<WorkOrderStatus, StatusDisplayConfig> = {
     completed: {
         label: 'completed',
         labelAr: 'مكتمل',
+        color: 'text-success',
+        bg: 'bg-success/10',
+        borderColor: 'border-success/20',
+    },
+    auto_closed: {
+        label: 'autoClosed',
+        labelAr: 'مغلق تلقائيًا',
         color: 'text-success',
         bg: 'bg-success/10',
         borderColor: 'border-success/20',
@@ -130,6 +122,13 @@ export const STATUS_DISPLAY: Record<WorkOrderStatus, StatusDisplayConfig> = {
         bg: 'bg-muted/10',
         borderColor: 'border-muted/20',
     },
+    on_hold: {
+        label: 'onHold',
+        labelAr: 'معلق',
+        color: 'text-orange-500',
+        bg: 'bg-orange-500/10',
+        borderColor: 'border-orange-500/20',
+    },
     archived: {
         label: 'archived',
         labelAr: 'مؤرشف',
@@ -137,4 +136,42 @@ export const STATUS_DISPLAY: Record<WorkOrderStatus, StatusDisplayConfig> = {
         bg: 'bg-muted/10',
         borderColor: 'border-muted/20',
     },
+}
+
+export type WorkOrderFilterKey =
+    | 'all'
+    | 'open'
+    | 'in_progress'
+    | 'waiting'
+    | 'approval'
+    | 'overdue'
+    | 'closed'
+    | 'cancelled'
+
+export interface WorkOrderFilterConfig {
+    key: WorkOrderFilterKey
+    label: string
+    labelAr: string
+    statuses?: WorkOrderStatus[]
+    derived?: 'overdue'
+}
+
+export const WORK_ORDER_FILTERS: WorkOrderFilterConfig[] = [
+    { key: 'all', label: 'All', labelAr: 'الكل' },
+    { key: 'open', label: 'Open', labelAr: 'مفتوحة', statuses: STATUS_GROUPS.open },
+    { key: 'in_progress', label: 'In Progress', labelAr: 'قيد التنفيذ', statuses: STATUS_GROUPS.inProgress },
+    { key: 'waiting', label: 'Waiting', labelAr: 'بانتظار إجراء', statuses: STATUS_GROUPS.waiting },
+    { key: 'approval', label: 'Approval', labelAr: 'اعتمادات', statuses: STATUS_GROUPS.approval },
+    { key: 'overdue', label: 'Overdue', labelAr: 'متأخرة', derived: 'overdue' },
+    { key: 'closed', label: 'Closed', labelAr: 'مغلقة', statuses: STATUS_GROUPS.closed },
+    { key: 'cancelled', label: 'Cancelled', labelAr: 'ملغاة/مرفوضة', statuses: STATUS_GROUPS.cancelled },
+]
+
+export function isClosedWorkOrderStatus(status: string) {
+    return [...STATUS_GROUPS.closed, ...STATUS_GROUPS.cancelled].includes(status as WorkOrderStatus)
+}
+
+export function isOverdueWorkOrder(dueDate: string | null | undefined, status: string) {
+    if (!dueDate || isClosedWorkOrderStatus(status)) return false
+    return new Date(dueDate) < new Date()
 }

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck } from 'lucide-react'
+import { toast } from 'sonner'
 import { useWorkOrderWorkflow } from '@/hooks/useWorkOrderWorkflow'
 import { usePermission } from '@/hooks/usePermission'
 import InventorySelector, { SelectedPart } from './InventorySelector'
@@ -83,7 +84,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
             onActionCompleted()
         } catch (error) {
             console.error(error)
-            alert(isRTL ? 'حدث خطأ' : 'An error occurred')
+            toast.error(isRTL ? 'تعذر تنفيذ الإجراء' : 'Action could not be completed')
         } finally {
             setIsSubmitting(false)
         }
@@ -114,7 +115,10 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                         />
                         <button
                             onClick={() => {
-                                if (!notes) return alert(isRTL ? 'الرجاء كتابة سبب الرفض' : 'Please provide a rejection reason')
+                                if (!notes.trim()) {
+                                    toast.error(isRTL ? 'يرجى كتابة سبب الرفض' : 'Please provide a rejection reason')
+                                    return
+                                }
                                 handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, reason: notes }))
                             }}
                             disabled={isSubmitting}
@@ -159,7 +163,10 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
 
                 <button
                     onClick={() => {
-                        if (!notes) return alert(isRTL ? 'الرجاء كتابة ملاحظات' : 'Please enter notes')
+                        if (!notes.trim()) {
+                            toast.error(isRTL ? 'يرجى كتابة ملاحظات الإنجاز' : 'Please enter completion notes')
+                            return
+                        }
 
                         const partsPayload = selectedParts.map(p => ({
                             part_id: p.part_id,
@@ -265,7 +272,10 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
 
                     <button
                         onClick={() => {
-                            if (!notes) return alert(isRTL ? 'الرجاء كتابة سبب الرفض' : 'Please provide a reason for rejection')
+                            if (!notes.trim()) {
+                                toast.error(isRTL ? 'يرجى كتابة سبب الرفض' : 'Please provide a reason for rejection')
+                                return
+                            }
                             handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, reason: notes }))
                         }}
                         disabled={isSubmitting}

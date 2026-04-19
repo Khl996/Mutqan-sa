@@ -52,6 +52,8 @@ export interface Asset {
     installation_date: string | null
     barcode: string | null
     qr_code: string | null
+    qr_code_url?: string | null
+    qr_data?: Record<string, unknown> | null
     image_url: string | null
     specifications: Record<string, unknown> | null
     created_at: string

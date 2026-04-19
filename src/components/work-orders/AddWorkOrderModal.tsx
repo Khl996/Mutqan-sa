@@ -8,6 +8,7 @@ import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { useTenantSubscription, useTenantUsage } from '@/hooks/useSubscription'
 import { usePermission } from '@/hooks/usePermission'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTenant } from '@/contexts/TenantContext'
 import Modal from '@/components/ui/Modal'
 import { ClipboardList, Loader2, Users2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -43,7 +44,20 @@ const issueTypeToSpecialization: Record<string, string> = {
 export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModalProps) {
     const { t, i18n } = useTranslation()
     const { profile, user } = useAuth()
+    const { currentTenant } = useTenant()
     const isRTL = i18n.language === 'ar'
+
+    // Guard: block if subscription expired or cancelled
+    useEffect(() => {
+        if (!isOpen) return
+        const s = currentTenant?.subscription_status
+        if (s === 'expired' || s === 'cancelled') {
+            toast.error(isRTL
+                ? 'اشتراكك منتهٍ. اختر باقة للاستمرار.'
+                : 'Your subscription has expired. Choose a plan to continue.')
+            onClose()
+        }
+    }, [isOpen, currentTenant?.subscription_status, isRTL, onClose])
 
     // Check assignment feature
     // Check permissions

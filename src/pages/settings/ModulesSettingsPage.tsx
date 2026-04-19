@@ -25,7 +25,6 @@ import {
     X,
     Lock,
 } from 'lucide-react'
-import { toast } from 'sonner'
 
 const iconMap: Record<string, React.ElementType> = {
     LayoutDashboard,
@@ -41,111 +40,18 @@ const iconMap: Record<string, React.ElementType> = {
     Settings2,
 }
 
-const arabicModuleCopy: Record<string, {
-    name: string
-    description: string
-    features: Record<string, string>
-}> = {
-    dashboard: {
-        name: 'لوحة التحكم',
-        description: 'لوحة التحكم الرئيسية مع المؤشرات والإحصائيات',
-        features: {
-            quick_stats: 'إحصائيات سريعة',
-            charts: 'الرسوم البيانية',
-            recent_activity: 'النشاط الأخير',
-        },
-    },
-    facilities: {
-        name: 'إدارة المرافق',
-        description: 'إدارة المباني والطوابق',
-        features: {
-            buildings: 'المباني',
-            floors: 'الطوابق',
-            departments: 'الأقسام',
-            rooms: 'الغرف',
-        },
-    },
-    assets: {
-        name: 'إدارة الأصول',
-        description: 'تتبع وإدارة جميع الأصول والمعدات',
-        features: {
-            asset_tracking: 'تتبع الأصول',
-            qr_codes: 'رموز QR',
-            asset_history: 'سجل الأصول',
-            warranty_tracking: 'تتبع الضمان',
-        },
-    },
-    work_orders: {
-        name: 'أوامر العمل',
-        description: 'إنشاء وإدارة أوامر العمل وطلبات الصيانة',
-        features: {
-            create_wo: 'إنشاء أوامر عمل',
-            workflow: 'سير العمل والاعتمادات',
-            assignment: 'تعيين الفرق',
-            parts_tracking: 'تتبع القطع',
-        },
-    },
-    maintenance: {
-        name: 'الصيانة الوقائية',
-        description: 'إنشاء وإدارة خطط ومهام الصيانة الوقائية اليدوية',
-        features: {
-            maintenance_plans: 'الخطط اليدوية',
-            schedules: 'المهام',
-        },
-    },
-    inventory: {
-        name: 'إدارة المخزون',
-        description: 'إدارة قطع الغيار والمخزون',
-        features: {
-            stock_tracking: 'تتبع المخزون',
-            low_stock_alerts: 'تنبيهات نقص المخزون',
-            consumption_reports: 'تقارير الاستهلاك',
-        },
-    },
-    employees: {
-        name: 'إدارة الموظفين',
-        description: 'إدارة حسابات الموظفين والصلاحيات',
-        features: {
-            user_management: 'إدارة المستخدمين',
-            role_assignment: 'تعيين الأدوار',
-        },
-    },
-    work_teams: {
-        name: 'فرق العمل',
-        description: 'إنشاء وإدارة فرق العمل المتخصصة',
-        features: {
-            team_creation: 'إنشاء الفرق',
-            member_assignment: 'تعيين الأعضاء',
-        },
-    },
-    reports: {
-        name: 'التقارير والتحليلات',
-        description: 'عرض التقارير والتحليلات',
-        features: {
-            operational_reports: 'التقارير التشغيلية',
-            export: 'تصدير التقارير',
-        },
-    },
-    public_portal: {
-        name: 'البوابة العامة',
-        description: 'السماح للمستخدمين العموميين برفع البلاغات',
-        features: {
-            public_submission: 'رفع بلاغات عامة',
-            qr_portal: 'روابط QR للبوابة',
-        },
-    },
-}
-
 function getModuleArabicName(module: SystemModule) {
-    return arabicModuleCopy[module.code]?.name || module.name_ar
+    return module.name_ar
 }
 
 function getModuleArabicDescription(module: SystemModule) {
-    return arabicModuleCopy[module.code]?.description || module.description_ar
+    return module.description_ar
 }
 
 function getFeatureArabicName(moduleCode: string, featureCode: string, fallback: string) {
-    return arabicModuleCopy[moduleCode]?.features?.[featureCode] || fallback
+    void moduleCode
+    void featureCode
+    return fallback
 }
 
 export default function ModulesSettingsPage() {
@@ -174,7 +80,7 @@ export default function ModulesSettingsPage() {
             <div>
                 <h1 className="text-2xl font-bold text-primary font-cairo flex items-center gap-3">
                     <Settings2 className="w-7 h-7 text-secondary" />
-                    {isRTL ? 'إدارة الموديولات' : 'Module Management'}
+                    {isRTL ? 'استحقاقات الخطة' : 'Plan Entitlements'}
                 </h1>
                 <p className="text-muted font-cairo">
                     {isRTL
@@ -206,7 +112,6 @@ export default function ModulesSettingsPage() {
                         tenantModules={tenantModules}
                         isExpanded={expandedModule === module.code}
                         onToggleExpand={() => setExpandedModule(expandedModule === module.code ? null : module.code)}
-                        onPlanManagedAction={() => toast.info(planManagedMessage)}
                         isRTL={isRTL}
                     />
                 ))}
@@ -221,7 +126,6 @@ function ModuleCard({
     tenantModules,
     isExpanded,
     onToggleExpand,
-    onPlanManagedAction,
     isRTL,
 }: {
     module: SystemModule
@@ -229,7 +133,6 @@ function ModuleCard({
     tenantModules: Record<string, { enabled: boolean; features?: Record<string, boolean> }> | null | undefined
     isExpanded: boolean
     onToggleExpand: () => void
-    onPlanManagedAction: () => void
     isRTL: boolean
 }) {
     const Icon = iconMap[module.icon] || Settings2
@@ -276,7 +179,6 @@ function ModuleCard({
 
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={onPlanManagedAction}
                         disabled
                         title={isRTL ? 'تُدار من الباقة' : 'Managed by subscription'}
                         className={cn(
@@ -341,7 +243,6 @@ function ModuleCard({
                                             : feature.name}
                                     </span>
                                     <button
-                                        onClick={onPlanManagedAction}
                                         disabled
                                         title={isRTL ? 'تُدار من الباقة' : 'Managed by subscription'}
                                         className={cn(

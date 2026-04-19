@@ -166,6 +166,12 @@ export interface Database {
                 }
                 Returns: Json
             }
+            get_tenant_reporting_foundation: {
+                Args: {
+                    p_tenant_id: string
+                }
+                Returns: Json
+            }
         }
         Enums: {
             [_ in never]: never

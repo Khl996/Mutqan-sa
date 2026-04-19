@@ -3,33 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowLeft, Printer, Share2 } from 'lucide-react'
 import { WorkOrder } from '@/hooks/useWorkOrders'
 import { cn } from '@/lib/utils'
+import { STATUS_DISPLAY } from '@/config/workOrderStatus'
 
 interface WorkOrderHeaderProps {
     workOrder: WorkOrder
     isRTL: boolean
     onPrint?: () => void
-}
-
-// Helper for labels and colors
-const getStatusConfig = (status: string) => {
-    switch (status) {
-        case 'pending': return { label: 'pending', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
-        case 'assigned': return { label: 'assigned', color: 'bg-blue-100 text-blue-700 border-blue-200' }
-        case 'in_progress': return { label: 'inProgress', color: 'bg-purple-100 text-purple-700 border-purple-200' }
-
-        case 'pending_supervisor_approval': return { label: 'pendingApproval', color: 'bg-purple-50 text-purple-700 border-purple-200' }
-        case 'pending_engineer_review': return { label: 'pendingReview', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' }
-        case 'pending_reporter_closure': return { label: 'pendingClosure', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' }
-
-        case 'completed': return { label: 'completed', color: 'bg-green-100 text-green-700 border-green-200' }
-        case 'auto_closed': return { label: 'autoClosed', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' }
-
-        case 'rejected_by_technician': return { label: 'rejected', color: 'bg-red-100 text-red-700 border-red-200' }
-        case 'cancelled': return { label: 'cancelled', color: 'bg-gray-100 text-gray-700 border-gray-200' }
-        case 'on_hold': return { label: 'onHold', color: 'bg-orange-100 text-orange-700 border-orange-200' }
-
-        default: return { label: status, color: 'bg-gray-100 text-gray-700' }
-    }
 }
 
 const getPriorityConfig = (priority: string) => {
@@ -45,7 +24,7 @@ const getPriorityConfig = (priority: string) => {
 export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrderHeaderProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const statusConfig = getStatusConfig(workOrder.status)
+    const statusConfig = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
     const priorityConfig = getPriorityConfig(workOrder.priority)
 
     return (
@@ -67,7 +46,7 @@ export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrder
                     </div>
 
                     <div className="flex items-center gap-2 text-sm">
-                        <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium border font-cairo", statusConfig.color)}>
+                        <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium border font-cairo", statusConfig.bg, statusConfig.color, statusConfig.borderColor)}>
                             {t(`workOrders.${statusConfig.label}`)}
                         </span>
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium font-cairo", priorityConfig.color)}>

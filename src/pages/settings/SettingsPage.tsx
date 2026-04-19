@@ -284,9 +284,9 @@ export default function SettingsPage() {
             )}
 
             <SettingsSection
-                title={isRTL ? 'إدارة الموديولات' : 'Module Management'}
+                title={isRTL ? 'استحقاقات الخطة' : 'Plan Entitlements'}
                 icon={Settings}
-                description={isRTL ? 'تفعيل وتعطيل الموديولات حسب الحاجة' : 'Enable and disable modules as needed'}
+                description={isRTL ? 'عرض الموديولات والميزات المتاحة حسب الاشتراك الحالي' : 'View modules and features included in the active subscription'}
             >
                 <div
                     className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-secondary/10 cursor-pointer hover:bg-secondary/10 transition-colors"
@@ -297,8 +297,8 @@ export default function SettingsPage() {
                             <Settings className="w-6 h-6 text-secondary" />
                         </div>
                         <div>
-                            <h4 className="font-bold text-secondary font-cairo">{isRTL ? 'تخصيص الموديولات' : 'Customize Modules'}</h4>
-                            <p className="text-sm text-muted-foreground font-cairo">{isRTL ? 'تفعيل أو تعطيل الموديولات والميزات' : 'Enable or disable modules and features'}</p>
+                            <h4 className="font-bold text-secondary font-cairo">{isRTL ? 'عرض استحقاقات الخطة' : 'View Plan Entitlements'}</h4>
+                            <p className="text-sm text-muted-foreground font-cairo">{isRTL ? 'هذه الميزات تُدار من الباقة النشطة ولا تُعدل يدويًا هنا' : 'These features are managed by the active plan, not manually toggled here'}</p>
                         </div>
                     </div>
                     <ChevronRight className={cn('w-5 h-5 text-secondary', isRTL && 'rotate-180')} />

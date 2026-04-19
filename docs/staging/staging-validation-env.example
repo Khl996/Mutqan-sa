@@ -1,0 +1,40 @@
+# Mutqan staging validation env template
+# Copy the names into .env.local or your shell session before running validation.
+# Do not commit real values.
+
+# Base deployment and Supabase
+VITE_APP_URL=https://mutqan-sa.vercel.app
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key-for-vercel-only>
+
+# Tap payment
+VITE_TAP_PUBLIC_KEY=<tap-sandbox-public-key>
+TAP_SECRET_KEY=<tap-sandbox-secret-key-for-vercel-only>
+PAYMENT_WEBHOOK_SECRET=<shared-secret-configured-on-vercel-and-test-webhook>
+
+# Cron hardening
+CRON_SECRET=<random-shared-secret-for-vercel-crons>
+
+# RLS runtime fixtures
+RLS_TENANT_A_ID=<tenant-a-uuid>
+RLS_TENANT_B_ID=<tenant-b-uuid>
+RLS_TENANT_A_ADMIN_JWT=<tenant-a-admin-access-token>
+RLS_TENANT_A_MANAGER_JWT=<tenant-a-maintenance-manager-access-token>
+RLS_TENANT_A_SUPERVISOR_JWT=<tenant-a-supervisor-access-token>
+RLS_TENANT_A_TECHNICIAN_JWT=<tenant-a-technician-access-token>
+RLS_TENANT_A_REPORTER_JWT=<tenant-a-reporter-access-token>
+RLS_TENANT_B_USER_JWT=<tenant-b-user-access-token>
+RLS_PLATFORM_ADMIN_JWT=<platform-admin-access-token>
+
+# Optional mutation proof. Use disposable work orders only.
+RLS_ALLOW_MUTATION_TESTS=0
+RLS_TECHNICIAN_ASSIGNED_WO_ID=<tenant-a-wo-assigned-to-technician>
+RLS_TECHNICIAN_UNASSIGNED_WO_ID=<tenant-a-wo-not-assigned-to-technician>
+
+# Tap sandbox proof
+PAYMENT_TEST_USER_JWT=<tenant-a-admin-or-owner-access-token>
+PAYMENT_CAPTURED_TAP_ID=<captured-charge-id-with-valid-mutqan-metadata>
+PAYMENT_FAILED_TAP_ID=<failed-or-cancelled-charge-id>
+PAYMENT_MISMATCHED_AMOUNT_TAP_ID=<captured-charge-id-with-wrong-amount>
+PAYMENT_REQUIRE_FULL_RUNTIME=1

@@ -15,6 +15,7 @@ import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { useTenantSubscription, useTenantUsage } from '@/hooks/useSubscription'
 import { usePermission } from '@/hooks/usePermission'
 import { useCurrentTenantId } from '@/hooks/useTenantQuery'
+import { useTenant } from '@/contexts/TenantContext'
 import {
     Users,
     UserCheck,
@@ -63,6 +64,8 @@ export default function TeamsPage() {
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const tenantId = useCurrentTenantId()
+    const { currentTenant } = useTenant()
+    const isReadOnly = currentTenant?.subscription_status === 'expired' || currentTenant?.subscription_status === 'cancelled'
 
     // Feature Flags
     const { can } = usePermission()
@@ -133,6 +136,12 @@ export default function TeamsPage() {
     const { data: usage } = useTenantUsage(tenantId || '')
 
     const handleCreateMember = async () => {
+        if (isReadOnly) {
+            toast.error(isRTL
+                ? 'اشتراكك منتهٍ. اختر باقة للاستمرار.'
+                : 'Your subscription has expired. Choose a plan to continue.')
+            return
+        }
         // Check Subscription Limits
         if (subscription?.plan && usage) {
             const maxUsers = subscription.plan.max_users

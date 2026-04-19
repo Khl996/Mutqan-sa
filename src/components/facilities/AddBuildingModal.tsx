@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCreateBuilding } from '@/hooks/useFacilities'
 import { useTenantSubscription, useTenantUsage } from '@/hooks/useSubscription'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTenant } from '@/contexts/TenantContext'
 import Modal from '@/components/ui/Modal'
 import { Building2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,7 +17,20 @@ interface AddBuildingModalProps {
 export default function AddBuildingModal({ isOpen, onClose }: AddBuildingModalProps) {
     const { t, i18n } = useTranslation()
     const { profile } = useAuth()
+    const { currentTenant } = useTenant()
     const isRTL = i18n.language === 'ar'
+
+    // Guard: block if subscription expired or cancelled
+    useEffect(() => {
+        if (!isOpen) return
+        const s = currentTenant?.subscription_status
+        if (s === 'expired' || s === 'cancelled') {
+            toast.error(isRTL
+                ? 'اشتراكك منتهٍ. اختر باقة للاستمرار.'
+                : 'Your subscription has expired. Choose a plan to continue.')
+            onClose()
+        }
+    }, [isOpen, currentTenant?.subscription_status, isRTL, onClose])
 
     const createBuilding = useCreateBuilding()
     const { data: subscription } = useTenantSubscription(profile?.tenant_id || '')

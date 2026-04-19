@@ -92,7 +92,9 @@ export interface CreateWorkOrderInput {
     status?: WorkOrder['status']
     priority?: WorkOrder['priority']
     reported_by?: string | null
+    assigned_to?: string | null
     assigned_team?: string | null
+    created_by?: string | null
     building_id?: string | null
     floor_id?: string | null
     department_id?: string | null
@@ -243,8 +245,10 @@ export function useWorkOrderStats() {
                     pending_engineer_review: 0,
                     pending_reporter_closure: 0,
                     completed: 0,
+                    auto_closed: 0,
                     rejected_by_technician: 0,
                     cancelled: 0,
+                    on_hold: 0,
                     archived: 0,
                 },
                 byPriority: {

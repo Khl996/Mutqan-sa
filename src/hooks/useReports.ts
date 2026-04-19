@@ -39,12 +39,79 @@ export interface TeamPerformanceReport {
     }[]
 }
 
+export interface ReportingFoundationMetrics {
+    tenant_id: string
+    generated_at: string
+    work_orders: {
+        total: number
+        open: number
+        closed: number
+        overdue_open: number
+        preventive: number
+        corrective: number
+        avg_completion_hours: number | null
+    }
+    sla: {
+        met: number
+        breached: number
+        completed_late: number
+        breach_rate: number | null
+    }
+    pm: {
+        schedules_total: number
+        schedules_active: number
+        schedules_overdue: number
+        schedules_due_7d: number
+        preventive_ratio: number | null
+    }
+    assets: {
+        total: number
+        operational: number
+        under_maintenance: number
+        out_of_service: number
+        critical: number
+    }
+    inventory: {
+        total_items: number
+        low_stock_items: number
+        out_of_stock_items: number
+        stock_value: number
+        consumed_quantity_30d: number
+        consumed_value_30d: number
+    }
+    cost: {
+        work_order_estimated_total: number
+        work_order_actual_total: number
+        work_order_line_cost_total: number
+    }
+}
+
 export const reportKeys = {
     all: ['reports'] as const,
+    foundation: (tenantId: string | null) => [...reportKeys.all, 'foundation', tenantId] as const,
     workOrders: (tenantId: string | null) => [...reportKeys.all, 'work-orders', tenantId] as const,
     maintenance: (tenantId: string | null) => [...reportKeys.all, 'maintenance', tenantId] as const,
     inventory: (tenantId: string | null) => [...reportKeys.all, 'inventory', tenantId] as const,
     teamPerformance: (tenantId: string | null) => [...reportKeys.all, 'team-performance', tenantId] as const,
+}
+
+export function useReportingFoundation() {
+    const tenantId = useCurrentTenantId()
+
+    return useQuery({
+        queryKey: reportKeys.foundation(tenantId),
+        queryFn: async () => {
+            if (!tenantId) throw new Error('No tenant selected')
+
+            const { data, error } = await supabase.rpc('get_tenant_reporting_foundation', {
+                p_tenant_id: tenantId,
+            })
+
+            if (error) throw error
+            return data as ReportingFoundationMetrics
+        },
+        enabled: !!tenantId,
+    })
 }
 
 export function useWorkOrdersReport() {

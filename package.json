@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:mojibake": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-mojibake.ps1",
+    "verify:staging-gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-staging-launch-gate.ps1",
+    "verify:rls": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-rls-isolation.ps1",
+    "verify:payment": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-payment-runtime.ps1",
+    "test": "npm run check:mojibake"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

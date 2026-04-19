@@ -20,9 +20,13 @@ interface VerifyPaymentResult {
     status: string
     message: string
     subscription?: {
+        subscription_id: string
+        invoice_id: string | null
         plan_id: string
         billing_cycle: string
+        period_start: string
         period_end: string
+        amount: number
     }
 }
 
@@ -81,9 +85,17 @@ export function usePayment() {
      */
     const verifyPayment = async (tapId: string): Promise<VerifyPaymentResult> => {
         try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.access_token) {
+                throw new Error(isRTL ? 'يرجى تسجيل الدخول أولاً' : 'Please log in first')
+            }
+
             const response = await fetch('/api/verify-payment', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
                 body: JSON.stringify({ tap_id: tapId }),
             })
 

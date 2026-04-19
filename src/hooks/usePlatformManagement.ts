@@ -49,49 +49,6 @@ export interface AuditLog {
     created_at: string
 }
 
-export interface PlatformInvoice {
-    id: string
-    invoice_number: string
-    tenant_id: string | null
-    subscription_id: string | null
-    plan_id: string | null
-    plan_name: string | null
-    billing_period_start: string | null
-    billing_period_end: string | null
-    subtotal: number
-    discount: number
-    discount_code: string | null
-    tax_rate: number
-    tax_amount: number
-    total: number
-    currency: string
-    status: 'draft' | 'pending' | 'paid' | 'overdue' | 'cancelled' | 'refunded'
-    due_date: string | null
-    paid_at: string | null
-    payment_method: string | null
-    payment_reference: string | null
-    notes: string | null
-    pdf_url: string | null
-    created_at: string
-    // Joined
-    tenant?: {
-        id: string
-        name: string
-        name_ar: string | null
-    }
-}
-
-export interface FinancialStats {
-    totalRevenue: number
-    pendingAmount: number
-    overdueAmount: number
-    paidInvoices: number
-    pendingInvoices: number
-    overdueInvoices: number
-    totalInvoices: number
-    collectionRate: number
-}
-
 // Query Keys
 export const platformKeys = {
     staff: ['platform', 'staff'] as const,
@@ -99,10 +56,6 @@ export const platformKeys = {
     staffMember: (id: string) => [...platformKeys.staff, id] as const,
     auditLogs: ['platform', 'audit-logs'] as const,
     auditLogsList: (filters?: AuditLogFilters) => [...platformKeys.auditLogs, 'list', filters] as const,
-    invoices: ['platform', 'invoices'] as const,
-    invoicesList: (filters?: InvoiceFilters) => [...platformKeys.invoices, 'list', filters] as const,
-    financials: ['platform', 'financials'] as const,
-    financialStats: () => [...platformKeys.financials, 'stats'] as const,
 }
 
 interface AuditLogFilters {
@@ -111,13 +64,6 @@ interface AuditLogFilters {
     dateFrom?: string
     dateTo?: string
     limit?: number
-}
-
-interface InvoiceFilters {
-    status?: string
-    tenantId?: string
-    dateFrom?: string
-    dateTo?: string
 }
 
 // ==================== STAFF HOOKS ====================
@@ -435,158 +381,4 @@ export function useLogAction() {
     })
 }
 
-// ==================== INVOICES/FINANCIALS HOOKS ====================
-
-export function usePlatformInvoices(filters?: InvoiceFilters) {
-    return useQuery({
-        queryKey: platformKeys.invoicesList(filters),
-        queryFn: async () => {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-            const accessToken = getAccessToken()
-            if (!accessToken) return [] as PlatformInvoice[]
-
-            let queryString = `${supabaseUrl}/rest/v1/platform_invoices?select=*,tenant:tenants(id,name,name_ar,address)&order=created_at.desc`
-
-            if (filters?.status && filters.status !== 'all') queryString += `&status=eq.${filters.status}`
-            if (filters?.tenantId) queryString += `&tenant_id=eq.${filters.tenantId}`
-
-            const response = await fetch(queryString, {
-                headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-
-            if (!response.ok) {
-                console.error('Invoices fetch error:', response.status)
-                return [] as PlatformInvoice[]
-            }
-
-            return await response.json() as PlatformInvoice[]
-        },
-    })
-}
-
-export function useFinancialStats() {
-    return useQuery({
-        queryKey: platformKeys.financialStats(),
-        queryFn: async () => {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-            const accessToken = getAccessToken()
-            if (!accessToken) return {
-                totalRevenue: 0, pendingAmount: 0, overdueAmount: 0,
-                paidInvoices: 0, pendingInvoices: 0, overdueInvoices: 0, totalInvoices: 0, collectionRate: 0
-            }
-
-            const response = await fetch(`${supabaseUrl}/rest/v1/platform_invoices?select=id,status,total`, {
-                headers: {
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-
-            if (!response.ok) return {
-                totalRevenue: 0, pendingAmount: 0, overdueAmount: 0,
-                paidInvoices: 0, pendingInvoices: 0, overdueInvoices: 0, totalInvoices: 0, collectionRate: 0
-            }
-
-            const invoices = await response.json()
-
-            const stats: FinancialStats = {
-                totalRevenue: 0,
-                pendingAmount: 0,
-                overdueAmount: 0,
-                paidInvoices: 0,
-                pendingInvoices: 0,
-                overdueInvoices: 0,
-                totalInvoices: invoices?.length || 0,
-                collectionRate: 0,
-            }
-
-            invoices?.forEach((inv: any) => {
-                const amount = Number(inv.total) || 0
-                if (inv.status === 'paid') {
-                    stats.totalRevenue += amount
-                    stats.paidInvoices++
-                } else if (inv.status === 'pending') {
-                    stats.pendingAmount += amount
-                    stats.pendingInvoices++
-                } else if (inv.status === 'overdue') {
-                    stats.overdueAmount += amount
-                    stats.overdueInvoices++
-                }
-            })
-
-            stats.collectionRate = stats.totalInvoices > 0
-                ? Math.round((stats.paidInvoices / stats.totalInvoices) * 100)
-                : 0
-
-            return stats
-        },
-    })
-}
-
-export function useCreateInvoice() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: async (invoice: Partial<PlatformInvoice>) => {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-            const accessToken = getAccessToken()
-            if (!accessToken) throw new Error('Not authenticated')
-
-            const response = await fetch(`${supabaseUrl}/rest/v1/platform_invoices`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
-                },
-                body: JSON.stringify(invoice)
-            })
-
-            if (!response.ok) throw new Error('Failed to create invoice')
-            const data = await response.json()
-            return data && data.length > 0 ? data[0] : null
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: platformKeys.invoices })
-            queryClient.invalidateQueries({ queryKey: platformKeys.financials })
-        },
-    })
-}
-
-export function useUpdateInvoice() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: async ({ id, ...updates }: Partial<PlatformInvoice> & { id: string }) => {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-            const accessToken = getAccessToken()
-            if (!accessToken) throw new Error('Not authenticated')
-
-            const response = await fetch(`${supabaseUrl}/rest/v1/platform_invoices?id=eq.${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Prefer': 'return=representation'
-                },
-                body: JSON.stringify({
-                    ...updates,
-                    updated_at: new Date().toISOString(),
-                })
-            })
-
-            if (!response.ok) throw new Error('Failed to update invoice')
-            const data = await response.json()
-            return data && data.length > 0 ? data[0] : null
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: platformKeys.invoices })
-            queryClient.invalidateQueries({ queryKey: platformKeys.financials })
-        },
-    })
-}
+// Invoices/Financials removed — use useBillingInvoices / useBillingStats from useBillingEngine.ts

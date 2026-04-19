@@ -7,13 +7,19 @@ import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 import AddWorkOrderModal from '@/components/work-orders/AddWorkOrderModal'
 import {
+    isOverdueWorkOrder,
+    STATUS_DISPLAY,
+    WORK_ORDER_FILTERS,
+    type WorkOrderFilterKey,
+    type WorkOrderStatus,
+} from '@/config/workOrderStatus'
+import {
     ClipboardList,
     Plus,
     Search,
     Filter,
     Clock,
     CheckCircle2,
-    AlertTriangle,
     XCircle,
     User,
     Building2,
@@ -25,20 +31,19 @@ import {
     PlayCircle,
 } from 'lucide-react'
 
-// Status configuration
-const statusConfig = {
-    pending: { color: 'text-warning', bg: 'bg-warning/10', icon: Clock, label: 'pending' },
-    assigned: { color: 'text-info', bg: 'bg-info/10', icon: User, label: 'assigned' },
-    in_progress: { color: 'text-secondary', bg: 'bg-secondary/10', icon: PlayCircle, label: 'inProgress' },
-    pending_supervisor_approval: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: AlertCircle, label: 'pendingApproval' },
-    pending_engineer_review: { color: 'text-purple-500', bg: 'bg-purple-500/10', icon: AlertCircle, label: 'pendingReview' },
-    pending_reporter_closure: { color: 'text-cyan-500', bg: 'bg-cyan-500/10', icon: CheckCircle2, label: 'pendingClosure' },
-    completed: { color: 'text-success', bg: 'bg-success/10', icon: CheckCircle2, label: 'completed' },
-    auto_closed: { color: 'text-success', bg: 'bg-success/10', icon: CheckCircle2, label: 'autoClosed' },
-    rejected_by_technician: { color: 'text-destructive', bg: 'bg-destructive/10', icon: XCircle, label: 'rejected' },
-    cancelled: { color: 'text-muted', bg: 'bg-muted/10', icon: XCircle, label: 'cancelled' },
-    on_hold: { color: 'text-orange-500', bg: 'bg-orange-500/10', icon: Pause, label: 'onHold' },
-    archived: { color: 'text-muted', bg: 'bg-muted/10', icon: ClipboardList, label: 'archived' },
+const statusIcons: Record<WorkOrderStatus, React.ElementType> = {
+    pending: Clock,
+    assigned: User,
+    in_progress: PlayCircle,
+    pending_supervisor_approval: AlertCircle,
+    pending_engineer_review: AlertCircle,
+    pending_reporter_closure: CheckCircle2,
+    completed: CheckCircle2,
+    auto_closed: CheckCircle2,
+    rejected_by_technician: XCircle,
+    cancelled: XCircle,
+    on_hold: Pause,
+    archived: ClipboardList,
 }
 
 const priorityConfig = {
@@ -58,7 +63,7 @@ export default function WorkOrdersPage() {
     const canCreate = can('work_orders.create')
 
     const [searchQuery, setSearchQuery] = useState('')
-    const [statusFilter, setStatusFilter] = useState<string>('all')
+    const [statusFilter, setStatusFilter] = useState<WorkOrderFilterKey>('all')
     const [showFilters, setShowFilters] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
@@ -73,7 +78,12 @@ export default function WorkOrdersPage() {
             wo.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
             wo.description?.toLowerCase().includes(searchQuery.toLowerCase())
 
-        const matchesStatus = statusFilter === 'all' || wo.status === statusFilter
+        const selectedFilter = WORK_ORDER_FILTERS.find((filter) => filter.key === statusFilter)
+        const matchesStatus =
+            !selectedFilter ||
+            selectedFilter.key === 'all' ||
+            (selectedFilter.derived === 'overdue' && isOverdueWorkOrder(wo.due_date, wo.status)) ||
+            Boolean(selectedFilter.statuses?.includes(wo.status))
 
         return matchesSearch && matchesStatus
     }) || []
@@ -217,21 +227,18 @@ export default function WorkOrdersPage() {
                 {showFilters && (
                     <div className="p-4 bg-card rounded-xl border border-border">
                         <div className="flex flex-wrap gap-2">
-                            {['all', 'pending', 'assigned', 'in_progress', 'completed', 'cancelled'].map((status) => (
+                            {WORK_ORDER_FILTERS.map((filter) => (
                                 <button
-                                    key={status}
-                                    onClick={() => setStatusFilter(status)}
+                                    key={filter.key}
+                                    onClick={() => setStatusFilter(filter.key)}
                                     className={cn(
                                         'px-3 py-1.5 rounded-lg text-sm font-cairo transition-colors',
-                                        statusFilter === status
+                                        statusFilter === filter.key
                                             ? 'bg-secondary text-white'
                                             : 'bg-muted/10 text-primary hover:bg-muted/20'
                                     )}
                                 >
-                                    {status === 'all'
-                                        ? (isRTL ? 'الكل' : 'All')
-                                        : t(`workOrders.${statusConfig[status as keyof typeof statusConfig]?.label || status}`)
-                                    }
+                                    {isRTL ? filter.labelAr : filter.label}
                                 </button>
                             ))}
                         </div>
@@ -298,9 +305,9 @@ function StatCard({ title, value, icon: Icon, color }: {
 function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: boolean }) {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const status = statusConfig[workOrder.status] || statusConfig.pending
+    const status = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
     const priority = priorityConfig[workOrder.priority] || priorityConfig.medium
-    const StatusIcon = status.icon
+    const StatusIcon = statusIcons[workOrder.status] || Clock
 
     return (
         <div
