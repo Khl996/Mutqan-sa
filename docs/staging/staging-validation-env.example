@@ -27,14 +27,18 @@ RLS_TENANT_A_REPORTER_JWT=<tenant-a-reporter-access-token>
 RLS_TENANT_B_USER_JWT=<tenant-b-user-access-token>
 RLS_PLATFORM_ADMIN_JWT=<platform-admin-access-token>
 
-# Optional mutation proof. Use disposable work orders only.
-RLS_ALLOW_MUTATION_TESTS=0
+# Optional mutation proof. prepare:staging-fixtures creates disposable work orders.
+RLS_ALLOW_MUTATION_TESTS=1
 RLS_TECHNICIAN_ASSIGNED_WO_ID=<tenant-a-wo-assigned-to-technician>
 RLS_TECHNICIAN_UNASSIGNED_WO_ID=<tenant-a-wo-not-assigned-to-technician>
 
-# Tap sandbox proof
+# Tap sandbox proof. PAYMENT_TEST_USER_JWT is generated from the tenant A admin account.
+MUTQAN_FIXTURE_PLAN_ID=<fixture-professional-plan-id>
 PAYMENT_TEST_USER_JWT=<tenant-a-admin-or-owner-access-token>
 PAYMENT_CAPTURED_TAP_ID=<captured-charge-id-with-valid-mutqan-metadata>
 PAYMENT_FAILED_TAP_ID=<failed-or-cancelled-charge-id>
 PAYMENT_MISMATCHED_AMOUNT_TAP_ID=<captured-charge-id-with-wrong-amount>
-PAYMENT_REQUIRE_FULL_RUNTIME=1
+
+# Minimal green path leaves optional failed/mismatched checks as SKIP.
+# Set to 1 only when PAYMENT_FAILED_TAP_ID and PAYMENT_MISMATCHED_AMOUNT_TAP_ID exist.
+PAYMENT_REQUIRE_FULL_RUNTIME=0

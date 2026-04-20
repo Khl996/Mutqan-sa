@@ -1,11 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import { timingSafeEqual } from 'crypto'
+import { activatePaidSubscription } from '../server/paymentActivation'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const WEBHOOK_SHARED_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || process.env.TAP_WEBHOOK_SECRET
+const WEBHOOK_SHARED_SECRETS = [
+    process.env.PAYMENT_WEBHOOK_SECRET,
+    process.env.TAP_WEBHOOK_SECRET,
+    process.env.CRON_SECRET,
+]
+    .map(value => value?.trim().replace(/^['"]|['"]$/g, ''))
+    .filter((value): value is string => Boolean(value))
 
 const CHARGE_ID_PATTERN = /^[A-Za-z0-9_.:-]{3,128}$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -64,18 +71,18 @@ function safeCompare(left: string, right: string) {
 
 function getSuppliedWebhookSecret(req: VercelRequest) {
     const directSecret = getHeader(req, 'x-mutqan-webhook-secret') || getHeader(req, 'x-webhook-secret')
-    if (directSecret) return directSecret
+    if (directSecret) return directSecret.trim().replace(/^['"]|['"]$/g, '')
 
     const authorization = getHeader(req, 'authorization')
     if (authorization?.startsWith('Bearer ')) {
-        return authorization.slice('Bearer '.length).trim()
+        return authorization.slice('Bearer '.length).trim().replace(/^['"]|['"]$/g, '')
     }
 
     return undefined
 }
 
 function hasValidSharedSecret(req: VercelRequest) {
-    if (!WEBHOOK_SHARED_SECRET) {
+    if (WEBHOOK_SHARED_SECRETS.length === 0) {
         if (!hasWarnedMissingWebhookSecret) {
             hasWarnedMissingWebhookSecret = true
             logWebhook('warn', 'webhook_secret_not_configured', {
@@ -86,7 +93,7 @@ function hasValidSharedSecret(req: VercelRequest) {
     }
 
     const suppliedSecret = getSuppliedWebhookSecret(req)
-    return Boolean(suppliedSecret && safeCompare(suppliedSecret, WEBHOOK_SHARED_SECRET))
+    return Boolean(suppliedSecret && WEBHOOK_SHARED_SECRETS.some(secret => safeCompare(suppliedSecret, secret)))
 }
 
 function getChargeId(body: any) {
@@ -136,16 +143,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(429).json({ error: 'Too many webhook attempts' })
         }
 
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+            logWebhook('error', 'missing_database_configuration', {
+                hasSupabaseUrl: Boolean(SUPABASE_URL),
+                hasServiceKey: Boolean(SUPABASE_SERVICE_KEY),
+            })
+            return res.status(500).json({ error: 'Server configuration error' })
+        }
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: { autoRefreshToken: false, persistSession: false },
+        })
+
+        const { data: existingInvoice } = await supabase
+            .from('billing_invoices')
+            .select('id, tenant_id, total, status')
+            .eq('payment_reference', chargeId)
+            .maybeSingle()
+
+        if (existingInvoice) {
+            logWebhook('log', 'already_processed', {
+                chargeId,
+                invoiceId: existingInvoice.id,
+                tenantId: existingInvoice.tenant_id,
+                status: existingInvoice.status,
+            })
+            return res.status(200).json({ received: true, processed: false, reason: 'already_processed' })
+        }
+
         if (!hasValidSharedSecret(req)) {
             logWebhook('warn', 'shared_secret_rejected', { chargeId, ip: getClientIp(req) })
             return res.status(401).json({ error: 'Unauthorized webhook' })
         }
 
-        if (!TAP_SECRET_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+        if (!TAP_SECRET_KEY) {
             logWebhook('error', 'missing_configuration', {
                 hasTapKey: Boolean(TAP_SECRET_KEY),
-                hasSupabaseUrl: Boolean(SUPABASE_URL),
-                hasServiceKey: Boolean(SUPABASE_SERVICE_KEY),
             })
             return res.status(500).json({ error: 'Server configuration error' })
         }
@@ -209,26 +242,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ received: true, processed: false, reason: 'currency_mismatch' })
         }
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-            auth: { autoRefreshToken: false, persistSession: false },
-        })
-
-        const { data: existingInvoice } = await supabase
-            .from('billing_invoices')
-            .select('id, tenant_id, total, status')
-            .eq('payment_reference', charge.id)
-            .maybeSingle()
-
-        if (existingInvoice) {
-            logWebhook('log', 'already_processed', {
-                chargeId,
-                invoiceId: existingInvoice.id,
-                tenantId: existingInvoice.tenant_id,
-                status: existingInvoice.status,
-            })
-            return res.status(200).json({ received: true, processed: false, reason: 'already_processed' })
-        }
-
         let expectedAmount: number
 
         if (verifiedAmount) {
@@ -289,25 +302,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ received: true, processed: false, reason: 'plan_id_unresolvable' })
         }
 
-        const { data: activateResult, error: activateError } = await supabase.rpc('engine_activate', {
-            p_tenant_id: tenantId,
-            p_plan_id: finalPlanId,
-            p_billing_cycle: billingCycle,
-            p_source: 'self_service',
-            p_status: 'active',
-            p_trial_days: null,
-            p_discount_policy_id: null,
-            p_quote_id: null,
-            p_payment_method: 'tap',
-            p_payment_reference: charge.id,
-            p_amount: paidAmount,
-            p_admin_note: null,
+        const activateResult = await activatePaidSubscription(supabase, {
+            tenantId,
+            planId: finalPlanId,
+            billingCycle,
+            paymentReference: charge.id,
+            amount: paidAmount,
+            adminNote: null,
         })
-
-        if (activateError) {
-            logWebhook('error', 'activation_error', { chargeId, tenantId, planId: finalPlanId, error: activateError })
-            return res.status(500).json({ received: true, processed: false, reason: 'activation_error' })
-        }
 
         logWebhook('log', 'subscription_activated', {
             chargeId,

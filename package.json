@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "check:mojibake": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-mojibake.ps1",
     "verify:staging-gate": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-staging-launch-gate.ps1",
+    "prepare:staging-fixtures": "tsx scripts/prepare-staging-fixtures.ts",
+    "fixtures:merge-env": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/merge-staging-fixture-env.ps1",
+    "payment:create-sandbox-charge": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-tap-sandbox-charge.ps1",
     "verify:rls": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-rls-isolation.ps1",
     "verify:payment": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-payment-runtime.ps1",
     "test": "npm run check:mojibake"

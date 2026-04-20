@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
+import { activatePaidSubscription } from '../server/paymentActivation'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
@@ -218,28 +219,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Cannot resolve plan ID from metadata' })
         }
 
-        const { data: activateResult, error: activateError } = await supabase.rpc('engine_activate', {
-            p_tenant_id: tenantId,
-            p_plan_id: finalPlanId,
-            p_billing_cycle: billingCycle,
-            p_source: 'self_service',
-            p_status: 'active',
-            p_trial_days: null,
-            p_discount_policy_id: null,
-            p_quote_id: null,
-            p_payment_method: 'tap',
-            p_payment_reference: charge.id,
-            p_amount: paidAmount,
-            p_admin_note: null,
+        const activateResult = await activatePaidSubscription(supabase, {
+            tenantId,
+            planId: finalPlanId,
+            billingCycle,
+            paymentReference: charge.id,
+            amount: paidAmount,
+            adminNote: null,
         })
-
-        if (activateError) {
-            console.error('engine_activate error:', activateError)
-            return res.status(500).json({
-                error: 'Failed to activate subscription',
-                details: activateError.message,
-            })
-        }
 
         return res.status(200).json({
             success: true,

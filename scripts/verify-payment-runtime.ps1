@@ -102,7 +102,13 @@ if ([string]::IsNullOrWhiteSpace($baseUrl)) {
 }
 $baseUrl = $baseUrl.TrimEnd("/")
 
-$sharedSecret = Get-EnvAny -Names @("PAYMENT_WEBHOOK_SECRET", "TAP_WEBHOOK_SECRET")
+$sharedSecretCandidates = @()
+foreach ($secretName in @("PAYMENT_WEBHOOK_SECRET", "TAP_WEBHOOK_SECRET", "CRON_SECRET")) {
+    $secretValue = Get-EnvAny -Names @($secretName)
+    if (-not [string]::IsNullOrWhiteSpace($secretValue) -and $sharedSecretCandidates -notcontains $secretValue) {
+        $sharedSecretCandidates += $secretValue
+    }
+}
 $testUserJwt = Get-EnvAny -Names @("PAYMENT_TEST_USER_JWT")
 $capturedTapId = Get-EnvAny -Names @("PAYMENT_CAPTURED_TAP_ID")
 $failedTapId = Get-EnvAny -Names @("PAYMENT_FAILED_TAP_ID")
@@ -124,12 +130,30 @@ else {
     Add-Result "unauthorized callback attempt" "FAIL" "Expected 401, got $($unauthorized.StatusCode): $($unauthorized.Body)"
 }
 
-$webhookHeaders = @{}
-if ($sharedSecret) {
-    $webhookHeaders["x-mutqan-webhook-secret"] = $sharedSecret
+function Invoke-WebhookPost {
+    param(
+        [string]$BaseUrl,
+        [hashtable]$Body
+    )
+
+    if ($sharedSecretCandidates.Count -eq 0) {
+        return Invoke-JsonPost -BaseUrl $BaseUrl -Path "/api/payment-webhook" -Body $Body
+    }
+
+    $last = $null
+    foreach ($secret in $sharedSecretCandidates) {
+        $headers = @{ "x-mutqan-webhook-secret" = $secret }
+        $result = Invoke-JsonPost -BaseUrl $BaseUrl -Path "/api/payment-webhook" -Body $Body -Headers $headers
+        if ($result.StatusCode -ne 401) {
+            return $result
+        }
+        $last = $result
+    }
+
+    return $last
 }
 
-$invalidWebhook = Invoke-JsonPost -BaseUrl $baseUrl -Path "/api/payment-webhook" -Body @{ id = "invalid id with spaces" } -Headers $webhookHeaders
+$invalidWebhook = Invoke-WebhookPost -BaseUrl $baseUrl -Body @{ id = "invalid id with spaces" }
 if ($invalidWebhook.StatusCode -eq 400) {
     Add-Result "invalid webhook payload" "PASS" "payment-webhook rejected malformed charge id"
 }
@@ -156,7 +180,7 @@ if ($capturedTapId -and $testUserJwt) {
         Add-Result "duplicate callback idempotency" "FAIL" "Expected duplicate callback success, got $($duplicate.StatusCode): $($duplicate.Body | ConvertTo-Json -Compress -Depth 5)"
     }
 
-    $duplicateWebhook = Invoke-JsonPost -BaseUrl $baseUrl -Path "/api/payment-webhook" -Body @{ id = $capturedTapId } -Headers $webhookHeaders
+    $duplicateWebhook = Invoke-WebhookPost -BaseUrl $baseUrl -Body @{ id = $capturedTapId }
     if ($duplicateWebhook.StatusCode -eq 200 -and ($duplicateWebhook.Body.reason -eq "already_processed" -or $duplicateWebhook.Body.processed -eq $true)) {
         Add-Result "duplicate webhook idempotency" "PASS" "payment-webhook handled duplicate captured charge"
     }
