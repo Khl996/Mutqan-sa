@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import { timingSafeEqual } from 'crypto'
-import { activatePaidSubscription } from '../server/paymentActivation'
+import { activatePaidSubscription } from './_lib/paymentActivation'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
