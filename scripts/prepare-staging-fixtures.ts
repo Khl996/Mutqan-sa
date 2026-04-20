@@ -230,7 +230,7 @@ async function main() {
 
     await upsert('job_plans', [
         { id: ids.jobPlanA, tenant_id: ids.tenantA, code: 'FX-A-JP-01', name: 'Fixture AHU Monthly PM', name_ar: 'خطة وقائية شهرية لوحدة الهواء', category: 'hvac', status: 'active', estimated_duration_minutes: 45, requires_safety_checks: true, created_by: manager },
-        { id: ids.jobPlanB, tenant_id: ids.tenantB, code: 'FX-B-JP-01', name: 'Fixture Pump Monthly PM', name_ar: 'خطة وقائية شهرية للمضخة', category: 'mechanical', status: 'active', estimated_duration_minutes: 30, created_by: tenantBUser },
+        { id: ids.jobPlanB, tenant_id: ids.tenantB, code: 'FX-B-JP-01', name: 'Fixture Pump Monthly PM', name_ar: 'خطة وقائية شهرية للمضخة', category: 'mechanical', status: 'active', estimated_duration_minutes: 30, requires_safety_checks: true, created_by: tenantBUser },
     ])
     await upsert('pm_schedules', [
         { id: ids.scheduleA, tenant_id: ids.tenantA, code: 'FX-A-PM-01', name: 'Fixture AHU PM Schedule', name_ar: 'جدول صيانة وقائية لوحدة الهواء', job_plan_id: ids.jobPlanA, primary_asset_id: ids.assetA, trigger_type: 'calendar', frequency_type: 'monthly', frequency_interval: 1, start_date: new Date().toISOString().slice(0, 10), next_due_date: new Date(Date.now() + 604800000).toISOString().slice(0, 10), default_assignee_id: technician, default_priority: 'medium', status: 'active', created_by: manager, generation_mode: 'per_asset' },

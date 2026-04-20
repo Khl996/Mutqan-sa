@@ -43,5 +43,6 @@ foreach ($key in $targetValues.Keys) {
     $lines += "$key=$($targetValues[$key])"
 }
 
-Set-Content -LiteralPath $Target -Value $lines -Encoding UTF8
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText((Resolve-Path -LiteralPath $Target), (($lines -join [Environment]::NewLine) + [Environment]::NewLine), $utf8NoBom)
 Write-Host "Merged fixture variables into $Target without printing secret values."
