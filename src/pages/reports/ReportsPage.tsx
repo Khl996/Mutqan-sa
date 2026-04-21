@@ -1,19 +1,12 @@
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
     Activity,
     AlertTriangle,
-    ArrowRight,
-    BarChart3,
-    Boxes,
     Building2,
-    CheckCircle2,
     ClipboardList,
     FileSpreadsheet,
     Gauge,
-    PackageSearch,
-    Route,
     ShieldCheck,
     Timer,
     TrendingUp,
@@ -141,7 +134,7 @@ export default function ReportsPage() {
         return (
             <EmptyState
                 icon={AlertTriangle}
-                title={isRTL ? 'تعذر تحميل مؤشرات الديمو' : 'Demo Metrics Unavailable'}
+                title={isRTL ? 'تعذر تحميل المؤشرات' : 'Metrics Unavailable'}
                 description={isRTL
                     ? 'تأكد من تطبيق migration 114 وتشغيل الدالة get_tenant_reporting_foundation على قاعدة staging.'
                     : 'Apply migration 114 and verify get_tenant_reporting_foundation on staging.'}
@@ -174,12 +167,6 @@ export default function ReportsPage() {
                             {isRTL ? 'تصدير الملخص' : 'Export Summary'}
                         </Button>
                     ) : null}
-                    <Button asChild className="gap-2">
-                        <Link to="/maintenance">
-                            {isRTL ? 'عرض مسار الديمو' : 'Open Demo Flow'}
-                            <ArrowRight className="h-4 w-4" />
-                        </Link>
-                    </Button>
                 </div>
             </div>
 
@@ -280,25 +267,6 @@ export default function ReportsPage() {
                 </Card>
             </section>
 
-            <Card className="border-secondary/20 bg-secondary/5">
-                <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 font-cairo text-xl">
-                        <Route className="h-5 w-5 text-secondary" />
-                        {isRTL ? 'مسار الديمو التجاري الموصى به' : 'Recommended Sales Demo Flow'}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-3 md:grid-cols-7">
-                        <DemoStep to="/facilities" icon={Building2} label={isRTL ? 'الموقع' : 'Site'} />
-                        <DemoStep to="/assets" icon={Boxes} label={isRTL ? 'الأصل' : 'Asset'} />
-                        <DemoStep to="/maintenance" icon={Wrench} label={isRTL ? 'PM Schedule' : 'PM Schedule'} />
-                        <DemoStep to="/work-orders" icon={ClipboardList} label={isRTL ? 'أمر العمل' : 'Generated WO'} />
-                        <DemoStep to="/work-orders" icon={CheckCircle2} label={isRTL ? 'تنفيذ الفني' : 'Execution'} />
-                        <DemoStep to="/inventory" icon={PackageSearch} label={isRTL ? 'قطع الغيار' : 'Parts'} />
-                        <DemoStep to="/reports" icon={BarChart3} label={isRTL ? 'الأثر' : 'ROI Result'} active />
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     )
 }
@@ -384,30 +352,5 @@ function ValuePair({ label, value }: { label: string; value: string }) {
             <span className="font-cairo text-sm text-muted-foreground">{label}</span>
             <span className="font-bold text-primary">{value}</span>
         </div>
-    )
-}
-
-function DemoStep({
-    to,
-    icon: Icon,
-    label,
-    active = false,
-}: {
-    to: string
-    icon: React.ElementType
-    label: string
-    active?: boolean
-}) {
-    return (
-        <Link
-            to={to}
-            className={cn(
-                'flex min-h-24 flex-col items-center justify-center gap-2 rounded-lg border bg-background p-3 text-center transition hover:border-secondary hover:bg-secondary/5',
-                active && 'border-secondary bg-secondary/10 text-secondary'
-            )}
-        >
-            <Icon className="h-5 w-5" />
-            <span className="font-cairo text-xs font-semibold">{label}</span>
-        </Link>
     )
 }
