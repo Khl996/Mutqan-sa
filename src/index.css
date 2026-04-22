@@ -68,6 +68,13 @@
   body {
     @apply bg-background text-foreground font-cairo antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+  }
+
+  html,
+  body,
+  #root {
+    min-width: 0;
   }
 
   /* RTL Support */
@@ -116,7 +123,7 @@
 
   /* Smooth Card */
   .smooth-card {
-    @apply bg-card rounded-lg shadow-card transition-all duration-300 hover:shadow-card-hover;
+    @apply bg-card rounded-lg shadow-card transition-all duration-200 hover:shadow-card-hover;
   }
 
   /* Sidebar Styles */

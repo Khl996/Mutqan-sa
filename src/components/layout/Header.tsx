@@ -7,7 +7,6 @@ import { cn, getInitials } from '@/lib/utils'
 import {
     Menu,
     Bell,
-    Search,
     Sun,
     Moon,
     Globe,
@@ -112,15 +111,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     </div>
                 )}
 
-                {/* Search */}
-                <div className="hidden md:flex items-center gap-2 bg-background rounded-lg px-4 py-2 w-64">
-                    <Search className="w-4 h-4 text-muted" />
-                    <input
-                        type="text"
-                        placeholder={t('common.search')}
-                        className="flex-1 bg-transparent border-none outline-none text-sm font-cairo"
-                    />
-                </div>
             </div>
 
             {/* Right side */}

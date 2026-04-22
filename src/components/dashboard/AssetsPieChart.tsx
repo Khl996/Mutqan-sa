@@ -29,10 +29,10 @@ export function AssetsPieChart({ data }: AssetsPieChartProps) {
     ].filter(item => item.value > 0)
 
     return (
-        <div className="bg-card rounded-xl p-6 shadow-card h-full">
+        <div className="h-full rounded-lg border bg-card p-5 shadow-card sm:p-6">
             <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-primary font-cairo">
-                    {isRTL ? 'توزيع حالة الأصول' : 'Assets Status Distribution'}
+                    {isRTL ? 'توزيع جاهزية الأصول' : 'Asset Readiness Distribution'}
                 </h3>
             </div>
 
@@ -76,7 +76,7 @@ export function AssetsPieChart({ data }: AssetsPieChartProps) {
                         <span className="text-3xl font-bold text-primary">
                             {data.active + data.underMaintenance + data.outOfService}
                         </span>
-                        <p className="text-xs text-muted font-cairo">Total</p>
+                        <p className="text-xs text-muted font-cairo">{isRTL ? 'الإجمالي' : 'Total'}</p>
                     </div>
                 )}
             </div>

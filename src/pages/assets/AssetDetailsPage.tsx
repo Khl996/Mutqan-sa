@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ConfirmActionDialog } from '@/components/ui/confirm-action-dialog'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -66,6 +67,7 @@ export default function AssetDetailsPage() {
     const canViewPm = maintenanceEnabled && can('maintenance.view')
     const [tab, setTab] = useState<'overview' | 'pm'>('overview')
     const [isStatusChanging, setIsStatusChanging] = useState(false)
+    const [pendingStatus, setPendingStatus] = useState<AssetStatus | null>(null)
     const [historySearch, setHistorySearch] = useState('')
     const [historyStatusFilter, setHistoryStatusFilter] = useState('all')
 
@@ -94,15 +96,19 @@ export default function AssetDetailsPage() {
 
     const qrValue = `${window.location.origin}/assets/${id}`
 
-    const handleStatusChange = async (newStatus: AssetStatus) => {
+    const requestStatusChange = (newStatus: AssetStatus) => {
         if (!asset || newStatus === asset.status) return
-        const confirmed = window.confirm(t('pm.asset.change_status_confirm'))
-        if (!confirmed) return
+        setPendingStatus(newStatus)
+    }
+
+    const handleStatusChange = async () => {
+        if (!asset || !pendingStatus || pendingStatus === asset.status) return
 
         try {
             setIsStatusChanging(true)
-            await changeAssetStatus.mutateAsync({ assetId: asset.id, newStatus, notes: undefined })
+            await changeAssetStatus.mutateAsync({ assetId: asset.id, newStatus: pendingStatus, notes: undefined })
             toast.success(t('pm.asset.status_updated'))
+            setPendingStatus(null)
         } catch (statusError) {
             toast.error(statusError instanceof Error ? statusError.message : t('pm.asset.status_update_failed'))
         } finally {
@@ -217,7 +223,7 @@ export default function AssetDetailsPage() {
                                 variant={asset.status === option.value ? 'default' : 'outline'}
                                 className="justify-start"
                                 disabled={isStatusChanging}
-                                onClick={() => void handleStatusChange(option.value)}
+                                onClick={() => requestStatusChange(option.value)}
                             >
                                 <option.icon className="me-2 h-4 w-4" />
                                 {t(option.labelKey)}
@@ -226,6 +232,19 @@ export default function AssetDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            <ConfirmActionDialog
+                open={!!pendingStatus}
+                onOpenChange={(open) => !open && setPendingStatus(null)}
+                title={t('pm.asset.change_status_confirm')}
+                description={isRTL
+                    ? 'سيتم تسجيل تغيير حالة الأصل ضمن السجل التشغيلي للأصل.'
+                    : 'This asset status change will be recorded in the asset operation history.'}
+                confirmLabel={t('common.confirm')}
+                cancelLabel={t('common.cancel')}
+                onConfirm={() => void handleStatusChange()}
+                tone="default"
+            />
 
             <Tabs value={tab} onValueChange={(value) => setTab(value as 'overview' | 'pm')} className="space-y-6">
                 <TabsList className={cn('grid w-full', canViewPm ? 'grid-cols-2' : 'grid-cols-1')}>

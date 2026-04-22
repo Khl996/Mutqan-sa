@@ -16,6 +16,8 @@ import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 import { useTenantModules } from '@/hooks/useTenantModules'
 import { isModuleEnabled } from '@/config/modules'
+import { ConfirmActionDialog } from '@/components/ui/confirm-action-dialog'
+import { PageHeader } from '@/components/ui/page-header'
 import {
     Users2,
     Plus,
@@ -80,6 +82,7 @@ export default function WorkTeamsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [selectedTeam, setSelectedTeam] = useState<WorkTeam | null>(null)
+    const [teamPendingDelete, setTeamPendingDelete] = useState<WorkTeam | null>(null)
     const [showMembersModal, setShowMembersModal] = useState(false)
 
     // Fetch data
@@ -120,12 +123,17 @@ export default function WorkTeamsPage() {
     }
 
     // Delete Team
-    const handleDeleteTeam = async (id: string) => {
-        if (!confirm(isRTL ? 'هل أنت متأكد من حذف هذا الفريق؟' : 'Are you sure you want to delete this team?')) return
+    const handleDeleteTeam = (team: WorkTeam) => {
+        setTeamPendingDelete(team)
+    }
+
+    const confirmDeleteTeam = async () => {
+        if (!teamPendingDelete) return
 
         try {
-            await deleteTeam.mutateAsync(id)
+            await deleteTeam.mutateAsync(teamPendingDelete.id)
             toast.success(isRTL ? 'تم حذف الفريق' : 'Team deleted')
+            setTeamPendingDelete(null)
         } catch (error: any) {
             toast.error(isRTL ? 'فشل حذف الفريق' : 'Failed to delete team')
         }
@@ -169,28 +177,20 @@ export default function WorkTeamsPage() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-primary font-cairo flex items-center gap-3">
-                        <Users2 className="w-7 h-7 text-secondary" />
-                        {isRTL ? 'فرق العمل' : 'Work Teams'}
-                    </h1>
-                    <p className="text-muted font-cairo">
-                        {isRTL ? 'إدارة فرق العمل المتخصصة وتوزيع الموظفين' : 'Manage specialized work teams and employee assignments'}
-                    </p>
-                </div>
-                {/* Create Button - only if feature enabled and user has permission */}
-                {isCreateTeamEnabled && canManage && (
+            <PageHeader
+                icon={<Users2 className="h-5 w-5" />}
+                title={isRTL ? 'فرق العمل' : 'Work Teams'}
+                description={isRTL ? 'إدارة فرق العمل المتخصصة وتوزيع الموظفين حسب نوع الصيانة والمسؤولية.' : 'Manage specialized work teams and employee assignments by maintenance responsibility.'}
+                actions={isCreateTeamEnabled && canManage ? (
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-xl font-cairo hover:bg-secondary/90 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg font-cairo hover:bg-secondary/90 transition-colors"
                     >
                         <Plus className="w-5 h-5" />
                         {isRTL ? 'إنشاء فريق' : 'Create Team'}
                     </button>
-                )}
-            </div>
+                ) : null}
+            />
 
             {/* Feature Warning - if creation disabled */}
             {!isCreateTeamEnabled && (
@@ -251,7 +251,7 @@ export default function WorkTeamsPage() {
                             isRTL={isRTL}
                             onManageMembers={() => openMembersModal(team)}
 
-                            onDelete={() => handleDeleteTeam(team.id)}
+                            onDelete={() => handleDeleteTeam(team)}
                             canManage={canManage}
                         />
                     ))}
@@ -360,6 +360,18 @@ export default function WorkTeamsPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmActionDialog
+                open={!!teamPendingDelete}
+                onOpenChange={(open) => !open && setTeamPendingDelete(null)}
+                title={isRTL ? 'تأكيد حذف الفريق' : 'Delete Team'}
+                description={isRTL
+                    ? `هل أنت متأكد من حذف فريق "${teamPendingDelete?.name_ar || teamPendingDelete?.name || ''}"؟`
+                    : `Are you sure you want to delete "${teamPendingDelete?.name || ''}"?`}
+                confirmLabel={isRTL ? 'حذف' : 'Delete'}
+                cancelLabel={isRTL ? 'إلغاء' : 'Cancel'}
+                onConfirm={confirmDeleteTeam}
+            />
 
             {/* Team Members Modal */}
             {showMembersModal && selectedTeam && (

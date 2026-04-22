@@ -67,18 +67,18 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full max-w-full min-w-0">
             {/* Mobile Logo (visible only on small screens) */}
-            <div className="md:hidden flex flex-col items-center mb-8">
+            <div className="md:hidden flex flex-col items-center mb-6">
                 <img
                     src="/images/logo-white.png"
-                    alt="Mutqan"
-                    className="w-24 h-auto object-contain mb-4 drop-shadow-md"
+                    alt={t('authPages.mobileLogoAlt')}
+                    className="w-20 h-auto object-contain mb-4 drop-shadow-md"
                 />
             </div>
 
             {/* Login Card */}
-            <div className="bg-white/95 backdrop-blur-[6px] rounded-2xl shadow-xl shadow-slate-900/5 p-8 lg:p-10 border border-white/50">
+            <div className="max-w-full overflow-hidden bg-white/95 backdrop-blur-[6px] rounded-xl shadow-card p-6 sm:p-8 lg:p-10 border border-white/60">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold text-[#1A202C] font-cairo mb-3">
@@ -156,7 +156,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Remember Me & Forgot Password */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <label className="flex items-center gap-2.5 cursor-pointer group">
                             <div className="relative flex items-center">
                                 <input
@@ -201,20 +201,11 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                {/* Language Toggle */}
-                <div className="mt-8 text-center pt-6 border-t border-[#E9EEF1]">
-                    <button
-                        onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
-                        className="text-sm font-medium text-[#6C7A86] hover:text-[#3AAFA9] transition-colors font-cairo flex items-center justify-center gap-2 mx-auto"
-                    >
-                        <span>{i18n.language === 'ar' ? 'English' : 'العربية'}</span>
-                    </button>
-                </div>
             </div>
 
             {/* Footer */}
             <p className="mt-8 text-center text-sm text-white/80 font-cairo text-shadow-sm md:hidden">
-                © {new Date().getFullYear()} {t('app.name')}. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved'}
+                © {new Date().getFullYear()} {t('app.name')}. {t('authPages.rights')}
             </p>
         </div>
     )

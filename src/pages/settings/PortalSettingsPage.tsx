@@ -8,6 +8,7 @@ import QRCode from 'react-qr-code'
 import { Copy, Printer, RefreshCw, Power, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { ConfirmActionDialog } from '@/components/ui/confirm-action-dialog'
 
 export default function PortalSettingsPage() {
     const { i18n } = useTranslation()
@@ -17,6 +18,7 @@ export default function PortalSettingsPage() {
     const [loading, setLoading] = useState(true)
     const [token, setToken] = useState<string | null>(null)
     const [tokenId, setTokenId] = useState<string | null>(null)
+    const [portalConfirm, setPortalConfirm] = useState<null | 'deactivate' | 'regenerate'>(null)
     const hasPublicPortalAccess =
         isFeatureEnabled(tenantModules, 'public_portal', 'qr_portal') &&
         isFeatureEnabled(tenantModules, 'public_portal', 'public_submission')
@@ -95,10 +97,6 @@ export default function PortalSettingsPage() {
     const deactivateToken = async () => {
         if (!tokenId) return
 
-        if (!confirm(isRTL ? 'هل أنت متأكد؟ سيتم إيقاف هذا الرابط.' : 'Are you sure? This will disable the link.')) {
-            return
-        }
-
         setLoading(true)
 
         try {
@@ -117,6 +115,18 @@ export default function PortalSettingsPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handlePortalConfirm = () => {
+        if (portalConfirm === 'deactivate') {
+            void deactivateToken()
+        }
+
+        if (portalConfirm === 'regenerate') {
+            void deactivateToken().then(generateToken)
+        }
+
+        setPortalConfirm(null)
     }
 
     const portalUrl = token ? `${window.location.origin}/portal/${token}` : ''
@@ -253,11 +263,7 @@ export default function PortalSettingsPage() {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => {
-                                        if (confirm(isRTL ? 'هل أنت متأكد؟' : 'Are you sure?')) {
-                                            void deactivateToken().then(generateToken)
-                                        }
-                                    }}
+                                    onClick={() => setPortalConfirm('regenerate')}
                                     className="px-3 py-1 text-xs bg-white border border-yellow-200 text-yellow-700 rounded hover:bg-yellow-100"
                                 >
                                     {isRTL ? 'تجديد' : 'Reset'}
@@ -273,7 +279,7 @@ export default function PortalSettingsPage() {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={deactivateToken}
+                                    onClick={() => setPortalConfirm('deactivate')}
                                     className="px-3 py-1 text-xs bg-white border border-red-200 text-red-700 rounded hover:bg-red-100"
                                 >
                                     {isRTL ? 'إيقاف' : 'Turn Off'}
@@ -283,6 +289,20 @@ export default function PortalSettingsPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmActionDialog
+                open={!!portalConfirm}
+                onOpenChange={(open) => !open && setPortalConfirm(null)}
+                title={portalConfirm === 'regenerate'
+                    ? (isRTL ? 'تجديد رابط البوابة' : 'Regenerate Portal Link')
+                    : (isRTL ? 'إيقاف البوابة العامة' : 'Deactivate Public Portal')}
+                description={portalConfirm === 'regenerate'
+                    ? (isRTL ? 'سيتم إيقاف الرابط الحالي فورًا وإنشاء رابط جديد ورمز QR جديد.' : 'The current link will stop working immediately and a new link and QR code will be generated.')
+                    : (isRTL ? 'سيتم إيقاف الرابط الحالي ولن يتم استقبال بلاغات جديدة عبره.' : 'The current link will be disabled and new reports cannot be submitted through it.')}
+                confirmLabel={portalConfirm === 'regenerate' ? (isRTL ? 'تجديد' : 'Regenerate') : (isRTL ? 'إيقاف' : 'Deactivate')}
+                cancelLabel={isRTL ? 'إلغاء' : 'Cancel'}
+                onConfirm={handlePortalConfirm}
+            />
         </div>
     )
 }

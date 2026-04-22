@@ -12,9 +12,9 @@ import {
     TrendingUp,
     Wrench,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from '@/components/ui/page-header'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 import { useReportingFoundation, type ReportingFoundationMetrics } from '@/hooks/useReports'
@@ -93,12 +93,12 @@ export default function ReportsPage() {
             const url = window.URL.createObjectURL(blob)
             const link = document.createElement('a')
             link.href = url
-            link.download = `mutqan-executive-overview-${new Date().toISOString().slice(0, 10)}.csv`
+            link.download = `mutqan-operational-overview-${new Date().toISOString().slice(0, 10)}.csv`
             document.body.appendChild(link)
             link.click()
             link.remove()
             window.URL.revokeObjectURL(url)
-            toast.success(isRTL ? 'تم تصدير الملخص التنفيذي' : 'Executive summary exported')
+            toast.success(isRTL ? 'تم تصدير الملخص التشغيلي' : 'Operational summary exported')
         } catch (exportError) {
             console.error('Error exporting executive report:', exportError)
             toast.error(isRTL ? 'تعذر تصدير الملخص' : 'Failed to export summary')
@@ -136,39 +136,28 @@ export default function ReportsPage() {
                 icon={AlertTriangle}
                 title={isRTL ? 'تعذر تحميل المؤشرات' : 'Metrics Unavailable'}
                 description={isRTL
-                    ? 'تأكد من تطبيق migration 114 وتشغيل الدالة get_tenant_reporting_foundation على قاعدة staging.'
-                    : 'Apply migration 114 and verify get_tenant_reporting_foundation on staging.'}
+                    ? 'تعذر جلب بيانات التقارير الآن. حاول تحديث الصفحة أو راجع صلاحيات الوصول للتقارير.'
+                    : 'Reporting data could not be loaded right now. Refresh the page or review report access permissions.'}
             />
         )
     }
 
     return (
-        <div className="space-y-8 pb-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="max-w-3xl space-y-2">
-                    <Badge variant="outline" className="w-fit gap-2 border-secondary/30 bg-secondary/5 text-secondary">
-                        <Gauge className="h-3.5 w-3.5" />
-                        {isRTL ? 'سطح ديمو تنفيذي' : 'Executive Demo Surface'}
-                    </Badge>
-                    <h1 className="font-cairo text-2xl font-bold text-primary md:text-3xl">
-                        {isRTL ? 'نظرة تنفيذية على التشغيل والعائد' : 'Executive Operations and ROI Overview'}
-                    </h1>
-                    <p className="font-cairo text-muted-foreground">
-                        {isRTL
-                            ? 'ملخص صغير ومباشر يربط العمل الميداني بالأثر المالي والتشغيلي. صُمم ليكون نهاية قوية لعرض العميل.'
-                            : 'A compact view that connects field work to operational and financial impact. Built as the close for the customer demo.'}
-                    </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                    {canExport ? (
-                        <Button variant="outline" onClick={handleExport} className="gap-2">
-                            <FileSpreadsheet className="h-4 w-4" />
-                            {isRTL ? 'تصدير الملخص' : 'Export Summary'}
-                        </Button>
-                    ) : null}
-                </div>
-            </div>
+        <div className="space-y-6 pb-8">
+            <PageHeader
+                icon={<Gauge className="h-5 w-5" />}
+                eyebrow={isRTL ? 'التقارير التشغيلية' : 'Operational Reports'}
+                title={isRTL ? 'نظرة تنفيذية على الأداء التشغيلي' : 'Executive Operations Overview'}
+                description={isRTL
+                    ? 'مؤشرات مركزة تربط أوامر العمل والصيانة الوقائية والمخزون والتكلفة بصورة مناسبة لاجتماعات التشغيل.'
+                    : 'Focused metrics across work orders, preventive maintenance, inventory, and cost for operational reviews.'}
+                actions={canExport ? (
+                    <Button variant="outline" onClick={handleExport} className="gap-2">
+                        <FileSpreadsheet className="h-4 w-4" />
+                        {isRTL ? 'تصدير الملخص' : 'Export Summary'}
+                    </Button>
+                ) : null}
+            />
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
@@ -202,7 +191,7 @@ export default function ReportsPage() {
                     <CardHeader className="pb-4">
                         <CardTitle className="flex items-center gap-2 font-cairo text-xl">
                             <Activity className="h-5 w-5 text-secondary" />
-                            {isRTL ? 'Executive Operations Overview' : 'Executive Operations Overview'}
+                            {isRTL ? 'ملخص الأداء التشغيلي' : 'Operational Performance Summary'}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-5">
@@ -230,7 +219,7 @@ export default function ReportsPage() {
                     <CardHeader className="pb-4">
                         <CardTitle className="flex items-center gap-2 font-cairo text-xl">
                             <TrendingUp className="h-5 w-5 text-secondary" />
-                            {isRTL ? 'Maintenance ROI / SLA Summary' : 'Maintenance ROI / SLA Summary'}
+                            {isRTL ? 'التكلفة والالتزام التشغيلي' : 'Cost and SLA Summary'}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">

@@ -9,14 +9,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { isPlatformRole } from '@/config/roles'
 
 export default function CompleteRegistrationPage() {
-    const { i18n } = useTranslation()
+    const { t } = useTranslation()
     const navigate = useNavigate()
     const { isLoading, isAuthenticated, profile, refreshProfile, signOut } = useAuth()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const attemptedRef = useRef(false)
 
-    const isRTL = i18n.language === 'ar'
     const isPlatformUser = !!profile && (isPlatformRole(profile.role) || profile.is_super_admin)
     const getErrorMessage = (error: unknown, fallback: string) =>
         error instanceof Error ? error.message : fallback
@@ -40,24 +39,20 @@ export default function CompleteRegistrationPage() {
             await refreshProfile()
 
             toast.success(
-                isRTL
-                    ? 'اكتمل إعداد المنشأة بنجاح'
-                    : 'Workspace setup completed successfully',
+                t('authPages.complete.successToast'),
             )
 
             navigate('/dashboard', { replace: true })
         } catch (error: unknown) {
             console.error('Pending registration completion failed:', error)
 
-            const fallbackMessage = isRTL
-                ? 'تعذر إكمال إعداد المنشأة تلقائيًا. يمكنك إعادة المحاولة الآن.'
-                : 'We could not complete workspace setup automatically. You can retry now.'
+            const fallbackMessage = t('authPages.complete.fallbackError')
 
             setErrorMessage(getErrorMessage(error, fallbackMessage))
         } finally {
             setIsSubmitting(false)
         }
-    }, [isRTL, navigate, refreshProfile])
+    }, [navigate, refreshProfile, t])
 
     useEffect(() => {
         if (!isAuthenticated || isLoading || isPlatformUser || profile?.tenant_id || attemptedRef.current) {
@@ -74,7 +69,7 @@ export default function CompleteRegistrationPage() {
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
                     <p className="text-muted font-cairo">
-                        {isRTL ? 'جارٍ التحقق من الحساب...' : 'Checking your account...'}
+                        {t('authPages.complete.checking')}
                     </p>
                 </div>
             </div>
@@ -104,7 +99,7 @@ export default function CompleteRegistrationPage() {
             <div className="md:hidden flex flex-col items-center mb-8">
                 <img
                     src="/images/logo-white.png"
-                    alt="Mutqan"
+                    alt={t('authPages.mobileLogoAlt')}
                     className="w-24 h-auto object-contain mb-4 drop-shadow-md"
                 />
             </div>
@@ -122,17 +117,13 @@ export default function CompleteRegistrationPage() {
                     <div className="space-y-2">
                         <h2 className="text-2xl font-bold text-[#1A202C] font-cairo">
                             {errorMessage
-                                ? (isRTL ? 'إعداد المنشأة متوقف مؤقتًا' : 'Workspace setup needs attention')
-                                : (isRTL ? 'نستكمل تجهيز منشأتك' : 'Finishing your workspace setup')}
+                                ? t('authPages.complete.blockedTitle')
+                                : t('authPages.complete.progressTitle')}
                         </h2>
                         <p className="text-sm text-[#6C7A86] font-cairo leading-7">
                             {errorMessage
-                                ? (isRTL
-                                    ? 'تم إنشاء الحساب بنجاح، لكن ربطه بالمنشأة لم يكتمل بعد. يمكنك إعادة المحاولة دون فقدان بيانات التسجيل.'
-                                    : 'Your account was created, but workspace provisioning did not finish yet. You can retry without losing your registration details.')
-                                : (isRTL
-                                    ? 'نقوم الآن بربط الحساب بالمنشأة وتفعيل الإعدادات الأولية. قد يستغرق ذلك بضع ثوانٍ فقط.'
-                                    : 'We are linking your account to the organization and applying the initial workspace settings. This should only take a few seconds.')}
+                                ? t('authPages.complete.blockedBody')
+                                : t('authPages.complete.progressBody')}
                         </p>
                     </div>
                 </div>
@@ -145,7 +136,7 @@ export default function CompleteRegistrationPage() {
                     ) : (
                         <div className="flex items-center justify-center gap-3 text-secondary font-cairo">
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>{isRTL ? 'جارٍ استكمال التسجيل...' : 'Completing registration...'}</span>
+                            <span>{t('authPages.complete.completing')}</span>
                         </div>
                     )}
                 </div>
@@ -162,7 +153,7 @@ export default function CompleteRegistrationPage() {
                         ) : (
                             <RefreshCw className="w-5 h-5" />
                         )}
-                        <span>{isRTL ? 'إعادة المحاولة' : 'Retry setup'}</span>
+                        <span>{t('authPages.complete.retry')}</span>
                     </button>
 
                     <button
@@ -171,7 +162,7 @@ export default function CompleteRegistrationPage() {
                         className="w-full h-12 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                     >
                         <LogOut className="w-4 h-4" />
-                        <span>{isRTL ? 'العودة للتسجيل' : 'Back to registration'}</span>
+                        <span>{t('authPages.complete.backToRegistration')}</span>
                     </button>
                 </div>
             </div>

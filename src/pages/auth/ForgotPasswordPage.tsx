@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
                 toast.error(response.message || response.error)
             }
         } catch (error) {
-            toast.error(isRTL ? 'حدث خطأ غير متوقع' : 'Unexpected error')
+            toast.error(t('authPages.forgot.errors.unexpected'))
             console.error(error)
         } finally {
             setIsLoading(false)
@@ -53,12 +53,12 @@ export default function ForgotPasswordPage() {
         }
 
         if (newPassword !== confirmPassword) {
-            toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match')
+            toast.error(t('authPages.forgot.errors.passwordMismatch'))
             return
         }
 
         if (newPassword.length < 10) {
-            toast.error(isRTL ? 'كلمة المرور يجب أن تكون 10 أحرف على الأقل' : 'Password must be at least 10 characters')
+            toast.error(t('authPages.forgot.errors.passwordMin'))
             return
         }
 
@@ -83,17 +83,17 @@ export default function ForgotPasswordPage() {
                     // error.message might be 'Edge Function returned a non-2xx status code'
                     // We need to check exact context usually.
                     // But here we rely on standard error catching
-                    if (msg.includes('Invalid OTP')) msg = isRTL ? 'رمز التحقق غير صحيح أو منتهي' : 'Invalid or expired OTP'
-                    else msg = isRTL ? 'فشل تحديث كلمة المرور' : 'Failed to update password'
+                    if (msg.includes('Invalid OTP')) msg = t('authPages.forgot.errors.otpInvalid')
+                    else msg = t('authPages.forgot.errors.updateFailed')
                 } catch { /* JSON parsing may fail, use original msg */ }
                 toast.error(msg)
                 console.error(error)
             } else {
-                toast.success(isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully')
+                toast.success(t('authPages.forgot.success.passwordChanged'))
                 navigate('/login')
             }
         } catch (error: any) {
-            toast.error(isRTL ? 'حدث خطأ أثناء التحديث' : 'Update failed')
+            toast.error(t('authPages.forgot.errors.updateError'))
             console.error(error)
         } finally {
             setIsLoading(false)
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
             <div className="md:hidden flex flex-col items-center mb-8">
                 <img
                     src="/images/logo-white.png"
-                    alt="Mutqan"
+                    alt={t('authPages.mobileLogoAlt')}
                     className="w-24 h-auto object-contain mb-4 drop-shadow-md"
                 />
             </div>
@@ -117,14 +117,14 @@ export default function ForgotPasswordPage() {
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold text-[#1A202C] font-cairo mb-3">
                         {step === 1
-                            ? (isRTL ? 'نسيت كلمة المرور؟' : 'Forgot Password?')
-                            : (isRTL ? 'تغيير كلمة المرور' : 'Reset Password')
+                            ? t('authPages.forgot.title')
+                            : t('authPages.forgot.resetTitle')
                         }
                     </h2>
                     <p className="text-[#6C7A86] font-cairo text-base">
                         {step === 1
-                            ? (isRTL ? 'أدخل بريدك الإلكتروني لاستلام رمز التحقق' : 'Enter your email to receive verification code')
-                            : (isRTL ? 'أدخل الرمز المرسل وكلمة المرور الجديدة' : 'Enter the code and your new password')
+                            ? t('authPages.forgot.description')
+                            : t('authPages.forgot.resetDescription')
                         }
                     </p>
                 </div>
@@ -170,10 +170,10 @@ export default function ForgotPasswordPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>{isRTL ? 'جاري الإرسال...' : 'Sending...'}</span>
+                                    <span>{t('authPages.forgot.sending')}</span>
                                 </>
                             ) : (
-                                <span>{isRTL ? 'إرسال رمز التحقق' : 'Send Code'}</span>
+                                <span>{t('authPages.forgot.sendCode')}</span>
                             )}
                         </button>
                     </form>
@@ -185,7 +185,7 @@ export default function ForgotPasswordPage() {
                         {/* OTP */}
                         <div className="space-y-2">
                             <label className="block text-sm font-semibold text-[#1A202C] font-cairo">
-                                {isRTL ? 'رمز التحقق' : 'Verification Code'}
+                                {t('authPages.forgot.verificationCode')}
                             </label>
                             <div className="relative group">
                                 <input
@@ -212,7 +212,7 @@ export default function ForgotPasswordPage() {
                         {/* New Password */}
                         <div className="space-y-2">
                             <label className="block text-sm font-semibold text-[#1A202C] font-cairo">
-                                {isRTL ? 'كلمة المرور الجديدة' : 'New Password'}
+                                {t('authPages.forgot.newPassword')}
                             </label>
                             <div className="relative group">
                                 <input
@@ -238,7 +238,7 @@ export default function ForgotPasswordPage() {
                         {/* Confirm Password */}
                         <div className="space-y-2">
                             <label className="block text-sm font-semibold text-[#1A202C] font-cairo">
-                                {isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}
+                                {t('authPages.forgot.confirmPassword')}
                             </label>
                             <div className="relative group">
                                 <input
@@ -274,10 +274,10 @@ export default function ForgotPasswordPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>{isRTL ? 'جاري التحديث...' : 'Updating...'}</span>
+                                    <span>{t('authPages.forgot.updating')}</span>
                                 </>
                             ) : (
-                                <span>{isRTL ? 'تغيير كلمة المرور' : 'Reset Password'}</span>
+                                <span>{t('authPages.forgot.resetTitle')}</span>
                             )}
                         </button>
                     </form>
@@ -292,12 +292,12 @@ export default function ForgotPasswordPage() {
                         {isRTL ? (
                             <>
                                 <ArrowRight className="w-4 h-4" />
-                                <span>{step === 2 ? 'العودة للخلف' : 'العودة لتسجيل الدخول'}</span>
+                                <span>{step === 2 ? t('authPages.forgot.back') : t('authPages.forgot.backToLogin')}</span>
                             </>
                         ) : (
                             <>
                                 <ArrowLeft className="w-4 h-4" />
-                                <span>{step === 2 ? 'Go Back' : 'Back to Login'}</span>
+                                <span>{step === 2 ? t('authPages.forgot.back') : t('authPages.forgot.backToLogin')}</span>
                             </>
                         )}
                     </button>
@@ -306,7 +306,7 @@ export default function ForgotPasswordPage() {
 
             {/* Footer */}
             <p className="mt-8 text-center text-sm text-white/80 font-cairo text-shadow-sm md:hidden">
-                © {new Date().getFullYear()} {t('app.name')}. {isRTL ? 'جميع الحقوق محفوظة' : 'All rights reserved'}
+                © {new Date().getFullYear()} {t('app.name')}. {t('authPages.rights')}
             </p>
         </div>
     )

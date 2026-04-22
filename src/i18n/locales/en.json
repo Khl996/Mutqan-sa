@@ -3,6 +3,319 @@
         "name": "Mutqan",
         "description": "Facility & Maintenance Management System"
     },
+    "site": {
+        "brand": {
+            "name": "متقن",
+            "nameEn": "Mutqan",
+            "descriptor": "Maintenance and operations platform"
+        },
+        "nav": {
+            "about": "About Mutqan",
+            "contact": "Request a demo",
+            "login": "Log in",
+            "startShort": "Start",
+            "start": "Start now"
+        },
+        "footer": {
+            "description": "Mutqan is an Arabic-first platform for maintenance, facilities, and asset operations, built for teams that need clarity and faster daily decisions.",
+            "linksTitle": "Links",
+            "about": "About Mutqan",
+            "contact": "Request a demo",
+            "privacy": "Privacy Policy",
+            "terms": "Terms of Use",
+            "contactTitle": "Contact",
+            "rights": "All rights reserved."
+        },
+        "language": {
+            "english": "English",
+            "arabic": "العربية"
+        }
+    },
+    "landing": {
+        "hero": {
+            "eyebrow": "متقن | Maintenance and operations management",
+            "headlineTop": "Operations are not chaos",
+            "headlineAccent": "when the system is clear",
+            "subheadline": "Mutqan brings maintenance and assets into one clear workflow",
+            "description": "Instead of losing requests across WhatsApp, spreadsheets, and email, Mutqan turns every request into a clear path: request → work order → execution → closure → report.",
+            "primaryCta": "Request a demo",
+            "secondaryCta": "Try Mutqan for free",
+            "trustBullets": [
+                "Arabic-first interface built for operations teams",
+                "Clear tracking for statuses, priorities, and SLA",
+                "Roles and permissions for every management level"
+            ]
+        },
+        "preview": {
+            "mobileTitle": "Operations center",
+            "mobileSubtitle": "Critical work summary",
+            "windowTitle": "Operations monitoring center",
+            "modulesTitle": "Modules",
+            "summaryTitle": "Today summary",
+            "summaryBody": "Priority is overdue and critical work",
+            "slaActive": "SLA active",
+            "todayPriority": "Today priority",
+            "headers": {
+                "code": "Code",
+                "work": "Work",
+                "status": "Status",
+                "owner": "Owner"
+            },
+            "signals": [
+                { "label": "Active orders", "value": "42" },
+                { "label": "Overdue", "value": "7" },
+                { "label": "SLA on target", "value": "91%" },
+                { "label": "Due today", "value": "18" }
+            ],
+            "nav": [
+                "Operations dashboard",
+                "Work orders",
+                "Assets",
+                "Preventive maintenance",
+                "Reports"
+            ],
+            "rows": [
+                { "code": "WO-1048", "title": "Leak in pump room", "status": "Overdue", "priority": "High", "owner": "Electrical team" },
+                { "code": "WO-1049", "title": "AC unit inspection", "status": "In progress", "priority": "Medium", "owner": "HVAC team" },
+                { "code": "PM-220", "title": "Preventive maintenance round", "status": "Due today", "priority": "Scheduled", "owner": "Site supervisor" }
+            ]
+        },
+        "problem": {
+            "eyebrow": "Problem diagnosis",
+            "title": "Where does maintenance work get lost?",
+            "body": "The issue often does not start with the technician or supervisor. It starts when everyone is working without one shared workflow.",
+            "closing": "The problem is not the team. It is the absence of a clear system.",
+            "items": [
+                { "title": "The request arrives in a chat", "body": "The work begins as a passing message, then it becomes hard to know who received it and what happened next." },
+                { "title": "It gets delayed or lost", "body": "Small details turn into waiting, repeated follow-up, and pressure on supervisors." },
+                { "title": "There is no clear tracking", "body": "Priority, status, and the next responsible person are not visible enough." },
+                { "title": "Management lacks real visibility", "body": "Decisions depend on calls and messages instead of an operational record the team can trust." }
+            ]
+        },
+        "solution": {
+            "eyebrow": "Solution",
+            "title": "Mutqan turns chaos into a clear workflow",
+            "body": "Everything starts with a request and ends with a clear report, without loss, guesswork, or random follow-up.",
+            "points": [
+                "Every request has a clear status and path",
+                "Every task has a known owner",
+                "Every decision is based on data, not intuition"
+            ]
+        },
+        "workflow": {
+            "eyebrow": "Operating flow",
+            "title": "From request to closure, everything is clear",
+            "body": "The flow is not just visual. It is how the team understands what needs to happen, when it is due, and who owns it.",
+            "steps": [
+                { "title": "Clear request", "body": "The request enters with a code, status, priority, and location" },
+                { "title": "Direct assignment", "body": "It is routed to the right team without delay" },
+                { "title": "Continuous tracking", "body": "You see overdue and critical work before escalation" },
+                { "title": "Documented closure", "body": "Everything ends with a clear record and ready reports" }
+            ]
+        },
+        "modules": {
+            "eyebrow": "Core modules",
+            "title": "Everything you need to manage operations in one place",
+            "body": "Mutqan does not scatter operations across disconnected tools. Each module connects to the one before and after it, so the picture stays clear.",
+            "items": [
+                { "title": "Work orders", "body": "Complete management from request to closure" },
+                { "title": "Assets and locations", "body": "A record for every asset and its full history" },
+                { "title": "Preventive maintenance", "body": "Plans that reduce failures before they happen" },
+                { "title": "Inventory and costs", "body": "Track parts and costs without surprises" }
+            ]
+        },
+        "fit": {
+            "eyebrow": "Who is it for?",
+            "title": "Built for environments that cannot tolerate chaos",
+            "industries": [
+                "Operations and maintenance companies",
+                "Hospitals",
+                "Factories",
+                "Commercial facilities"
+            ]
+        },
+        "outcomes": {
+            "eyebrow": "Practical impact",
+            "title": "What actually changes?",
+            "body": "The value is not just in how the interface looks. It is in reducing daily ambiguity and making work easier to follow.",
+            "items": [
+                "Lost requests decrease",
+                "Work becomes clearer",
+                "The team works without guesswork",
+                "Management sees the full picture"
+            ]
+        },
+        "management": {
+            "eyebrow": "Decision confidence",
+            "title": "Decisions based on data, not guesswork",
+            "body": "Managers do not need to chase details across multiple sources. Records, statuses, performance, and reports are available in one place.",
+            "items": [
+                "Complete record for every operation",
+                "Clear reports",
+                "Performance tracking",
+                "Management visibility"
+            ]
+        },
+        "finalCta": {
+            "eyebrow": "Next step",
+            "title": "Try Mutqan and see the difference yourself",
+            "body": "We will walk through how Mutqan can fit your work environment in a practical way, not a theoretical one."
+        }
+    },
+    "aboutPage": {
+        "heroEyebrow": "About Mutqan",
+        "heroTitle": "A system born from operational needs, not a ready-made template",
+        "heroBody": "We built Mutqan to speak the language of facility managers, supervisors, and technicians: a clear request, a known asset, a defined owner, and a report the team can return to.",
+        "storyEyebrow": "Story",
+        "storyTitle": "From scattered requests to measurable operations",
+        "storyBodyOne": "The problem often starts small: a request in a chat, a missing paper, an asset without history, or a maintenance task no one can confirm was actually closed. Over time, small details become downtime, cost, and pressure on the team.",
+        "storyBodyTwo": "Mutqan addresses this at the root: it unifies information, clarifies responsibility, and turns daily work into a clear record for both the team and management.",
+        "cta": "Request a demo",
+        "visionEyebrow": "Our vision",
+        "visionTitle": "Make digital maintenance a simple daily practice",
+        "visionBody": "The system should not add burden to the team. It should reduce follow-up, improve decision clarity, and help the facility stay prepared instead of always reacting.",
+        "principles": [
+            { "title": "From the field", "body": "Mutqan treats maintenance as daily operational work with failures, teams, locations, assets, and fast decisions, not just a task list." },
+            { "title": "Clarity first", "body": "Every screen should help the user understand what happened, what is overdue, who owns it, and what comes next." },
+            { "title": "Operational confidence", "body": "Records, permissions, statuses, and reports are designed to give management visibility instead of relying on manual follow-up." }
+        ],
+        "sectors": [
+            "Commercial complexes",
+            "Medical facilities",
+            "Factories"
+        ],
+        "proofPoints": [
+            "A clear interface for daily teams",
+            "Operational terminology, not marketing language",
+            "A system that can scale with sites and teams"
+        ]
+    },
+    "contactPage": {
+        "heroEyebrow": "Request a demo",
+        "heroTitle": "See how Mutqan fits your facility",
+        "heroBody": "We will review your work orders, assets, preventive maintenance, and reporting workflows in a practical, clear way without a long sales presentation.",
+        "directTitle": "Direct contact",
+        "directBody": "Send us a short note about your facility, and we will get back to you with a clear next step for the right demo.",
+        "emailSubject": "Mutqan demo request",
+        "prepTitle": "What do we need before the demo?",
+        "prepBody": "These details help us keep the demo focused and useful, but they are not required.",
+        "goalTitle": "Demo goal",
+        "goalBody": "You should leave with a clear answer: is Mutqan a fit for your current need, and which operational workflow is the best place to start?",
+        "trialCta": "Or start a free trial",
+        "prepItems": [
+            "Facility type or sector",
+            "Approximate number of sites or buildings",
+            "Maintenance and operations team size",
+            "The first problem you want to solve"
+        ],
+        "cards": [
+            { "title": "Clear response", "body": "We define the best way to start with you." },
+            { "title": "Practical demo", "body": "We connect the walkthrough to your real workflow." },
+            { "title": "Facility fit", "body": "We review sites, teams, and assets." },
+            { "title": "No complexity", "body": "No technical preparation is required." }
+        ]
+    },
+    "authPages": {
+        "layoutTitle": "A complete platform for assets, maintenance, and operations",
+        "layoutBody": "Full control of your facility from request intake to executive reporting",
+        "mobileLogoAlt": "Mutqan",
+        "rights": "All rights reserved",
+        "forgot": {
+            "title": "Forgot password?",
+            "resetTitle": "Reset password",
+            "description": "Enter your email to receive a verification code",
+            "resetDescription": "Enter the code and your new password",
+            "sendCode": "Send code",
+            "sending": "Sending...",
+            "verificationCode": "Verification code",
+            "newPassword": "New password",
+            "confirmPassword": "Confirm password",
+            "updating": "Updating...",
+            "back": "Go back",
+            "backToLogin": "Back to login",
+            "errors": {
+                "unexpected": "Unexpected error",
+                "passwordMismatch": "Passwords do not match",
+                "passwordMin": "Password must be at least 10 characters",
+                "otpInvalid": "Invalid or expired OTP",
+                "updateFailed": "Failed to update password",
+                "updateError": "Update failed"
+            },
+            "success": {
+                "passwordChanged": "Password changed successfully"
+            }
+        },
+        "register": {
+            "title": "Register a new organization",
+            "steps": {
+                "orgInfo": "Step 1: Organization details",
+                "adminInfo": "Step 2: Admin details",
+                "otp": "Step 3: Email verification",
+                "success": "Registration complete"
+            },
+            "fields": {
+                "orgName": "Organization name",
+                "orgNamePlaceholder": "Example: Advanced Company",
+                "orgEnglishName": "English name",
+                "orgEnglishNamePlaceholder": "e.g. Advanced Co.",
+                "country": "Country",
+                "city": "City",
+                "streetAddress": "Street address",
+                "streetAddressPlaceholder": "Street name, building number...",
+                "postalCode": "Postal code",
+                "orgPhone": "Organization phone",
+                "website": "Website",
+                "crNumber": "CR number",
+                "taxNumber": "Tax number",
+                "firstName": "First name",
+                "lastName": "Last name",
+                "mobile": "Mobile",
+                "email": "Email",
+                "emailHelper": "A verification code will be sent here",
+                "password": "Password",
+                "confirmPassword": "Confirm password"
+            },
+            "defaults": {
+                "country": "Saudi Arabia"
+            },
+            "otp": {
+                "title": "Check your email",
+                "descriptionPrefix": "Enter the 6-digit code sent to",
+                "spamHint": "Check your spam folder if the code does not arrive"
+            },
+            "successTitle": "Registration successful!",
+            "redirecting": "Redirecting...",
+            "goDashboard": "Go to dashboard",
+            "hasAccount": "Already have an account? Log in",
+            "back": "Back",
+            "next": "Next",
+            "verify": "Verify",
+            "errors": {
+                "required": "Please fill all required fields",
+                "passwordMismatch": "Passwords do not match",
+                "passwordMin": "Password must be at least 10 characters",
+                "emailExists": "This email is already registered",
+                "setupPendingAfterCreate": "Your account was created, but workspace setup is still pending. We will take you to the completion step.",
+                "verificationSent": "Verification code sent to your email",
+                "createFailed": "Could not create the account right now",
+                "otpIncomplete": "Please enter the full 6-digit verification code",
+                "otpInvalid": "Invalid or expired verification code",
+                "setupPendingAfterVerify": "Email verification succeeded, but workspace setup is still pending. We will take you to the completion step."
+            }
+        },
+        "complete": {
+            "checking": "Checking your account...",
+            "successToast": "Workspace setup completed successfully",
+            "fallbackError": "We could not complete workspace setup automatically. You can retry now.",
+            "blockedTitle": "Workspace setup needs attention",
+            "progressTitle": "Finishing your workspace setup",
+            "blockedBody": "Your account was created, but workspace provisioning did not finish yet. You can retry without losing your registration details.",
+            "progressBody": "We are linking your account to the organization and applying the initial workspace settings. This should only take a few seconds.",
+            "completing": "Completing registration...",
+            "retry": "Retry setup",
+            "backToRegistration": "Back to registration"
+        }
+    },
     "common": {
         "loading": "Loading...",
         "save": "Save",

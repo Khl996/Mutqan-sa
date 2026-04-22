@@ -1,17 +1,18 @@
 import { Outlet, Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/contexts/AuthContext'
 import { isPlatformRole } from '@/config/roles'
+import { LanguageToggle } from '@/components/site/LanguageToggle'
 
 export default function AuthLayout() {
     const { isAuthenticated, isLoading, profile } = useAuth()
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const location = useLocation()
+    const isRTL = i18n.language === 'ar'
 
-    // Show loading spinner while checking auth
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="min-h-screen flex items-center justify-center bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
                     <p className="text-muted">{t('common.loading')}</p>
@@ -19,6 +20,7 @@ export default function AuthLayout() {
             </div>
         )
     }
+
     const isRegistrationRoute = location.pathname === '/register' || location.pathname === '/register/complete'
     const canStayInRegistrationFlow =
         isRegistrationRoute &&
@@ -37,63 +39,42 @@ export default function AuthLayout() {
     }
 
     return (
-        <div className="min-h-screen w-full relative overflow-hidden flex flex-row">
-            {/* Background Image & Overlay */}
-            <div className="absolute inset-0 z-0 select-none">
-                <img
-                    src="/images/dashboard-hero.jpg"
-                    alt="Dashboard Background"
-                    className="w-full h-full object-cover blur-[7px] scale-105"
-                />
-                <div
-                    className="absolute inset-0"
-                    style={{ backgroundColor: 'rgba(46, 58, 69, 0.85)' }}
-                />
-                {/* Soft Radial Light Effect (Center-Right) */}
-                <div className="absolute top-1/2 right-[20%] -translate-y-1/2 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[120px] mix-blend-soft-light pointer-events-none" />
+        <div
+            className="min-h-screen w-full relative overflow-x-hidden overflow-y-auto flex flex-row bg-[#071113]"
+            style={{ backgroundImage: 'linear-gradient(135deg, #071113 0%, #0d2225 55%, #11181d 100%)' }}
+            dir={isRTL ? 'rtl' : 'ltr'}
+        >
+            <div className="absolute inset-0 z-0 select-none opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
+            <div className="absolute inset-0 z-0 bg-[linear-gradient(180deg,rgba(7,17,19,0.2),rgba(7,17,19,0.72))]" />
+            <div className="absolute top-4 z-20 ltr:right-4 rtl:left-4">
+                <LanguageToggle variant="dark" />
             </div>
 
-            {/* Content Container */}
-            <div className="relative z-10 w-full h-full flex flex-col md:flex-row">
-
-                {/* 
-                    RTL Layout Logic:
-                    Natural DOM Order: Element 1 -> Start (Right), Element 2 -> End (Left).
-                    Goal: Right side = Hero, Left side = Login Card.
-                    So: Element 1 = Hero, Element 2 = Login Card.
-                */}
-
-                {/* HERO SECTION (Right Side in RTL) */}
-                <div className="hidden md:flex flex-1 flex-col justify-center px-16 lg:px-24">
+            <div className="relative z-10 flex h-full w-full min-w-0 flex-col md:flex-row">
+                <div className="hidden md:flex flex-1 flex-col justify-center px-12 lg:px-20">
                     <div className="max-w-xl space-y-8 animate-in fade-in slide-in-from-right-8 duration-700">
-                        {/* Logo */}
                         <img
                             src="/images/logo-white.png"
-                            alt="Mutqan Logo"
-                            className="h-64 w-auto object-contain mb-8 drop-shadow-2xl"
+                            alt={t('site.brand.name')}
+                            className="h-40 w-auto object-contain mb-8 drop-shadow-2xl lg:h-52"
                         />
 
-                        {/* Typography */}
                         <div className="space-y-4">
                             <h1 className="text-4xl lg:text-5xl font-bold text-white font-cairo leading-tight">
-                                منصة متكاملة لإدارة الأصول والصيانة والتشغيل
+                                {t('authPages.layoutTitle')}
                             </h1>
                             <p className="text-xl text-white/90 font-cairo font-light leading-relaxed max-w-lg">
-                                تحكم كامل في منشأتك من البلاغ إلى التقارير التنفيذية
+                                {t('authPages.layoutBody')}
                             </p>
                         </div>
-
-
                     </div>
                 </div>
 
-                {/* LOGIN CARD CONTAINER (Left Side in RTL) */}
-                <div className="flex-1 flex items-center justify-center p-6 md:p-12">
-                    <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-left-8 duration-700 delay-150">
+                <div className="flex min-h-screen min-w-0 flex-1 items-center justify-center overflow-x-hidden p-4 py-8 sm:p-6 md:p-10">
+                    <div className="w-full max-w-[320px] sm:max-w-[440px] min-w-0 animate-in fade-in slide-in-from-left-8 duration-700 delay-150">
                         <Outlet />
                     </div>
                 </div>
-
             </div>
         </div>
     )

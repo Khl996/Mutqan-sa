@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -48,7 +48,7 @@ interface FormData {
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function RegisterPage() {
-    const { i18n } = useTranslation()
+    const { t, i18n } = useTranslation()
     const navigate = useNavigate()
     const { refreshProfile } = useAuth()
     const isRTL = i18n.language === 'ar'
@@ -68,7 +68,7 @@ export default function RegisterPage() {
         orgPhone: '',
         orgWebsite: '',
         orgAddress: '',
-        orgCountry: 'السعودية', // Default
+        orgCountry: t('authPages.register.defaults.country'),
         orgCity: '',
         orgPostalCode: '',
         crNumber: '',
@@ -80,6 +80,19 @@ export default function RegisterPage() {
         password: '',
         confirmPassword: ''
     })
+
+    useEffect(() => {
+        const arDefault = i18n.getFixedT('ar')('authPages.register.defaults.country')
+        const enDefault = i18n.getFixedT('en')('authPages.register.defaults.country')
+
+        setFormData((prev) => {
+            if (prev.orgCountry !== arDefault && prev.orgCountry !== enDefault) {
+                return prev
+            }
+
+            return { ...prev, orgCountry: t('authPages.register.defaults.country') }
+        })
+    }, [i18n, t, isRTL])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target
@@ -108,7 +121,7 @@ export default function RegisterPage() {
 
     const validateOrgInfo = () => {
         if (!formData.orgNameAr || !formData.orgNameEn || !formData.crNumber || !formData.taxNumber || !formData.orgCity || !formData.orgAddress) {
-            toast.error(isRTL ? 'الرجاء تعبئة جميع الحقول المطلوبة' : 'Please fill all required fields')
+            toast.error(t('authPages.register.errors.required'))
             return false
         }
         return true
@@ -116,15 +129,15 @@ export default function RegisterPage() {
 
     const validateAdminInfo = () => {
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.phone) {
-            toast.error(isRTL ? 'الرجاء تعبئة جميع الحقول المطلوبة' : 'Please fill all required fields')
+            toast.error(t('authPages.register.errors.required'))
             return false
         }
         if (formData.password !== formData.confirmPassword) {
-            toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match')
+            toast.error(t('authPages.register.errors.passwordMismatch'))
             return false
         }
         if (formData.password.length < 10) {
-            toast.error(isRTL ? 'كلمة المرور يجب أن تكون 10 أحرف على الأقل' : 'Password must be at least 10 characters')
+            toast.error(t('authPages.register.errors.passwordMin'))
             return false
         }
         return true
@@ -156,7 +169,7 @@ export default function RegisterPage() {
 
                     if (error) {
                         if (error.message.includes('already registered')) {
-                            toast.error(isRTL ? 'هذا البريد الإلكتروني مسجل مسبقاً' : 'Email already registered')
+                            toast.error(t('authPages.register.errors.emailExists'))
                         } else {
                             throw error
                         }
@@ -174,9 +187,7 @@ export default function RegisterPage() {
                         } catch (setupError) {
                             console.error('Workspace setup failed after auto-confirm:', setupError)
                             toast.error(
-                                isRTL
-                                    ? 'تم إنشاء الحساب لكن تجهيز المنشأة لم يكتمل بعد. سننقلك لخطوة الاستكمال.'
-                                    : 'Your account was created, but workspace setup is still pending. We will take you to the completion step.',
+                                t('authPages.register.errors.setupPendingAfterCreate'),
                             )
                             navigate('/register/complete', { replace: true })
                         }
@@ -185,11 +196,11 @@ export default function RegisterPage() {
 
                     // If no session, OTP/Link was sent to email
                     setCurrentStep('otp')
-                    toast.success(isRTL ? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' : 'Verification code sent to your email')
+                    toast.success(t('authPages.register.errors.verificationSent'))
 
                 } catch (error: unknown) {
                     console.error('Signup error:', error)
-                    toast.error(getErrorMessage(error, isRTL ? 'تعذر إنشاء الحساب الآن' : 'Could not create the account right now'))
+                    toast.error(getErrorMessage(error, t('authPages.register.errors.createFailed')))
                 } finally {
                     setIsLoading(false)
                 }
@@ -205,7 +216,7 @@ export default function RegisterPage() {
     const handleRegister = async () => {
         // Enforce 6 digit OTP for verification
         if (otp.join('').length !== 6) {
-            toast.error(isRTL ? 'الرجاء إدخال رمز التحقق كامل (6 أرقام)' : 'Please enter full 6-digit OTP')
+            toast.error(t('authPages.register.errors.otpIncomplete'))
             return
         }
 
@@ -220,7 +231,7 @@ export default function RegisterPage() {
             })
 
             if (error) {
-                toast.error(isRTL ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired OTP')
+                toast.error(t('authPages.register.errors.otpInvalid'))
                 return
             }
 
@@ -232,9 +243,7 @@ export default function RegisterPage() {
                 } catch (setupError) {
                     console.error('Workspace setup failed after OTP verification:', setupError)
                     toast.error(
-                        isRTL
-                            ? 'تم التحقق من البريد لكن تجهيز المنشأة لم يكتمل بعد. سننقلك لخطوة الاستكمال.'
-                            : 'Email verification succeeded, but workspace setup is still pending. We will take you to the completion step.',
+                        t('authPages.register.errors.setupPendingAfterVerify'),
                     )
                     navigate('/register/complete', { replace: true })
                 }
@@ -242,7 +251,7 @@ export default function RegisterPage() {
 
         } catch (error: unknown) {
             console.error('Verification failed:', error)
-            toast.error(isRTL ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired OTP')
+            toast.error(t('authPages.register.errors.otpInvalid'))
         } finally {
             setIsLoading(false)
         }
@@ -287,25 +296,25 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full max-w-full min-w-0">
             {/* Mobile Logo */}
-            <div className="md:hidden flex flex-col items-center mb-8">
-                <img src="/images/logo-white.png" alt="Mutqan" className="w-24 h-auto object-contain mb-4 drop-shadow-md" />
+            <div className="md:hidden flex flex-col items-center mb-6">
+                <img src="/images/logo-white.png" alt={t('authPages.mobileLogoAlt')} className="w-20 h-auto object-contain mb-4 drop-shadow-md" />
             </div>
 
             {/* Register Card */}
-            <div className="bg-white/95 backdrop-blur-[6px] rounded-2xl shadow-xl shadow-slate-900/5 p-8 border border-white/50 overflow-hidden relative min-h-[500px]">
+            <div className="max-w-full bg-white/95 backdrop-blur-[6px] rounded-xl shadow-card p-5 sm:p-8 border border-white/60 overflow-hidden relative min-h-[500px]">
 
                 {/* Header */}
                 <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold text-[#1A202C] font-cairo mb-2">
-                        {isRTL ? 'تسجيل منشأة جديدة' : 'Register Organization'}
+                        {t('authPages.register.title')}
                     </h2>
                     <p className="text-[#6C7A86] font-cairo text-sm">
-                        {currentStep === 'org_info' && (isRTL ? 'الخطوة 1: بيانات المنشأة' : 'Step 1: Organization Details')}
-                        {currentStep === 'admin_info' && (isRTL ? 'الخطوة 2: بيانات المدير' : 'Step 2: Admin Details')}
-                        {currentStep === 'otp' && (isRTL ? 'الخطوة 3: التحقق من البريد' : 'Step 3: Email Verification')}
-                        {currentStep === 'success' && (isRTL ? 'تم التسجيل!' : 'Registration Complete')}
+                        {currentStep === 'org_info' && t('authPages.register.steps.orgInfo')}
+                        {currentStep === 'admin_info' && t('authPages.register.steps.adminInfo')}
+                        {currentStep === 'otp' && t('authPages.register.steps.otp')}
+                        {currentStep === 'success' && t('authPages.register.steps.success')}
                     </p>
                 </div>
 
@@ -329,33 +338,33 @@ export default function RegisterPage() {
                             className="space-y-4"
                         >
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'اسم المنشأة' : 'Organization Name'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.orgName')} *</label>
                                 <input
                                     type="text"
                                     name="orgNameAr"
                                     value={formData.orgNameAr}
                                     onChange={handleInputChange}
                                     className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
-                                    placeholder={isRTL ? 'مثال: شركة المتطورة' : ''}
+                                    placeholder={t('authPages.register.fields.orgNamePlaceholder')}
                                 />
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الاسم بالإنجليزية' : 'English Name'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.orgEnglishName')} *</label>
                                 <input
                                     type="text"
                                     name="orgNameEn"
                                     value={formData.orgNameEn}
                                     onChange={handleInputChange}
                                     className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all text-left"
-                                    placeholder="e.g. Advanced Co."
+                                    placeholder={t('authPages.register.fields.orgEnglishNamePlaceholder')}
                                     dir="ltr"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الدولة' : 'Country'} *</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.country')} *</label>
                                     <input
                                         type="text"
                                         name="orgCountry"
@@ -365,7 +374,7 @@ export default function RegisterPage() {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'المدينة' : 'City'} *</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.city')} *</label>
                                     <input
                                         type="text"
                                         name="orgCity"
@@ -377,20 +386,20 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'العنوان الوطني / الشارع' : 'Street Address'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.streetAddress')} *</label>
                                 <input
                                     type="text"
                                     name="orgAddress"
                                     value={formData.orgAddress}
                                     onChange={handleInputChange}
                                     className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
-                                    placeholder={isRTL ? 'اسم الشارع، رقم المبنى...' : 'Street name, Building No...'}
+                                    placeholder={t('authPages.register.fields.streetAddressPlaceholder')}
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الرمز البريدي' : 'Postal Code'}</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.postalCode')}</label>
                                     <input
                                         type="text"
                                         name="orgPostalCode"
@@ -400,7 +409,7 @@ export default function RegisterPage() {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'هاتف المنشأة' : 'Organization Phone'}</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.orgPhone')}</label>
                                     <input
                                         type="tel"
                                         name="orgPhone"
@@ -414,7 +423,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الموقع الإلكتروني' : 'Website'}</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.website')}</label>
                                 <input
                                     type="text"
                                     name="orgWebsite"
@@ -426,9 +435,9 @@ export default function RegisterPage() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'السجل التجاري' : 'CR Number'} *</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.crNumber')} *</label>
                                     <input
                                         type="text"
                                         name="crNumber"
@@ -438,7 +447,7 @@ export default function RegisterPage() {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الرقم الضريبي' : 'Tax Number'} *</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.taxNumber')} *</label>
                                     <input
                                         type="text"
                                         name="taxNumber"
@@ -460,9 +469,9 @@ export default function RegisterPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-4"
                         >
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الاسم الأول' : 'First Name'} *</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.firstName')} *</label>
                                     <input
                                         type="text"
                                         name="firstName"
@@ -472,7 +481,7 @@ export default function RegisterPage() {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'الاسم الأخير' : 'Last Name'} *</label>
+                                    <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.lastName')} *</label>
                                     <input
                                         type="text"
                                         name="lastName"
@@ -484,7 +493,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'رقم الجوال' : 'Mobile'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.mobile')} *</label>
                                 <div className="relative">
                                     <Phone className="absolute top-3 left-3 w-4 h-4 text-gray-400" />
                                     <input
@@ -500,7 +509,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'البريد الإلكتروني' : 'Email'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.email')} *</label>
                                 <div className="relative">
                                     <Mail className="absolute top-3 left-3 w-4 h-4 text-gray-400" />
                                     <input
@@ -512,11 +521,11 @@ export default function RegisterPage() {
                                         dir="ltr"
                                     />
                                 </div>
-                                <p className="text-[10px] text-gray-400 mt-1">{isRTL ? 'سيتم إرسال رمز التحقق لهذا البريد' : 'Verification code will be sent here'}</p>
+                                <p className="text-[10px] text-gray-400 mt-1">{t('authPages.register.fields.emailHelper')}</p>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'كلمة المرور' : 'Password'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.password')} *</label>
                                 <div className="relative">
                                     <input
                                         type={showPassword ? 'text' : 'password'}
@@ -537,7 +546,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-[#1A202C]">{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'} *</label>
+                                <label className="text-xs font-semibold text-[#1A202C]">{t('authPages.register.fields.confirmPassword')} *</label>
                                 <input
                                     type="password"
                                     name="confirmPassword"
@@ -563,9 +572,9 @@ export default function RegisterPage() {
                                 <Mail className="w-6 h-6 text-secondary" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">{isRTL ? 'تحقق من بريدك الإلكتروني' : 'Check your email'}</h3>
+                                <h3 className="font-bold text-lg">{t('authPages.register.otp.title')}</h3>
                                 <p className="text-sm text-gray-500 mt-1">
-                                    {isRTL ? `أدخل رمز التحقق (6 أرقام) المرسل إلى` : `Enter 6-digit code sent to`} <br />
+                                    {t('authPages.register.otp.descriptionPrefix')} <br />
                                     <span className="font-semibold text-secondary">{formData.email}</span>
                                 </p>
                             </div>
@@ -585,7 +594,7 @@ export default function RegisterPage() {
                             </div>
 
                             <p className="text-xs text-gray-400">
-                                {isRTL ? 'قد يصل الرمز في الرسائل غير المرغوب فيها (Spam)' : 'Check spam folder if code not received'}
+                                {t('authPages.register.otp.spamHint')}
                             </p>
                         </motion.div>
                     )}
@@ -602,16 +611,16 @@ export default function RegisterPage() {
                                 <CheckCircle2 className="w-8 h-8 text-green-600" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-[#1A202C]">{isRTL ? 'تم التسجيل بنجاح!' : 'Registration Successful!'}</h2>
+                                <h2 className="text-xl font-bold text-[#1A202C]">{t('authPages.register.successTitle')}</h2>
                                 <p className="text-sm text-gray-500 mt-2">
-                                    {isRTL ? 'جاري توجيهك...' : 'Redirecting...'}
+                                    {t('authPages.register.redirecting')}
                                 </p>
                             </div>
                             <button
                                 onClick={() => navigate('/dashboard')}
                                 className="w-full h-12 bg-secondary text-white rounded-xl font-bold hover:bg-secondary/90 transition-all shadow-lg"
                             >
-                                {isRTL ? 'الذهاب للوحة التحكم' : 'Go to Dashboard'}
+                                {t('authPages.register.goDashboard')}
                             </button>
                         </motion.div>
                     )}
@@ -619,18 +628,18 @@ export default function RegisterPage() {
 
                 {/* Footer Actions */}
                 {currentStep !== 'success' && (
-                    <div className="mt-8 pt-6 border-t border-[#E9EEF1] flex items-center justify-between gap-4">
+                    <div className="mt-8 pt-6 border-t border-[#E9EEF1] flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
                         {currentStep === 'org_info' ? (
-                            <Link to="/login" className="text-sm text-secondary font-bold hover:underline">
-                                {isRTL ? 'لديك حساب؟' : 'Login'}
+                            <Link to="/login" className="text-center text-sm text-secondary font-bold hover:underline sm:text-start">
+                                {t('authPages.register.hasAccount')}
                             </Link>
                         ) : (
                             <button
                                 type="button"
                                 onClick={handleBack}
-                                className="text-sm text-gray-500 hover:text-[#1A202C] font-semibold"
+                                className="text-center text-sm text-gray-500 hover:text-[#1A202C] font-semibold sm:text-start"
                             >
-                                {isRTL ? 'رجوع' : 'Back'}
+                                {t('authPages.register.back')}
                             </button>
                         )}
 
@@ -645,7 +654,7 @@ export default function RegisterPage() {
                             )}
                         >
                             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                currentStep === 'otp' ? (isRTL ? 'تأكيد' : 'Verify') : (isRTL ? 'التالي' : 'Next')
+                                currentStep === 'otp' ? t('authPages.register.verify') : t('authPages.register.next')
                             )}
                         </button>
                     </div>

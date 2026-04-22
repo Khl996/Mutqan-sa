@@ -13,10 +13,8 @@ import {
     AlertTriangle,
     Search,
     Plus,
-    Filter,
     MoreVertical,
     Box,
-    Clock,
     History,
     Edit,
     Trash2,
@@ -28,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from '@/components/ui/page-header'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,7 +51,7 @@ import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 
 export default function InventoryPage() {
-    const { t, i18n } = useTranslation()
+    const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
@@ -70,6 +69,9 @@ export default function InventoryPage() {
     const { data: allItems } = useAllInventoryItems() // For export
     const items = itemsResult?.data || []
     const totalCount = itemsResult?.count || 0
+    const pageSize = 10
+    const pageStart = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
+    const pageEnd = Math.min(page * pageSize, totalCount)
 
     // Mutations
     const deleteItem = useDeleteInventoryItem()
@@ -161,31 +163,16 @@ export default function InventoryPage() {
         }
     }
 
-    // Calculating Total Value (Approximation based on current page or we need stats endpoint to return it)
-    // For now, let's assume stats.total_value is 0 from hook logic, or calculate it.
-    // The hook returns 0 currently. We might want to fix the hook later, but user code showed frontend calculation.
-    // Frontend calculation works if we have ALL items. `allItems` gives us a lightweight list.
-    // Let's ensure `useAllInventoryItems` returns cost too if we want to calc value.
-    // The current `useAllInventoryItems` selects: id, name, ... unit_cost (added implicitly? No I didn't add it).
-    // I should probably rely on `stats` or improve `useAllInventoryItems`.
-    // I will use simplified stats for now or just wait for backend update.
-
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2 font-cairo text-primary">
-                        <Package className="h-8 w-8" />
-                        {isRTL ? 'إدارة المخزون' : 'Inventory Management'}
-                    </h1>
-                    <p className="text-muted-foreground mt-1 font-cairo">
-                        {isRTL
-                            ? 'إدارة قطع الغيار والمواد الاستهلاكية ومراقبة المستويات'
-                            : 'Manage spare parts, consumables and monitor stock levels'}
-                    </p>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
+            <PageHeader
+                icon={<Package className="h-5 w-5" />}
+                title={isRTL ? 'إدارة المخزون' : 'Inventory Management'}
+                description={isRTL
+                    ? 'إدارة قطع الغيار والمواد الاستهلاكية ومراقبة مستويات المخزون ونقاط إعادة الطلب.'
+                    : 'Manage spare parts, consumables, stock levels, and reorder points.'}
+                actions={(
+                    <div className="flex w-full gap-2 sm:w-auto">
                     {/* Export Button - only if consumption reports enabled */}
                     {isConsumptionReportsEnabled && (
                         <Button variant="outline" onClick={handleExport} className="gap-2 w-full sm:w-auto justify-center">
@@ -201,8 +188,9 @@ export default function InventoryPage() {
                             {isRTL ? 'إضافة صنف' : 'Add Item'}
                         </Button>
                     )}
-                </div>
-            </div>
+                    </div>
+                )}
+            />
 
             {/* Feature Warning - if stock tracking disabled */}
             {
@@ -285,9 +273,9 @@ export default function InventoryPage() {
             }
 
             {/* Main Content */}
-            <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-card border rounded-lg shadow-card overflow-hidden">
                 {/* Toolbar */}
-                <div className="p-4 border-b flex flex-col sm:flex-row gap-4 justify-between items-center">
+                <div className="p-4 border-b flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="relative w-full sm:w-96">
                         <Search className={cn("absolute top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4", isRTL ? "right-3" : "left-3")} />
                         <Input
@@ -297,19 +285,34 @@ export default function InventoryPage() {
                             className={cn(isRTL ? "pr-9 pl-4" : "pl-9 pr-4")}
                         />
                     </div>
+                    <div className="flex flex-wrap items-center gap-2 font-cairo text-xs text-muted-foreground">
+                        <span className="rounded-full border bg-background px-3 py-1">
+                            {isRTL ? `${totalCount} صنف` : `${totalCount} items`}
+                        </span>
+                        {stats && isLowStockAlertsEnabled ? (
+                            <span className={cn(
+                                'rounded-full border px-3 py-1',
+                                stats.low_stock > 0
+                                    ? 'border-destructive/20 bg-destructive/10 text-destructive'
+                                    : 'border-success/20 bg-success/10 text-success'
+                            )}>
+                                {isRTL ? `${stats.low_stock} منخفض المخزون` : `${stats.low_stock} low stock`}
+                            </span>
+                        ) : null}
+                    </div>
                 </div>
 
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-muted/50">
+                        <thead className="bg-muted/40">
                             <tr>
-                                <th className="text-start p-4 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'تفاصيل الصنف' : 'Item Details'}</th>
-                                <th className="text-center p-4 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'الكمية' : 'Quantity'}</th>
-                                <th className="text-center p-4 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'الحد الأدنى' : 'Min Qty'}</th>
-                                <th className="text-start p-4 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'السعر' : 'Unit Cost'}</th>
-                                <th className="text-start p-4 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'الموقع' : 'Location'}</th>
-                                <th className="text-center p-4 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'إجراءات' : 'Actions'}</th>
+                                <th className="text-start px-4 py-3 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'تفاصيل الصنف' : 'Item Details'}</th>
+                                <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'المخزون' : 'Stock'}</th>
+                                <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'حد الطلب' : 'Reorder Point'}</th>
+                                <th className="text-start px-4 py-3 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'قيمة الوحدة' : 'Unit Cost'}</th>
+                                <th className="text-start px-4 py-3 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'الموقع' : 'Location'}</th>
+                                <th className="text-center px-4 py-3 text-sm font-medium text-muted-foreground font-cairo">{isRTL ? 'إجراءات' : 'Actions'}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
@@ -331,50 +334,67 @@ export default function InventoryPage() {
                             ) : (
                                 items.map((item) => {
                                     const isLowStock = item.quantity <= item.min_quantity
+                                    const stockRatio = item.min_quantity > 0
+                                        ? Math.min(100, Math.round((item.quantity / item.min_quantity) * 100))
+                                        : 100
                                     return (
-                                        <tr key={item.id} className={cn("hover:bg-muted/5 transition-colors", isLowStock && "bg-destructive/5")}>
-                                            <td className="p-4">
+                                        <tr key={item.id} className={cn("hover:bg-secondary/5 transition-colors", isLowStock && "bg-destructive/5")}>
+                                            <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-muted/20 flex items-center justify-center text-muted-foreground flex-shrink-0">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                                        isLowStock ? 'bg-destructive/10 text-destructive' : 'bg-secondary/10 text-secondary'
+                                                    )}>
                                                         <Box className="w-5 h-5" />
                                                     </div>
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="font-bold text-foreground font-cairo">
                                                             {isRTL ? (item.name_ar || item.name) : item.name}
                                                         </p>
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex flex-wrap items-center gap-2">
                                                             <p className="text-xs text-muted-foreground font-mono">{item.code}</p>
-                                                            {item.part_number && <p className="text-xs text-muted-foreground border-l pl-2 ml-2">{item.part_number}</p>}
+                                                            {item.part_number && <p className="text-xs text-muted-foreground border-s ps-2">{item.part_number}</p>}
+                                                            {item.category ? (
+                                                                <span className="rounded-full bg-muted/30 px-2 py-0.5 text-[10px] text-muted-foreground font-cairo">
+                                                                    {isRTL ? item.category.name_ar || item.category.name : item.category.name}
+                                                                </span>
+                                                            ) : null}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-center">
-                                                <div className="flex flex-col items-center gap-1">
+                                            <td className="px-4 py-3 text-center">
+                                                <div className="flex flex-col items-center gap-1.5">
                                                     <span className={cn(
-                                                        "font-bold font-mono text-lg",
+                                                        "font-bold font-mono text-lg tabular-nums",
                                                         isLowStock ? "text-destructive" : "text-foreground"
                                                     )}>
                                                         {item.quantity}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground">{item.unit_of_measure}</span>
+                                                    <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                                                        <div
+                                                            className={cn('h-full rounded-full', isLowStock ? 'bg-destructive' : 'bg-success')}
+                                                            style={{ width: `${stockRatio}%` }}
+                                                        />
+                                                    </div>
                                                     {isLowStock && (
                                                         <Badge variant="destructive" className="h-5 text-[10px] px-1 py-0">
-                                                            {isRTL ? 'منخفض' : 'Low'}
+                                                            {isRTL ? 'إعادة طلب' : 'Reorder'}
                                                         </Badge>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-center text-muted-foreground font-mono">
+                                            <td className="px-4 py-3 text-center text-muted-foreground font-mono tabular-nums">
                                                 {item.min_quantity}
                                             </td>
-                                            <td className="p-4 text-sm font-mono">
+                                            <td className="px-4 py-3 text-sm font-mono">
                                                 {formatCurrency(item.unit_cost)}
                                             </td>
-                                            <td className="p-4 text-sm text-muted-foreground">
+                                            <td className="px-4 py-3 text-sm text-muted-foreground font-cairo">
                                                 {item.location || '-'}
                                             </td>
-                                            <td className="p-4">
+                                            <td className="px-4 py-3">
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Button variant="ghost" size="icon" onClick={() => handleShowHistory(item)} title={isRTL ? 'سجل الحركات' : 'History'}>
                                                         <History className="w-4 h-4 text-muted-foreground" />
@@ -414,7 +434,7 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="p-4 border-t flex justify-between items-center text-sm text-muted-foreground">
+                <div className="p-4 border-t flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                     <Button
                         variant="outline"
                         size="sm"
@@ -423,12 +443,16 @@ export default function InventoryPage() {
                     >
                         {isRTL ? 'السابق' : 'Previous'}
                     </Button>
-                    <span className="font-mono">{page}</span>
+                    <span className="text-center font-cairo">
+                        {totalCount > 0
+                            ? (isRTL ? `${pageStart}-${pageEnd} من ${totalCount}` : `${pageStart}-${pageEnd} of ${totalCount}`)
+                            : (isRTL ? 'لا توجد نتائج' : 'No results')}
+                    </span>
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setPage(p => p + 1)}
-                        disabled={items.length < 10} // Assuming page size 10
+                        disabled={totalCount ? page * pageSize >= totalCount : items.length < pageSize}
                     >
                         {isRTL ? 'التالي' : 'Next'}
                     </Button>

@@ -116,6 +116,11 @@ function AppRoutes() {
     const isLoginRoute = location === '/login'
     const isPublicRoute =
         location === '/' ||
+        location === '/about' ||
+        location === '/contact' ||
+        location === '/privacy' ||
+        location === '/terms' ||
+        location === '/payment/callback' ||
         location.startsWith('/portal') ||
         location === '/register' ||
         location === '/register/complete'

@@ -59,7 +59,7 @@ export function useInventoryItems(page = 1, search = '') {
                 .select(`
                     *,
                     category:inventory_categories(name, name_ar)
-                `) as any
+                `, { count: 'exact' }) as any
 
             // Apply tenant filter
             if (tenantId) {
@@ -89,7 +89,7 @@ export function useAllInventoryItems() {
         queryFn: async () => {
             let query = (supabase
                 .from('inventory_items')
-                .select('id, name, name_ar, code, quantity, unit_of_measure') as any)
+                .select('id, name, name_ar, code, part_number, quantity, min_quantity, unit_of_measure, unit_cost, location') as any)
 
             if (tenantId) {
                 query = query.eq('tenant_id', tenantId)

@@ -11,6 +11,8 @@ import {
 } from '@/hooks/useAssets'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
+import { ConfirmActionDialog } from '@/components/ui/confirm-action-dialog'
+import { PageHeader } from '@/components/ui/page-header'
 import AddAssetModal from '@/components/assets/AddAssetModal'
 import AddFloorModal from '@/components/facilities/AddFloorModal'
 import AssetActionModal from '@/components/assets/AssetActionModal'
@@ -74,6 +76,7 @@ export default function AssetsPage() {
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [isAddAssetModalOpen, setIsAddAssetModalOpen] = useState(false)
     const [isAddFloorModalOpen, setIsAddFloorModalOpen] = useState(false)
+    const [assetPendingDelete, setAssetPendingDelete] = useState<{ id: string; name: string } | null>(null)
 
     // State for actions
     const [selectedBuildingForFloor, setSelectedBuildingForFloor] = useState<{ id: string, name: string } | null>(null)
@@ -114,15 +117,20 @@ export default function AssetsPage() {
     }) || []
 
     // Actions Handlers
-    const handleDeleteAsset = async (id: string) => {
-        if (window.confirm(isRTL ? 'هل أنت متأكد من حذف هذا الأصل؟' : 'Are you sure you want to delete this asset?')) {
-            try {
-                await deleteAsset.mutateAsync(id)
-                toast.success(isRTL ? 'تم حذف الأصل بنجاح' : 'Asset deleted successfully')
-                refetchTree()
-            } catch (error) {
-                toast.error(isRTL ? 'حدث خطأ أثناء الحذف' : 'Error deleting asset')
-            }
+    const handleDeleteAsset = (id: string, name = '') => {
+        setAssetPendingDelete({ id, name })
+    }
+
+    const confirmDeleteAsset = async () => {
+        if (!assetPendingDelete) return
+
+        try {
+            await deleteAsset.mutateAsync(assetPendingDelete.id)
+            toast.success(isRTL ? 'تم حذف الأصل بنجاح' : 'Asset deleted successfully')
+            setAssetPendingDelete(null)
+            refetchTree()
+        } catch (error) {
+            toast.error(isRTL ? 'حدث خطأ أثناء الحذف' : 'Error deleting asset')
         }
     }
 
@@ -186,21 +194,24 @@ export default function AssetsPage() {
                 />
             )}
 
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-primary font-cairo">
-                        {t('assets.title')}
-                    </h1>
-                    <p className="text-muted font-cairo">
-                        {isRTL
-                            ? 'إدارة الأصول والمعدات والمواقع'
-                            : 'Manage assets, equipment and locations'
-                        }
-                    </p>
-                </div>
+            <ConfirmActionDialog
+                open={!!assetPendingDelete}
+                onOpenChange={(open) => !open && setAssetPendingDelete(null)}
+                title={isRTL ? 'تأكيد حذف الأصل' : 'Delete Asset'}
+                description={isRTL
+                    ? `هل أنت متأكد من حذف الأصل${assetPendingDelete?.name ? ` "${assetPendingDelete.name}"` : ''}؟ لا يمكن التراجع عن هذا الإجراء.`
+                    : `Are you sure you want to delete${assetPendingDelete?.name ? ` "${assetPendingDelete.name}"` : ' this asset'}? This action cannot be undone.`}
+                confirmLabel={isRTL ? 'حذف' : 'Delete'}
+                cancelLabel={isRTL ? 'إلغاء' : 'Cancel'}
+                onConfirm={confirmDeleteAsset}
+            />
 
-                <div className="flex gap-2">
+            <PageHeader
+                icon={<Box className="h-5 w-5" />}
+                title={t('assets.title')}
+                description={isRTL ? 'إدارة الأصول والمعدات والمواقع ضمن هيكل واضح للمباني والتشغيل.' : 'Manage assets, equipment, and locations within a clear operational hierarchy.'}
+                actions={(
+                    <>
                     {/* View Switcher */}
                     <div className="flex bg-card border rounded-lg p-1">
                         <button
@@ -234,8 +245,9 @@ export default function AssetsPage() {
                             {t('assets.addAsset')}
                         </button>
                     )}
-                </div>
-            </div>
+                    </>
+                )}
+            />
 
             {/* Feature Disabled Warning */}
             {!isAssetTrackingEnabled && (
@@ -313,7 +325,7 @@ export default function AssetsPage() {
                                 key={asset.id}
                                 asset={asset}
                                 isRTL={isRTL}
-                                onDelete={() => handleDeleteAsset(asset.id)}
+                                onDelete={() => handleDeleteAsset(asset.id, isRTL ? (asset.name_ar || asset.name) : asset.name)}
                                 onAction={(action) => openActionModal(asset.id, isRTL ? (asset.name_ar || asset.name) : asset.name, asset.status, action)}
                                 isQrEnabled={isQrCodesEnabled}
                                 isHistoryEnabled={isAssetHistoryEnabled}
@@ -374,7 +386,7 @@ function TreeNode({
     isRTL: boolean,
     depth: number,
     searchQuery: string,
-    onDeleteAsset: (id: string) => void,
+    onDeleteAsset: (id: string, name?: string) => void,
     onAddFloor: (id: string, name: string) => void
     onAction: (id: string, name: string, status: string, action: 'start' | 'stop' | 'maintenance' | 'retire') => void
     canManage: boolean
@@ -572,7 +584,7 @@ function TreeNode({
 
                                 <button
                                     onClick={() => {
-                                        if (node.type === 'asset') onDeleteAsset(node.id)
+                                        if (node.type === 'asset') onDeleteAsset(node.id, displayName)
                                         else toast.warning(isRTL ? "لا يمكن حذف هذا العنصر حالياً" : "Cannot delete this item yet")
                                         setIsMenuOpen(false)
                                     }}

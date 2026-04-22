@@ -1,506 +1,618 @@
 import { Link } from 'react-router-dom'
-import {
-    ClipboardList,
-    Box,
-    BarChart3,
-    Zap,
-    ArrowLeft,
-    CheckCircle2,
-    Building2,
-    Stethoscope,
-    GraduationCap,
-    Factory,
-    MessagesSquare,
-    FileWarning,
-    History,
-    Monitor,
-    RefreshCw,
-    Mail,
-    Smartphone,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { motion, type Variants } from 'framer-motion'
-
-// ─── Animation primitives ──────────────────────────────────────────────────────
+import { useTranslation } from 'react-i18next'
+import {
+    Activity,
+    AlertTriangle,
+    ArrowLeft,
+    ArrowRight,
+    BarChart3,
+    Building2,
+    CalendarCheck,
+    CheckCircle2,
+    ClipboardList,
+    Clock3,
+    Factory,
+    FileText,
+    PackageCheck,
+    ShieldCheck,
+    Stethoscope,
+    Users,
+    Wrench,
+    Zap,
+    type LucideIcon,
+} from 'lucide-react'
+import { SiteFooter } from '@/components/site/SiteFooter'
+import { SiteNav } from '@/components/site/SiteNav'
+import { cn } from '@/lib/utils'
 
 const stagger: Variants = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
 }
 
 const rise: Variants = {
-    hidden: { opacity: 0, y: 22 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.55 } },
+    hidden: { opacity: 0, y: 18 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.46 } },
 }
 
-// ─── Landing Page ──────────────────────────────────────────────────────────────
+type IconText = {
+    title: string
+    body: string
+}
+
+type SignalCopy = {
+    label: string
+    value: string
+}
+
+type PreviewRow = {
+    code: string
+    title: string
+    status: string
+    priority: string
+    owner: string
+}
+
+const signalMeta = [
+    { icon: ClipboardList, tone: 'text-sky-300' },
+    { icon: AlertTriangle, tone: 'text-amber-300' },
+    { icon: ShieldCheck, tone: 'text-emerald-300' },
+    { icon: CalendarCheck, tone: 'text-cyan-300' },
+]
+
+const productNavIcons: LucideIcon[] = [Activity, ClipboardList, Building2, CalendarCheck, BarChart3]
+const problemIcons: LucideIcon[] = [ClipboardList, Clock3, AlertTriangle, BarChart3]
+const workflowIcons: LucideIcon[] = [FileText, Users, Clock3, CheckCircle2]
+const moduleIcons: LucideIcon[] = [ClipboardList, Building2, CalendarCheck, PackageCheck]
+const industryIcons: LucideIcon[] = [Wrench, Stethoscope, Factory, Building2]
 
 export default function LandingPage() {
+    const { i18n } = useTranslation()
+    const dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
+
     return (
-        <div className="min-h-screen bg-slate-50 font-cairo text-slate-900" dir="rtl">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#071113] font-cairo text-slate-950" dir={dir}>
+            <SiteNav variant="dark" />
 
-            {/* ══════════════════════════════════════════════════════════════
-                NAV
-            ══════════════════════════════════════════════════════════════ */}
-            <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-200/70">
-                <div className="max-w-7xl mx-auto px-5 sm:px-8 h-[66px] flex items-center justify-between">
-                    <img src="/images/logo.png" alt="متقن" className="h-10 w-auto" />
+            <main>
+                <HeroSection />
+                <ProblemSection />
+                <SolutionSection />
+                <WorkflowSection />
+                <CoreModulesSection />
+                <FitSection />
+                <OutcomesSection />
+                <ManagementTrustSection />
+                <FinalCta />
+            </main>
 
-                    <div className="flex items-center gap-2 sm:gap-5">
-                        <Link
-                            to="/contact"
-                            className="hidden sm:block text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-                        >
-                            تواصل معنا
-                        </Link>
-                        <Link
-                            to="/login"
-                            className="text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-                        >
-                            تسجيل الدخول
-                        </Link>
-                        <Link
-                            to="/register"
-                            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-[#2E3A45] hover:bg-[#3a4a57] text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-sm"
-                        >
-                            جرب مجاناً
-                        </Link>
-                    </div>
-                </div>
-            </nav>
+            <SiteFooter />
+        </div>
+    )
+}
 
-            {/* ══════════════════════════════════════════════════════════════
-                HERO
-            ══════════════════════════════════════════════════════════════ */}
-            <section className="relative pt-36 pb-24 lg:pt-52 lg:pb-36 overflow-hidden">
+function HeroSection() {
+    const { t } = useTranslation()
+    const trustBullets = t('landing.hero.trustBullets', { returnObjects: true }) as string[]
 
-                {/* Ambient glow orbs — very subtle */}
-                <div
-                    className="absolute -top-24 left-1/2 -translate-x-1/2 w-[900px] h-[420px] rounded-full blur-3xl pointer-events-none"
-                    style={{ background: 'radial-gradient(ellipse, rgba(58,175,169,0.08) 0%, transparent 70%)' }}
-                />
-                <div className="absolute top-28 right-[-80px] w-[320px] h-[320px] rounded-full blur-[100px] pointer-events-none bg-[#2E3A45]/5" />
-                <div className="absolute bottom-0 left-[-60px] w-[260px] h-[260px] rounded-full blur-[80px] pointer-events-none bg-[#3AAFA9]/7" />
+    return (
+        <section
+            className="relative overflow-hidden bg-[#071113] px-4 pt-36 text-white sm:px-6 sm:pt-44 lg:px-8"
+            style={{
+                backgroundImage:
+                    'radial-gradient(circle at 50% 18%, rgba(118,213,208,0.17), transparent 34%), linear-gradient(115deg, transparent 0%, rgba(58,175,169,0.17) 45%, transparent 66%), linear-gradient(135deg, #071113 0%, #0a1c1f 48%, #11181d 100%)',
+            }}
+        >
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-transparent via-[#76D5D0] to-transparent opacity-80" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.13] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#071113] via-[#071113]/70 to-transparent" />
 
-                <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center relative z-10">
+            <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center pb-20">
+                <motion.div initial="hidden" animate="visible" variants={stagger} className="mx-auto max-w-[340px] text-center sm:max-w-5xl">
+                    <motion.p variants={rise} className="mb-5 text-sm font-black text-[#76D5D0]">
+                        {t('landing.hero.eyebrow')}
+                    </motion.p>
 
-                    {/* Eyebrow badge */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.45 }}
-                        className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-sm text-sm font-semibold text-slate-600 mb-8"
-                    >
-                        <span className="w-2 h-2 rounded-full bg-[#3AAFA9] shrink-0" />
-                        الجيل الجديد من إدارة المرافق
-                    </motion.div>
-
-                    {/* Headline */}
                     <motion.h1
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 0.61, 0.36, 1] }}
-                        className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-black text-slate-900 leading-[1.1] tracking-tight mb-6 max-w-4xl mx-auto"
+                        variants={rise}
+                        className="mx-auto max-w-full text-4xl font-black leading-[1.16] tracking-normal text-white drop-shadow-[0_18px_45px_rgba(0,0,0,0.48)] sm:max-w-none sm:text-6xl lg:text-7xl"
                     >
-                        تحكم في منشأتك
-                        <br />
-                        <span style={{ color: '#3AAFA9' }}>بذكاء مطلق</span>
+                        {t('landing.hero.headlineTop')}
+                        <span className="block text-[#76D5D0]">{t('landing.hero.headlineAccent')}</span>
                     </motion.h1>
 
-                    {/* Subheadline */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.22 }}
-                        className="max-w-2xl mx-auto mb-10 space-y-1.5"
-                    >
-                        <p className="text-lg md:text-xl text-slate-500 leading-relaxed">
-                            نظام سحابي يجمع لك الصيانة، الأصول، وفرق العمل في منصة واحدة.
-                        </p>
-                        <p className="text-lg md:text-xl font-bold text-slate-800">
-                            بدون تعقيد. بدون أوراق. بدون فوضى.
-                        </p>
+                    <motion.p variants={rise} className="mx-auto mt-6 max-w-full text-xl font-black leading-8 text-white sm:max-w-3xl sm:text-2xl">
+                        {t('landing.hero.subheadline')}
+                    </motion.p>
+
+                    <motion.p variants={rise} className="mx-auto mt-4 max-w-full text-base leading-8 text-slate-300 sm:max-w-3xl sm:text-lg">
+                        {t('landing.hero.description')}
+                    </motion.p>
+
+                    <motion.div variants={rise} className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                        <PrimaryCta />
+                        <SecondaryCta />
                     </motion.div>
 
-                    {/* CTA row */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.55, delay: 0.34 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
-                    >
-                        <Link
-                            to="/register"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-[17px] font-bold text-white transition-all duration-200 hover:-translate-y-0.5 group"
-                            style={{
-                                background: '#3AAFA9',
-                                boxShadow: '0 8px 32px rgba(58,175,169,0.30)',
-                            }}
-                        >
-                            ابدأ تجربتك المجانية
-                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-                        </Link>
-                        <p className="text-sm text-slate-400 font-medium">
-                            لا تحتاج لبطاقة ائتمان &nbsp;·&nbsp; 14 يوماً مجاناً
-                        </p>
-                    </motion.div>
-
-                    {/* Capability cards */}
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        variants={stagger}
-                        className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto"
-                    >
-                        {[
-                            { label: "أوامر عمل منجزة", val: "+150", icon: ClipboardList, ic: "#3B82F6", ib: "#EFF6FF" },
-                            { label: "أصول مسجلة",      val: "100%", icon: Box,           ic: "#10B981", ib: "#ECFDF5" },
-                            { label: "كفاءة التشغيل",   val: "High", icon: BarChart3,      ic: "#8B5CF6", ib: "#F5F3FF" },
-                            { label: "توفير في التكاليف", val: "30%", icon: Zap,           ic: "#F59E0B", ib: "#FFFBEB" },
-                        ].map((s, i) => (
-                            <motion.div
-                                key={i}
-                                variants={rise}
-                                className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col items-center gap-3 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-                            >
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: s.ib }}>
-                                    <s.icon className="w-5 h-5" style={{ color: s.ic }} />
-                                </div>
-                                <span className="text-2xl font-black text-slate-900">{s.val}</span>
-                                <span className="text-xs text-slate-500 font-medium text-center leading-snug">{s.label}</span>
-                            </motion.div>
+                    <motion.div variants={rise} className="mt-6 flex flex-col items-center justify-center gap-2 text-center text-sm text-slate-400 sm:flex-row sm:flex-wrap sm:gap-x-5">
+                        {trustBullets.map((point) => (
+                            <span key={point} className="inline-flex max-w-full items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-[#76D5D0]" />
+                                {point}
+                            </span>
                         ))}
                     </motion.div>
-                </div>
-            </section>
+                </motion.div>
 
-            {/* ══════════════════════════════════════════════════════════════
-                INDUSTRIES STRIP
-            ══════════════════════════════════════════════════════════════ */}
-            <section className="py-10 border-y border-slate-200/70 bg-white">
-                <div className="max-w-7xl mx-auto px-5 sm:px-8">
-                    <p className="text-[11px] font-bold text-slate-400 text-center mb-7 tracking-[0.18em] uppercase">
-                        يخدم مختلف القطاعات
-                    </p>
-                    <div className="flex flex-wrap justify-center items-center gap-5 sm:gap-12">
-                        {[
-                            { icon: Building2,     label: "المجمعات التجارية" },
-                            { icon: Stethoscope,   label: "المرافق الطبية" },
-                            { icon: GraduationCap, label: "التعليم" },
-                            { icon: Factory,       label: "الصناعة" },
-                        ].map(({ icon: Icon, label }, i) => (
-                            <div key={i} className="flex items-center gap-2.5 group cursor-default">
-                                <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:border-[#3AAFA9]/30 group-hover:bg-[#3AAFA9]/5 transition-all duration-200">
-                                    <Icon className="w-4 h-4 text-slate-500 group-hover:text-[#3AAFA9] transition-colors duration-200" />
-                                </div>
-                                <span className="text-sm font-semibold text-slate-600 group-hover:text-slate-900 transition-colors duration-200">{label}</span>
+                <motion.div
+                    initial={{ opacity: 0, y: 28 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.68, delay: 0.26 }}
+                    className="relative mt-12 sm:mt-16"
+                >
+                    <div className="pointer-events-none absolute inset-x-6 -top-5 h-px bg-gradient-to-l from-transparent via-[#76D5D0]/80 to-transparent sm:inset-x-24" />
+                    <div className="pointer-events-none absolute inset-x-12 top-8 h-44 rounded-lg bg-[#3AAFA9]/14 blur-3xl" />
+                    <ProductPreview />
+                </motion.div>
+            </div>
+        </section>
+    )
+}
+
+function ProductPreview() {
+    const { t, i18n } = useTranslation()
+    const isRTL = i18n.language === 'ar'
+    const signals = t('landing.preview.signals', { returnObjects: true }) as SignalCopy[]
+    const productNav = t('landing.preview.nav', { returnObjects: true }) as string[]
+    const rows = t('landing.preview.rows', { returnObjects: true }) as PreviewRow[]
+
+    return (
+        <>
+            <div className="relative mx-auto block w-full max-w-[318px] overflow-hidden rounded-lg border border-[#76D5D0]/22 bg-[#0d171b]/96 p-4 shadow-[0_34px_110px_-40px_rgba(58,175,169,0.62),0_28px_90px_-48px_rgba(0,0,0,0.95)] ring-1 ring-[#3AAFA9]/14 sm:hidden">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <div className="text-sm font-black text-white">{t('landing.preview.mobileTitle')}</div>
+                        <div className="mt-1 text-xs text-slate-500">{t('landing.preview.mobileSubtitle')}</div>
+                    </div>
+                    <span className="rounded-lg border border-[#3AAFA9]/25 bg-[#3AAFA9]/10 px-2 py-1 text-xs font-bold text-[#9BE3DF]">
+                        {t('landing.preview.slaActive')}
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                    {signals.map(({ label, value }, index) => {
+                        const Icon = signalMeta[index].icon
+                        return (
+                            <div key={label} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                                <Icon className={cn('mb-3 h-4 w-4', signalMeta[index].tone)} />
+                                <div className="text-xl font-black text-white">{value}</div>
+                                <div className="mt-1 text-xs text-slate-400">{label}</div>
                             </div>
-                        ))}
-                    </div>
+                        )
+                    })}
                 </div>
-            </section>
-
-            {/* ══════════════════════════════════════════════════════════════
-                PAIN POINTS
-            ══════════════════════════════════════════════════════════════ */}
-            <section className="py-24 bg-slate-50" id="features">
-                <div className="max-w-7xl mx-auto px-5 sm:px-8">
-
-                    {/* Section header */}
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-80px" }}
-                        variants={stagger}
-                        className="text-center mb-14 max-w-2xl mx-auto"
-                    >
-                        <motion.span
-                            variants={rise}
-                            className="inline-block text-[11px] font-bold text-[#3AAFA9] tracking-[0.18em] uppercase mb-4"
-                        >
-                            لماذا مُتقَن
-                        </motion.span>
-                        <motion.h2
-                            variants={rise}
-                            className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-tight mb-4"
-                        >
-                            صممناه لأننا نعلم
-                            <br />
-                            <span className="text-slate-400 font-semibold">حجم المعاناة اليومية</span>
-                        </motion.h2>
-                        <motion.p variants={rise} className="text-slate-500 text-lg leading-relaxed">
-                            مدراء المرافق والصيانة يعانون من نفس المشاكل. مُتقَن جاء ليحلها.
-                        </motion.p>
-                    </motion.div>
-
-                    {/* Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                icon: MessagesSquare,
-                                accent: "#EF4444", iconBg: "#FFF1F2",
-                                tag: "التواصل", featured: false,
-                                title: "قروبات الواتساب المزعجة",
-                                body: "هل تضيع وقتك في تتبع البلاغات عبر مئات الرسائل الصوتية والنصية؟ مُتقَن ينظم لك كل شيء في تذاكر رسمية.",
-                            },
-                            {
-                                icon: FileWarning,
-                                accent: "#3AAFA9", iconBg: "#EDFAFA",
-                                tag: "التوثيق", featured: true,
-                                title: "الأوراق الضائعة",
-                                body: "وداعاً للفواتير المفقودة وأوامر العمل الورقية. كل شيء موثق رقمياً، ومحفوظ في السحابة للوصول إليه في أي وقت.",
-                            },
-                            {
-                                icon: History,
-                                accent: "#F59E0B", iconBg: "#FFFBEB",
-                                tag: "الصيانة", featured: false,
-                                title: "الصيانة التفاعلية المكلفة",
-                                body: "لا تنتظر تعطل المعدة لتصلحها. تحول للصيانة الوقائية وجدول أعمالك لتقلل التكاليف المفاجئة.",
-                            },
-                        ].map((card, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 28 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-60px" }}
-                                transition={{ duration: 0.5, delay: i * 0.1 }}
-                                className={cn(
-                                    "relative bg-white rounded-3xl p-8 border transition-all duration-300 hover:-translate-y-2",
-                                    card.featured
-                                        ? "border-[#3AAFA9]/20 shadow-lg md:-mt-4 hover:shadow-2xl"
-                                        : "border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200"
-                                )}
-                            >
-                                {/* Featured accent line */}
-                                {card.featured && (
-                                    <div
-                                        className="absolute top-0 inset-x-0 h-[3px] rounded-t-3xl"
-                                        style={{ background: 'linear-gradient(90deg, #3AAFA9 0%, #2E3A45 100%)' }}
-                                    />
-                                )}
-
-                                <div className="flex items-start justify-between mb-6">
-                                    <div
-                                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                                        style={{ background: card.iconBg }}
-                                    >
-                                        <card.icon className="w-6 h-6" style={{ color: card.accent }} />
-                                    </div>
-                                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-50 text-slate-400 border border-slate-100 tracking-wide">
-                                        {card.tag}
-                                    </span>
-                                </div>
-
-                                <h3 className="text-xl font-bold text-slate-900 mb-3 leading-snug">{card.title}</h3>
-                                <p className="text-slate-500 text-[15px] leading-relaxed">{card.body}</p>
-                            </motion.div>
-                        ))}
-                    </div>
+                <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                    <div className="mb-2 text-xs font-bold text-slate-400">{t('landing.preview.todayPriority')}</div>
+                    {rows.slice(0, 2).map((row) => (
+                        <div key={row.code} className="flex items-center justify-between gap-3 border-t border-white/8 py-3 first:border-t-0 first:pt-0 last:pb-0">
+                            <div className="min-w-0">
+                                <div className="truncate text-sm font-bold text-white">{row.title}</div>
+                                <div className="mt-1 text-xs text-slate-500" dir={isRTL ? 'rtl' : 'ltr'}>{row.code}</div>
+                            </div>
+                            <span className="shrink-0 rounded-lg border border-white/10 bg-white/[0.05] px-2 py-1 text-xs font-bold text-[#9BE3DF]">
+                                {row.status}
+                            </span>
+                        </div>
+                    ))}
                 </div>
-            </section>
+            </div>
 
-            {/* ══════════════════════════════════════════════════════════════
-                PWA FEATURES — dark section
-            ══════════════════════════════════════════════════════════════ */}
-            <section className="py-24 bg-[#1C2730] text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-[#3AAFA9]/10 rounded-full blur-[130px] pointer-events-none" />
-                <div className="absolute bottom-0 left-[-80px] w-[320px] h-[320px] bg-[#3AAFA9]/5 rounded-full blur-[80px] pointer-events-none" />
+            <div className="relative mx-auto hidden w-full max-w-7xl overflow-hidden rounded-lg border border-[#76D5D0]/22 bg-[#0d171b]/96 shadow-[0_38px_120px_-42px_rgba(58,175,169,0.62),0_28px_90px_-48px_rgba(0,0,0,0.95)] ring-1 ring-[#3AAFA9]/14 sm:block">
+                <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-l from-[#3AAFA9]/16 via-white/[0.04] to-transparent px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full bg-red-400/75" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-300/75" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-300/75" />
+                    </div>
+                    <div className="text-sm font-bold text-white/78">{t('landing.preview.windowTitle')}</div>
+                </div>
 
-                <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-                        {/* Text content */}
-                        <motion.div
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                            variants={stagger}
-                        >
-                            <motion.span
-                                variants={rise}
-                                className="block text-[11px] font-bold text-[#3AAFA9] tracking-[0.18em] uppercase mb-4"
-                            >
-                                وصول شامل
-                            </motion.span>
-                            <motion.h2 variants={rise} className="text-3xl md:text-4xl lg:text-5xl font-black leading-[1.2] mb-5">
-                                معك في الميدان
-                                <br />
-                                <span className="text-slate-400 font-medium text-2xl md:text-3xl">بدون تحميل تطبيقات</span>
-                            </motion.h2>
-                            <motion.p variants={rise} className="text-slate-400 text-lg mb-10 leading-relaxed max-w-md">
-                                مُتقَن يعمل كتطبيق ويب تقدمي (PWA). سواء كنت في المكتب أو الموقع، افتح المتصفح وابدأ العمل فوراً.
-                            </motion.p>
-
-                            <motion.div variants={stagger} className="space-y-1.5">
-                                {[
-                                    { icon: Monitor,    title: "متجاوب 100%",           desc: "واجهة تتكيف تلقائياً مع جوالك وتابلتك وكمبيوترك." },
-                                    { icon: RefreshCw,  title: "دائماً محدث",            desc: "لا حاجة لزيارة متجر التطبيقات، أنت دائماً على أحدث نسخة." },
-                                    { icon: Mail,       title: "تنبيهات بريدية فورية",   desc: "إشعارات لحظية تصلك وتصل للفريق عند أي تحديث." },
-                                    { icon: Zap,        title: "خفيف وسريع",             desc: "لا يستهلك مساحة تخزين جهازك، وسريع الاستجابة." },
-                                ].map((item, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        variants={rise}
-                                        className="flex gap-4 p-4 rounded-2xl border border-transparent hover:bg-white/5 hover:border-white/10 transition-all duration-200 cursor-default group"
-                                    >
-                                        <div className="mt-0.5 w-10 h-10 rounded-xl bg-[#3AAFA9]/15 border border-[#3AAFA9]/20 flex items-center justify-center shrink-0 group-hover:bg-[#3AAFA9]/25 transition-colors">
-                                            <item.icon className="w-5 h-5 text-[#3AAFA9]" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-white mb-0.5 text-base">{item.title}</h4>
-                                            <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-                        </motion.div>
-
-                        {/* Abstract visual — desktop only */}
-                        <div className="hidden lg:flex justify-center items-center">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.88 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.65, ease: "easeOut" }}
-                                className="relative"
-                            >
-                                {/* Glow */}
-                                <div className="absolute inset-0 bg-[#3AAFA9]/20 blur-[80px] rounded-full" />
-
-                                {/* Icon box */}
+                <div className="grid min-h-[420px] md:grid-cols-[210px_minmax(0,1fr)]">
+                    <aside className={cn('hidden bg-white/[0.025] p-4 md:block', isRTL ? 'border-l border-white/10' : 'border-r border-white/10')}>
+                        <div className="mb-5 text-xs font-semibold text-white/40">{t('landing.preview.modulesTitle')}</div>
+                        {productNav.map((label, index) => {
+                            const Icon = productNavIcons[index]
+                            return (
                                 <div
-                                    className="relative w-56 h-56 rounded-[2.5rem] border border-white/10 shadow-2xl flex items-center justify-center"
-                                    style={{ background: 'linear-gradient(135deg, #2a3840 0%, #1C2730 100%)' }}
+                                    key={label}
+                                    className={cn(
+                                        'mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm',
+                                        index === 0 ? 'bg-[#3AAFA9]/16 text-white' : 'text-white/56'
+                                    )}
                                 >
-                                    <Smartphone className="w-24 h-24 text-white/60" />
+                                    <Icon className="h-4 w-4" />
+                                    {label}
+                                </div>
+                            )
+                        })}
+                    </aside>
 
-                                    {/* Floating chips */}
-                                    <div className="absolute -top-5 -right-6 bg-[#3AAFA9] text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg">
-                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                        جاهز دائماً
+                    <div className="min-w-0 p-4 sm:p-5">
+                        <div className="mb-4 flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h2 className="text-xl font-black text-white">{t('landing.preview.summaryTitle')}</h2>
+                                <p className="mt-1 text-sm text-slate-400">{t('landing.preview.summaryBody')}</p>
+                            </div>
+                            <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#3AAFA9]/25 bg-[#3AAFA9]/10 px-3 py-2 text-sm font-bold text-[#9BE3DF]">
+                                <Zap className="h-4 w-4" />
+                                {t('landing.preview.slaActive')}
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            {signals.map(({ label, value }, index) => {
+                                const Icon = signalMeta[index].icon
+                                return (
+                                    <div key={label} className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
+                                        <div className="mb-3 flex items-center justify-between text-sm text-slate-400">
+                                            <span>{label}</span>
+                                            <Icon className={cn('h-4 w-4', signalMeta[index].tone)} />
+                                        </div>
+                                        <div className="text-3xl font-black text-white">{value}</div>
                                     </div>
-                                    <div className="absolute -bottom-5 -left-6 bg-[#1a2028] border border-white/15 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg">
-                                        <Zap className="w-3.5 h-3.5 text-yellow-400" />
-                                        سريع وخفيف
+                                )
+                            })}
+                        </div>
+
+                        <div className="mt-4 overflow-hidden rounded-lg border border-white/10">
+                            <div className="grid grid-cols-[110px_minmax(0,1fr)_120px_110px] gap-3 bg-white/[0.04] px-3 py-3 text-xs font-bold text-slate-400">
+                                <span>{t('landing.preview.headers.code')}</span>
+                                <span>{t('landing.preview.headers.work')}</span>
+                                <span>{t('landing.preview.headers.status')}</span>
+                                <span>{t('landing.preview.headers.owner')}</span>
+                            </div>
+                            {rows.map((row) => (
+                                <div key={row.code} className="grid grid-cols-[110px_minmax(0,1fr)_120px_110px] gap-3 border-t border-white/8 px-3 py-3 text-sm">
+                                    <span className="font-bold text-white/76" dir={isRTL ? 'rtl' : 'ltr'}>{row.code}</span>
+                                    <div className="min-w-0">
+                                        <div className="truncate font-bold text-white">{row.title}</div>
+                                        <div className="mt-1 text-xs text-slate-500">{row.priority}</div>
+                                    </div>
+                                    <span className="w-fit rounded-lg border border-white/10 bg-white/[0.05] px-2 py-1 text-xs font-bold text-[#9BE3DF]">
+                                        {row.status}
+                                    </span>
+                                    <span className="truncate text-slate-400">{row.owner}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    )
+}
+
+function ProblemSection() {
+    const { t } = useTranslation()
+    const items = t('landing.problem.items', { returnObjects: true }) as IconText[]
+
+    return (
+        <section className="relative overflow-hidden bg-[#071113] px-4 py-20 text-white sm:px-6 lg:px-8">
+            <DarkTexture />
+            <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
+                <SectionIntro
+                    eyebrow={t('landing.problem.eyebrow')}
+                    title={t('landing.problem.title')}
+                    body={t('landing.problem.body')}
+                    dark
+                />
+
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 shadow-[0_26px_90px_-58px_rgba(0,0,0,0.9)]">
+                    <div className="divide-y divide-white/8">
+                        {items.map(({ title, body }, index) => {
+                            const Icon = problemIcons[index]
+                            return (
+                                <div key={title} className="grid gap-3 px-3 py-4 sm:grid-cols-[44px_minmax(0,1fr)] sm:px-4">
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-[#3AAFA9]/10 text-[#9BE3DF]">
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 flex items-center gap-3">
+                                            <span className="text-xs font-black text-[#76D5D0]">0{index + 1}</span>
+                                            <h3 className="text-lg font-black text-white">{title}</h3>
+                                        </div>
+                                        <p className="text-sm leading-7 text-slate-400">{body}</p>
                                     </div>
                                 </div>
+                            )
+                        })}
+                    </div>
+                    <div className="mt-3 rounded-lg border border-[#76D5D0]/20 bg-[#3AAFA9]/10 px-4 py-4 text-center text-lg font-black text-white">
+                        {t('landing.problem.closing')}
+                    </div>
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function SolutionSection() {
+    const { t } = useTranslation()
+    const points = t('landing.solution.points', { returnObjects: true }) as string[]
+
+    return (
+        <section className="relative overflow-hidden bg-[#eef5f4] px-4 py-20 sm:px-6 lg:px-8">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#071113] to-transparent" />
+            <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+                <div className="rounded-lg border border-slate-200/70 bg-white/80 p-6 shadow-[0_24px_80px_-54px_rgba(15,23,42,0.45)] backdrop-blur sm:p-8">
+                    <SectionIntro
+                        eyebrow={t('landing.solution.eyebrow')}
+                        title={t('landing.solution.title')}
+                        body={t('landing.solution.body')}
+                    />
+                </div>
+
+                <div className="grid gap-3">
+                    {points.map((point, index) => (
+                        <div key={point} className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-card">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#071113] text-sm font-black text-[#76D5D0]">
+                                0{index + 1}
+                            </span>
+                            <span className="text-base font-black text-slate-950">{point}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function WorkflowSection() {
+    const { t } = useTranslation()
+    const steps = t('landing.workflow.steps', { returnObjects: true }) as IconText[]
+
+    return (
+        <section className="relative overflow-hidden bg-[#eef5f4] px-4 py-20 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+                <SectionIntro
+                    eyebrow={t('landing.workflow.eyebrow')}
+                    title={t('landing.workflow.title')}
+                    body={t('landing.workflow.body')}
+                    centered
+                />
+
+                <div className="relative mt-12 grid gap-4 lg:grid-cols-4">
+                    <div className="pointer-events-none absolute left-8 right-8 top-[30px] hidden h-px bg-gradient-to-l from-transparent via-[#3AAFA9]/55 to-transparent lg:block" />
+                    {steps.map(({ title, body }, index) => {
+                        const Icon = workflowIcons[index]
+                        return (
+                            <motion.div
+                                key={title}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true, margin: '-80px' }}
+                                variants={rise}
+                                className="relative rounded-lg border border-slate-200 bg-white p-5 shadow-card"
+                            >
+                                <div className="mb-5 flex items-center justify-between">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-[#3AAFA9]/20 bg-[#3AAFA9]/10 text-[#2E8F8A]">
+                                        <Icon className="h-6 w-6" />
+                                    </div>
+                                    <span className="text-sm font-black text-slate-400">0{index + 1}</span>
+                                </div>
+                                <h3 className="text-xl font-black text-slate-950">{title}</h3>
+                                <p className="mt-2 text-sm leading-7 text-slate-600">{body}</p>
                             </motion.div>
-                        </div>
-                    </div>
+                        )
+                    })}
                 </div>
-            </section>
+            </div>
+        </section>
+    )
+}
 
-            {/* ══════════════════════════════════════════════════════════════
-                CTA
-            ══════════════════════════════════════════════════════════════ */}
-            <section className="py-28 relative overflow-hidden" style={{ background: '#2E3A45' }}>
-                {/* Top glow */}
-                <div
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] rounded-full blur-[100px] pointer-events-none"
-                    style={{ background: 'radial-gradient(ellipse, rgba(58,175,169,0.18) 0%, transparent 70%)' }}
+function CoreModulesSection() {
+    const { t } = useTranslation()
+    const modules = t('landing.modules.items', { returnObjects: true }) as IconText[]
+
+    return (
+        <section className="relative overflow-hidden bg-[#071113] px-4 py-20 text-white sm:px-6 lg:px-8">
+            <DarkTexture />
+            <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+                <SectionIntro
+                    eyebrow={t('landing.modules.eyebrow')}
+                    title={t('landing.modules.title')}
+                    body={t('landing.modules.body')}
+                    dark
                 />
-                {/* Dot grid texture */}
-                <div
-                    className="absolute inset-0 opacity-[0.04] pointer-events-none"
-                    style={{
-                        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
-                        backgroundSize: '28px 28px',
-                    }}
+
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-2">
+                    {modules.map(({ title, body }, index) => {
+                        const Icon = moduleIcons[index]
+                        return (
+                            <div key={title} className="grid gap-3 rounded-lg px-4 py-4 transition-colors hover:bg-white/[0.04] sm:grid-cols-[52px_minmax(0,1fr)_88px] sm:items-center">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/10 bg-[#3AAFA9]/10 text-[#9BE3DF]">
+                                    <Icon className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-white">{title}</h3>
+                                    <p className="mt-1 text-sm leading-7 text-slate-400">{body}</p>
+                                </div>
+                                <span className="hidden text-end text-xs font-black text-white/28 sm:block">0{index + 1}</span>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function FitSection() {
+    const { t } = useTranslation()
+    const industries = t('landing.fit.industries', { returnObjects: true }) as string[]
+
+    return (
+        <section className="bg-[#071113] px-4 pb-20 text-white sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl rounded-lg border border-[#76D5D0]/18 bg-[#102124] p-6 shadow-[0_30px_100px_-64px_rgba(58,175,169,0.65)]">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p className="text-sm font-black text-[#76D5D0]">{t('landing.fit.eyebrow')}</p>
+                        <h2 className="mt-2 text-3xl font-black text-white">{t('landing.fit.title')}</h2>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {industries.map((label, index) => {
+                            const Icon = industryIcons[index]
+                            return (
+                                <div key={label} className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm font-bold text-slate-200">
+                                    <Icon className="h-4 w-4 text-[#76D5D0]" />
+                                    {label}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function OutcomesSection() {
+    const { t } = useTranslation()
+    const outcomes = t('landing.outcomes.items', { returnObjects: true }) as string[]
+
+    return (
+        <section className="relative overflow-hidden bg-[#f4f8f7] px-4 py-20 sm:px-6 lg:px-8">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#071113] to-transparent" />
+            <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+                <SectionIntro
+                    eyebrow={t('landing.outcomes.eyebrow')}
+                    title={t('landing.outcomes.title')}
+                    body={t('landing.outcomes.body')}
                 />
 
-                <div className="max-w-4xl mx-auto px-5 sm:px-8 text-center relative z-10">
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true }}
-                        variants={stagger}
-                    >
-                        <motion.span
-                            variants={rise}
-                            className="inline-block text-[11px] font-bold text-[#3AAFA9] tracking-[0.18em] uppercase mb-6"
-                        >
-                            ابدأ اليوم
-                        </motion.span>
-                        <motion.h2
-                            variants={rise}
-                            className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight"
-                        >
-                            جاهز للبدء؟
-                        </motion.h2>
-                        <motion.p variants={rise} className="text-slate-300 text-xl mb-10 max-w-lg mx-auto leading-relaxed">
-                            انضم للمستقبل، ورتب منشأتك اليوم. التجربة مجانية بالكامل.
-                        </motion.p>
-                        <motion.div variants={rise} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link
-                                to="/register"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-9 py-4 text-white rounded-2xl text-lg font-bold transition-all duration-200 hover:-translate-y-0.5"
-                                style={{
-                                    background: '#3AAFA9',
-                                    boxShadow: '0 8px 32px rgba(58,175,169,0.25)',
-                                }}
-                            >
-                                أنشئ حساب منشأتك مجاناً
-                            </Link>
-                            <p className="text-slate-400 text-sm font-medium">
-                                لا تحتاج لبطاقة ائتمان &nbsp;·&nbsp; 14 يوم تجربة مجانية
-                            </p>
-                        </motion.div>
-                    </motion.div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {outcomes.map((item) => (
+                        <div key={item} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-card">
+                            <CheckCircle2 className="h-5 w-5 shrink-0 text-[#2E8F8A]" />
+                            <span className="font-black text-slate-950">{item}</span>
+                        </div>
+                    ))}
                 </div>
-            </section>
+            </div>
+        </section>
+    )
+}
 
-            {/* ══════════════════════════════════════════════════════════════
-                FOOTER
-            ══════════════════════════════════════════════════════════════ */}
-            <footer className="bg-white border-t border-slate-200 pt-14 pb-8">
-                <div className="max-w-7xl mx-auto px-5 sm:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+function ManagementTrustSection() {
+    const { t } = useTranslation()
+    const managementSignals = t('landing.management.items', { returnObjects: true }) as string[]
 
-                        {/* Brand */}
-                        <div>
-                            <img src="/images/logo.png" alt="متقن" className="h-9 w-auto mb-5 opacity-75" />
-                            <p className="text-slate-500 text-sm leading-relaxed max-w-[260px]">
-                                مُتقَن هو الحل السحابي الأحدث لإدارة الصيانة والمرافق في المملكة العربية السعودية.
-                            </p>
-                        </div>
-
-                        {/* Links */}
-                        <div>
-                            <h4 className="font-bold text-slate-900 mb-4 text-sm">الشركة</h4>
-                            <ul className="space-y-2.5">
-                                {[
-                                    { to: "/about",   label: "من نحن" },
-                                    { to: "/contact", label: "اتصل بنا" },
-                                    { to: "/privacy", label: "سياسة الخصوصية" },
-                                    { to: "/terms",   label: "سياسة الاستخدام" },
-                                ].map(({ to, label }) => (
-                                    <li key={to}>
-                                        <Link to={to} className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
-                                            {label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Contact */}
-                        <div>
-                            <h4 className="font-bold text-slate-900 mb-4 text-sm">تواصل معنا</h4>
-                            <a
-                                href="mailto:info@mutqan-sa.com"
-                                className="text-sm text-slate-500 hover:text-[#3AAFA9] transition-colors"
-                                dir="ltr"
-                            >
-                                info@mutqan-sa.com
-                            </a>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-slate-100 pt-6 text-center text-xs text-slate-400">
-                        © {new Date().getFullYear()} مُتقَن لتقنية المعلومات. جميع الحقوق محفوظة.
-                    </div>
+    return (
+        <section className="bg-[#f4f8f7] px-4 pb-20 sm:px-6 lg:px-8">
+            <div className="mx-auto grid max-w-7xl gap-6 rounded-lg border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-56px_rgba(15,23,42,0.35)] lg:grid-cols-[1fr_1.1fr] lg:p-8">
+                <div>
+                    <p className="text-sm font-black text-[#2E8F8A]">{t('landing.management.eyebrow')}</p>
+                    <h2 className="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
+                        {t('landing.management.title')}
+                    </h2>
+                    <p className="mt-4 max-w-xl text-base leading-8 text-slate-600">
+                        {t('landing.management.body')}
+                    </p>
                 </div>
-            </footer>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {managementSignals.map((item, index) => (
+                        <div key={item} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <span className="text-xs font-black text-[#2E8F8A]">0{index + 1}</span>
+                            <div className="mt-2 text-lg font-black text-slate-950">{item}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function FinalCta() {
+    const { t } = useTranslation()
+
+    return (
+        <section
+            className="relative overflow-hidden bg-[#071113] px-4 py-24 text-white sm:px-6 lg:px-8"
+            style={{
+                backgroundImage:
+                    'radial-gradient(circle at 50% 20%, rgba(118,213,208,0.16), transparent 36%), linear-gradient(135deg, #071113 0%, #0d2225 55%, #11181d 100%)',
+            }}
+        >
+            <DarkTexture />
+            <div className="relative mx-auto max-w-3xl text-center">
+                <p className="text-sm font-bold text-[#76D5D0]">{t('landing.finalCta.eyebrow')}</p>
+                <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">{t('landing.finalCta.title')}</h2>
+                <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                    {t('landing.finalCta.body')}
+                </p>
+                <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                    <PrimaryCta />
+                    <SecondaryCta />
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function PrimaryCta() {
+    const { t, i18n } = useTranslation()
+    const CtaArrow = i18n.language === 'ar' ? ArrowLeft : ArrowRight
+
+    return (
+        <Link
+            to="/contact"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#3AAFA9] px-6 text-base font-bold text-white shadow-[0_18px_44px_-26px_rgba(58,175,169,0.95)] transition-colors hover:bg-[#45bdb7] sm:w-auto"
+        >
+            {t('landing.hero.primaryCta')}
+            <CtaArrow className="h-4 w-4" />
+        </Link>
+    )
+}
+
+function SecondaryCta() {
+    const { t } = useTranslation()
+
+    return (
+        <Link
+            to="/register"
+            className="inline-flex h-12 w-full items-center justify-center rounded-lg border border-white/16 bg-white/8 px-6 text-base font-bold text-white transition-colors hover:bg-white/12 sm:w-auto"
+        >
+            {t('landing.hero.secondaryCta')}
+        </Link>
+    )
+}
+
+function SectionIntro({
+    eyebrow,
+    title,
+    body,
+    dark = false,
+    centered = false,
+}: {
+    eyebrow: string
+    title: string
+    body: string
+    dark?: boolean
+    centered?: boolean
+}) {
+    return (
+        <div className={cn('max-w-3xl', centered ? 'mx-auto text-center' : 'text-start')}>
+            <p className={cn('text-sm font-black', dark ? 'text-[#76D5D0]' : 'text-[#2E8F8A]')}>{eyebrow}</p>
+            <h2 className={cn('mt-3 text-3xl font-black leading-tight sm:text-4xl', dark ? 'text-white' : 'text-slate-950')}>{title}</h2>
+            <p className={cn('mt-4 text-base leading-8', dark ? 'text-slate-400' : 'text-slate-600')}>{body}</p>
         </div>
+    )
+}
+
+function DarkTexture() {
+    return (
+        <div className="pointer-events-none absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
     )
 }

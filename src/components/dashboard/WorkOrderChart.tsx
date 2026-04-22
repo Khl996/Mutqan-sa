@@ -9,7 +9,6 @@ import {
     ResponsiveContainer,
     Legend
 } from 'recharts'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 interface ChartData {
     date: string
@@ -22,14 +21,14 @@ interface WorkOrderChartProps {
 }
 
 export function WorkOrderChart({ data }: WorkOrderChartProps) {
-    const { t, i18n } = useTranslation()
+    const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
 
     return (
-        <div className="bg-card rounded-xl p-6 shadow-card h-full">
+        <div className="h-full rounded-lg border bg-card p-5 shadow-card sm:p-6">
             <div className="mb-6">
                 <h3 className="text-lg font-bold text-primary font-cairo">
-                    {isRTL ? 'حركة البلاغات (آخر 7 أيام)' : 'Work Orders Activity (Last 7 Days)'}
+                    {isRTL ? 'حركة أوامر العمل خلال 7 أيام' : 'Work Orders Activity, Last 7 Days'}
                 </h3>
             </div>
 

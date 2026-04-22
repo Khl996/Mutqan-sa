@@ -29,6 +29,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
 import {
     Select,
     SelectContent,
@@ -385,32 +386,33 @@ export default function MaintenancePage() {
             </AlertDialog>
 
             <div className="space-y-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div className="space-y-1">
-                        <h1 className="text-3xl font-bold text-primary font-cairo">{copy.title}</h1>
-                        <p className="max-w-3xl text-sm text-muted-foreground font-cairo">{copy.subtitle}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+                <PageHeader
+                    icon={<CalendarClock className="h-5 w-5" />}
+                    title={copy.title}
+                    description={copy.subtitle}
+                    actions={(
+                        <>
                         {canManage ? (
-                            <Button onClick={handleGenerateNow} disabled={isGenerating}>
+                            <Button onClick={handleGenerateNow} disabled={isGenerating} className="gap-2">
                                 <PlayCircle className="me-2 h-4 w-4" />
                                 {isGenerating ? copy.generating : copy.generateNow}
                             </Button>
                         ) : null}
                         {canManage ? (
-                            <Button variant="outline" onClick={() => { setEditingPlan(null); setPlanDialogOpen(true); setActiveTab('job-plans') }}>
+                            <Button variant="outline" className="gap-2" onClick={() => { setEditingPlan(null); setPlanDialogOpen(true); setActiveTab('job-plans') }}>
                                 <FileText className="me-2 h-4 w-4" />{copy.createJobPlan}
                             </Button>
                         ) : null}
                         {canManage ? (
-                            <Button variant="outline" onClick={() => { setEditingSchedule(null); setScheduleDialogOpen(true); setActiveTab('schedules') }}>
+                            <Button variant="outline" className="gap-2" onClick={() => { setEditingSchedule(null); setScheduleDialogOpen(true); setActiveTab('schedules') }}>
                                 <CalendarClock className="me-2 h-4 w-4" />{copy.createSchedule}
                             </Button>
                         ) : null}
-                    </div>
-                </div>
+                        </>
+                    )}
+                />
 
-                <div className="grid gap-2 rounded-lg border bg-card p-3 shadow-sm md:grid-cols-4">
+                <div className="grid gap-2 rounded-lg border bg-card p-3 shadow-card md:grid-cols-4">
                     {[
                         { label: copy.workflowPlan, icon: FileText },
                         { label: copy.workflowSchedule, icon: CalendarClock },
@@ -419,7 +421,7 @@ export default function MaintenancePage() {
                     ].map((step, index) => {
                         const StepIcon = step.icon
                         return (
-                            <div key={step.label} className="flex items-center gap-3 rounded-md bg-muted/40 px-3 py-2">
+                            <div key={step.label} className="flex items-center gap-3 rounded-md border bg-background px-3 py-2">
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground" dir="ltr">
                                     {index + 1}
                                 </div>
@@ -563,7 +565,7 @@ function Metric({
 }) {
     const toneClass = tone === 'success' ? 'bg-emerald-500/10 text-emerald-700' : tone === 'warning' ? 'bg-amber-500/10 text-amber-700' : tone === 'danger' ? 'bg-rose-500/10 text-rose-700' : 'bg-primary/10 text-primary'
     return (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden shadow-card">
             <CardContent className="flex min-h-[132px] items-start justify-between gap-4 p-5">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground font-cairo">{title}</p>

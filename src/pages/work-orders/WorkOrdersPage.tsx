@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { cn, formatRelativeTime } from '@/lib/utils'
+import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
 import { useWorkOrders, useWorkOrderStats, WorkOrder } from '@/hooks/useWorkOrders'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 import AddWorkOrderModal from '@/components/work-orders/AddWorkOrderModal'
+import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
 import {
     isOverdueWorkOrder,
     STATUS_DISPLAY,
@@ -56,6 +66,7 @@ const priorityConfig = {
 export default function WorkOrdersPage() {
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
+    const locale = isRTL ? 'ar-SA' : 'en-US'
 
     // Check create WO feature
     const { can } = usePermission()
@@ -121,31 +132,19 @@ export default function WorkOrdersPage() {
                 onClose={() => setIsAddModalOpen(false)}
             />
 
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-primary font-cairo">
-                        {t('workOrders.title')}
-                    </h1>
-                    <p className="text-muted font-cairo">
-                        {isRTL
-                            ? `إدارة البلاغات وأوامر العمل - ${filteredWorkOrders.length} بلاغ`
-                            : `Manage work orders and tickets - ${filteredWorkOrders.length} orders`
-                        }
-                    </p>
-                </div>
-
-                {/* Create Button - only if feature enabled and user has permission */}
-                {isCreateWorkOrderEnabled && canCreate && (
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-cairo"
-                    >
-                        <Plus className="w-5 h-5" />
+            <PageHeader
+                icon={<ClipboardList className="h-5 w-5" />}
+                title={t('workOrders.title')}
+                description={isRTL
+                    ? `إدارة البلاغات وأوامر العمل مع عرض سريع للحالة، الأولوية، الموقع، والمسؤول - ${filteredWorkOrders.length} بلاغ`
+                    : `Manage work orders with quick visibility into status, priority, location, and owner - ${filteredWorkOrders.length} orders`}
+                actions={isCreateWorkOrderEnabled && canCreate ? (
+                    <Button onClick={() => setIsAddModalOpen(true)} className="gap-2 bg-secondary hover:bg-secondary/90">
+                        <Plus className="h-4 w-4" />
                         {t('workOrders.createWorkOrder')}
-                    </button>
-                )}
-            </div>
+                    </Button>
+                ) : null}
+            />
 
             {/* Feature Disabled Warning */}
             {!isCreateWorkOrderEnabled && (
@@ -190,7 +189,7 @@ export default function WorkOrdersPage() {
             )}
 
             {/* Search & Filters */}
-            <div className="space-y-4">
+            <div className="space-y-4 rounded-lg border bg-card p-4 shadow-card">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className={cn(
@@ -203,7 +202,7 @@ export default function WorkOrdersPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={cn(
-                                'w-full py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none font-cairo',
+                                'w-full py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none font-cairo',
                                 isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'
                             )}
                         />
@@ -211,7 +210,7 @@ export default function WorkOrdersPage() {
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={cn(
-                            'flex items-center gap-2 px-4 py-3 rounded-xl transition-colors font-cairo',
+                            'flex items-center gap-2 px-4 py-3 rounded-lg transition-colors font-cairo',
                             showFilters
                                 ? 'bg-secondary text-white'
                                 : 'bg-card border border-border text-primary hover:bg-muted/10'
@@ -225,7 +224,7 @@ export default function WorkOrdersPage() {
 
                 {/* Filter Panel */}
                 {showFilters && (
-                    <div className="p-4 bg-card rounded-xl border border-border">
+                    <div className="rounded-lg border border-border bg-background p-3">
                         <div className="flex flex-wrap gap-2">
                             {WORK_ORDER_FILTERS.map((filter) => (
                                 <button
@@ -261,12 +260,136 @@ export default function WorkOrdersPage() {
                     </p>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {filteredWorkOrders.map((workOrder) => (
-                        <WorkOrderCard key={workOrder.id} workOrder={workOrder} isRTL={isRTL} />
-                    ))}
-                </div>
+                <>
+                    <WorkOrdersTable workOrders={filteredWorkOrders} isRTL={isRTL} locale={locale} />
+                    <div className="space-y-3 md:hidden">
+                        {filteredWorkOrders.map((workOrder) => (
+                            <WorkOrderCard key={workOrder.id} workOrder={workOrder} isRTL={isRTL} />
+                        ))}
+                    </div>
+                </>
             )}
+        </div>
+    )
+}
+
+function WorkOrdersTable({
+    workOrders,
+    isRTL,
+    locale,
+}: {
+    workOrders: WorkOrder[]
+    isRTL: boolean
+    locale: string
+}) {
+    const { t } = useTranslation()
+    const navigate = useNavigate()
+
+    const label = {
+        order: isRTL ? 'البلاغ' : 'Work Order',
+        status: isRTL ? 'الحالة' : 'Status',
+        priority: isRTL ? 'الأولوية' : 'Priority',
+        location: isRTL ? 'الموقع / الأصل' : 'Location / Asset',
+        owner: isRTL ? 'المسؤول' : 'Owner',
+        due: isRTL ? 'الاستحقاق' : 'Due',
+        updated: isRTL ? 'آخر تحديث' : 'Updated',
+    }
+
+    return (
+        <div className="hidden overflow-hidden rounded-lg border bg-card shadow-card md:block">
+            <Table>
+                <TableHeader className="bg-muted/40">
+                    <TableRow className="hover:bg-transparent">
+                        <TableHead className="text-start font-cairo">{label.order}</TableHead>
+                        <TableHead className="text-start font-cairo">{label.status}</TableHead>
+                        <TableHead className="text-start font-cairo">{label.priority}</TableHead>
+                        <TableHead className="text-start font-cairo">{label.location}</TableHead>
+                        <TableHead className="text-start font-cairo">{label.owner}</TableHead>
+                        <TableHead className="text-start font-cairo">{label.due}</TableHead>
+                        <TableHead className="text-start font-cairo">{label.updated}</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {workOrders.map((workOrder) => {
+                        const status = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
+                        const priority = priorityConfig[workOrder.priority] || priorityConfig.medium
+                        const overdue = isOverdueWorkOrder(workOrder.due_date, workOrder.status)
+                        const assetName = workOrder.asset
+                            ? (isRTL ? workOrder.asset.name_ar || workOrder.asset.name : workOrder.asset.name)
+                            : null
+                        const buildingName = workOrder.building
+                            ? (isRTL ? workOrder.building.name_ar || workOrder.building.name : workOrder.building.name)
+                            : workOrder.asset?.building
+                                ? (isRTL ? workOrder.asset.building.name_ar || workOrder.asset.building.name : workOrder.asset.building.name)
+                                : null
+                        const ownerName = workOrder.assignee
+                            ? (isRTL ? workOrder.assignee.full_name_ar || workOrder.assignee.full_name : workOrder.assignee.full_name)
+                            : workOrder.reporter
+                                ? (isRTL ? workOrder.reporter.full_name_ar || workOrder.reporter.full_name : workOrder.reporter.full_name)
+                                : null
+
+                        return (
+                            <TableRow
+                                key={workOrder.id}
+                                className="cursor-pointer hover:bg-secondary/5"
+                                onClick={() => navigate(`/work-orders/${workOrder.id}`)}
+                            >
+                                <TableCell className="min-w-[260px]">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-cairo font-semibold text-primary">{workOrder.title}</span>
+                                            <span className="rounded border bg-background px-2 py-0.5 font-mono text-xs text-muted-foreground">
+                                                {workOrder.code}
+                                            </span>
+                                        </div>
+                                        {workOrder.description ? (
+                                            <p className="line-clamp-1 max-w-[360px] font-cairo text-xs text-muted-foreground">
+                                                {workOrder.description}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <span className={cn(
+                                        'inline-flex items-center rounded-full border px-2.5 py-1 font-cairo text-xs font-medium',
+                                        status.bg,
+                                        status.color,
+                                        status.borderColor
+                                    )}>
+                                        {t(`workOrders.${status.label}`)}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <span className={cn(
+                                        'inline-flex rounded-full px-2.5 py-1 font-cairo text-xs font-medium',
+                                        priority.bg,
+                                        priority.color
+                                    )}>
+                                        {t(`workOrders.${priority.label}`)}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="min-w-[180px]">
+                                    <div className="space-y-1 font-cairo text-sm">
+                                        <p className="text-primary">{buildingName || '-'}</p>
+                                        {assetName ? <p className="text-xs text-muted-foreground">{assetName}</p> : null}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="font-cairo text-sm text-muted-foreground">
+                                    {ownerName || '-'}
+                                </TableCell>
+                                <TableCell>
+                                    <div className={cn('font-cairo text-sm', overdue ? 'font-semibold text-destructive' : 'text-muted-foreground')}>
+                                        {workOrder.due_date ? formatDate(workOrder.due_date, locale) : '-'}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="font-cairo text-sm text-muted-foreground">
+                                    {formatRelativeTime(workOrder.updated_at)}
+                                </TableCell>
+                            </TableRow>
+                        )
+                    })}
+                </TableBody>
+            </Table>
         </div>
     )
 }
@@ -287,7 +410,7 @@ function StatCard({ title, value, icon: Icon, color }: {
     }
 
     return (
-        <div className="bg-card rounded-xl p-4 shadow-card">
+        <div className="rounded-lg border bg-card p-4 shadow-card">
             <div className="flex items-center gap-3">
                 <div className={cn('p-2 rounded-lg', colorClasses[color as keyof typeof colorClasses])}>
                     <Icon className="w-5 h-5" />
@@ -312,7 +435,7 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
     return (
         <div
             onClick={() => navigate(`/work-orders/${workOrder.id}`)}
-            className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+            className="bg-card rounded-lg border shadow-card overflow-hidden hover:shadow-card-hover transition-shadow cursor-pointer"
         >
             <div className="p-5">
                 <div className="flex items-start justify-between gap-4">
