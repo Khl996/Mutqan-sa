@@ -108,6 +108,59 @@ export const useWorkOrderWorkflow = () => {
         },
     })
 
+    const assignWorkOrder = useMutation({
+        mutationFn: async ({
+            workOrderId,
+            assignedTo = null,
+            assignedTeam = null,
+            reason = null,
+        }: {
+            workOrderId: string
+            assignedTo?: string | null
+            assignedTeam?: string | null
+            reason?: string | null
+        }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await (supabase as any).rpc('assign_work_order', {
+                p_work_order_id: workOrderId,
+                p_assigned_to: assignedTo,
+                p_assigned_team: assignedTeam,
+                p_reason: reason,
+            })
+            if (error) throw error
+            return data as {
+                success: boolean
+                work_order_id: string
+                assigned_to: string | null
+                assigned_team: string | null
+                status: string
+            }
+        },
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
+        },
+    })
+
+    const cancelWorkOrder = useMutation({
+        mutationFn: async ({ workOrderId, reason }: { workOrderId: string; reason: string }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await (supabase as any).rpc('cancel_work_order', {
+                p_work_order_id: workOrderId,
+                p_reason: reason,
+            })
+            if (error) throw error
+            return data as {
+                success: boolean
+                work_order_id: string
+                status: string
+                reason: string
+            }
+        },
+        onSuccess: (_, variables) => {
+            invalidateAll(variables.workOrderId)
+        },
+    })
+
     return {
         startWork,
         completeWorkTechnician,
@@ -115,5 +168,7 @@ export const useWorkOrderWorkflow = () => {
         approveEngineer,
         closeWorkOrder,
         rejectWork,
+        assignWorkOrder,
+        cancelWorkOrder,
     }
 }

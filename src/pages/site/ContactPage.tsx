@@ -1,31 +1,122 @@
-import { Link } from 'react-router-dom'
+import { useState, type ChangeEvent, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, ArrowRight, Building2, CheckCircle2, Mail, MessageSquareText, Phone, Wrench, type LucideIcon } from 'lucide-react'
+import {
+    ArrowLeft,
+    ArrowRight,
+    Mail,
+    ShieldCheck,
+} from 'lucide-react'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SiteNav } from '@/components/site/SiteNav'
+import { cn } from '@/lib/utils'
 
-type TextItem = {
-    title: string
-    body: string
+const CONTACT_EMAIL = 'info@mutqan-sa.com'
+
+type DemoRequestForm = {
+    fullName: string
+    company: string
+    jobTitle: string
+    email: string
+    phone: string
+    facilityType: string
+    scale: string
+    improvements: string[]
+    message: string
 }
 
-const cardIcons: LucideIcon[] = [MessageSquareText, Wrench, Building2, Phone]
+type FormLabels = Record<keyof DemoRequestForm, string>
+type FieldErrors = Partial<Record<keyof DemoRequestForm, string>>
+type TextField = Exclude<keyof DemoRequestForm, 'improvements'>
+
+type ValidationCopy = {
+    required: string
+    email: string
+    improvements: string
+}
+
+type EmailBodyCopy = {
+    intro: string
+    footer: string
+}
+
+const emptyForm: DemoRequestForm = {
+    fullName: '',
+    company: '',
+    jobTitle: '',
+    email: '',
+    phone: '',
+    facilityType: '',
+    scale: '',
+    improvements: [],
+    message: '',
+}
 
 export default function ContactPage() {
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const CtaArrow = isRTL ? ArrowLeft : ArrowRight
-    const demoPrep = t('contactPage.prepItems', { returnObjects: true }) as string[]
-    const cards = t('contactPage.cards', { returnObjects: true }) as TextItem[]
-    const emailHref = `mailto:info@mutqan-sa.com?subject=${encodeURIComponent(t('contactPage.emailSubject'))}`
+    const [form, setForm] = useState<DemoRequestForm>(emptyForm)
+    const [errors, setErrors] = useState<FieldErrors>({})
+    const [submitState, setSubmitState] = useState<'idle' | 'error' | 'prepared'>('idle')
+    const [lastMailtoHref, setLastMailtoHref] = useState('')
+
+    const labels = t('contactPage.form.labels', { returnObjects: true }) as FormLabels
+    const validation = t('contactPage.form.validation', { returnObjects: true }) as ValidationCopy
+    const emailBodyCopy = t('contactPage.form.emailBody', { returnObjects: true }) as EmailBodyCopy
+    const facilityOptions = t('contactPage.form.facilityOptions', { returnObjects: true }) as string[]
+    const improvementOptions = t('contactPage.form.improvementOptions', { returnObjects: true }) as string[]
+    const directEmailHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t('contactPage.emailSubject'))}`
+
+    function updateField(field: TextField, value: string) {
+        setForm((current) => ({ ...current, [field]: value }))
+        clearError(field)
+    }
+
+    function clearError(field: keyof DemoRequestForm) {
+        setErrors((current) => {
+            if (!current[field]) {
+                return current
+            }
+            const next = { ...current }
+            delete next[field]
+            return next
+        })
+        setSubmitState('idle')
+    }
+
+    function handleImprovementChange(value: string, checked: boolean) {
+        setForm((current) => ({
+            ...current,
+            improvements: checked
+                ? [...current.improvements, value]
+                : current.improvements.filter((item) => item !== value),
+        }))
+        clearError('improvements')
+    }
+
+    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        const nextErrors = validateForm(form, validation)
+        setErrors(nextErrors)
+
+        if (Object.keys(nextErrors).length > 0) {
+            setSubmitState('error')
+            return
+        }
+
+        const mailtoHref = buildMailtoHref(form, labels, emailBodyCopy, t('contactPage.emailSubject'))
+        setLastMailtoHref(mailtoHref)
+        setSubmitState('prepared')
+        window.location.href = mailtoHref
+    }
 
     return (
-        <div className="min-h-screen bg-slate-50 font-cairo text-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-[#f7f3ea] font-cairo text-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
             <SiteNav variant="dark" />
 
             <main>
                 <section
-                    className="relative overflow-hidden bg-[#071113] px-4 pb-16 pt-36 text-white sm:px-6 sm:pt-44 lg:px-8"
+                    className="relative overflow-hidden bg-[#071113] px-4 pb-10 pt-28 text-white sm:px-6 sm:pb-12 sm:pt-32 lg:px-8"
                     style={{
                         backgroundImage:
                             'linear-gradient(180deg, rgba(118,213,208,0.08) 0%, transparent 42%), linear-gradient(115deg, transparent 0%, rgba(58,175,169,0.12) 44%, transparent 66%), linear-gradient(135deg, #071113 0%, #0d2225 55%, #11181d 100%)',
@@ -33,85 +124,242 @@ export default function ContactPage() {
                 >
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-transparent via-[#76D5D0] to-transparent opacity-75" />
                     <div className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
-                    <div className="relative mx-auto max-w-4xl text-center">
+                    <div className="relative mx-auto max-w-3xl text-center">
                         <p className="text-sm font-bold text-[#76D5D0]">{t('contactPage.heroEyebrow')}</p>
-                        <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">
+                        <h1 className="mt-3 text-balance text-3xl font-black leading-[1.24] sm:text-5xl">
                             {t('contactPage.heroTitle')}
                         </h1>
-                        <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                        <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-slate-300">
                             {t('contactPage.heroBody')}
                         </p>
                     </div>
                 </section>
 
-                <section className="px-4 py-16 sm:px-6 lg:px-8">
-                    <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-                        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-card">
-                            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-[#3AAFA9]/10 text-[#2E8F8A]">
-                                <Mail className="h-5 w-5" />
-                            </div>
-                            <h2 className="text-2xl font-black text-slate-950">{t('contactPage.directTitle')}</h2>
-                            <p className="mt-3 text-sm leading-7 text-slate-600">
-                                {t('contactPage.directBody')}
-                            </p>
-
-                            <a
-                                href={emailHref}
-                                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#2E3A45] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#3a4a57] sm:w-auto"
-                                dir="ltr"
-                            >
-                                info@mutqan-sa.com
-                                <CtaArrow className="h-4 w-4" />
-                            </a>
-
-                            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                                {cards.map(({ title, body }, index) => {
-                                    const Icon = cardIcons[index]
-                                    return (
-                                        <div key={title} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                                            <Icon className="mb-3 h-5 w-5 text-[#2E8F8A]" />
-                                            <h3 className="font-black text-slate-950">{title}</h3>
-                                            <p className="mt-1 text-xs leading-6 text-slate-600">{body}</p>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-card">
-                            <h2 className="text-2xl font-black text-slate-950">{t('contactPage.prepTitle')}</h2>
-                            <p className="mt-3 text-sm leading-7 text-slate-600">
-                                {t('contactPage.prepBody')}
-                            </p>
-
-                            <div className="mt-6 space-y-3">
-                                {demoPrep.map((item, index) => (
-                                    <div key={item} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#3AAFA9]/10 text-sm font-black text-[#2E8F8A]">
-                                            {index + 1}
-                                        </span>
-                                        <span className="text-sm font-bold text-slate-700">{item}</span>
-                                    </div>
-                                ))}
+                <section className="px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+                    <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                        <form onSubmit={handleSubmit} noValidate className="rounded-lg border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+                            <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-start md:justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-black leading-9 text-slate-950">
+                                        {t('contactPage.form.title')}
+                                    </h2>
+                                    <p className="mt-2 max-w-xl text-sm leading-7 text-slate-600">
+                                        {t('contactPage.form.body')}
+                                    </p>
+                                </div>
+                                <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#3AAFA9]/25 bg-[#3AAFA9]/10 px-3 py-2 text-xs font-black text-[#2E8F8A]">
+                                    <ShieldCheck className="h-4 w-4" />
+                                    {t('contactPage.form.requiredNote')}
+                                </span>
                             </div>
 
-                            <div className="mt-7 rounded-lg border border-[#3AAFA9]/20 bg-[#3AAFA9]/8 p-5">
-                                <h3 className="flex items-center gap-2 font-black text-slate-950">
-                                    <CheckCircle2 className="h-5 w-5 text-[#2E8F8A]" />
-                                    {t('contactPage.goalTitle')}
-                                </h3>
-                                <p className="mt-2 text-sm leading-7 text-slate-600">
-                                    {t('contactPage.goalBody')}
+                            {submitState === 'error' && (
+                                <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold leading-6 text-red-700" role="alert">
+                                    {t('contactPage.form.errorSummary')}
+                                </div>
+                            )}
+
+                            {submitState === 'prepared' && (
+                                <div className="mt-5 rounded-lg border border-[#3AAFA9]/25 bg-[#3AAFA9]/10 p-4" role="status">
+                                    <h3 className="flex items-center gap-2 text-sm font-black text-[#172027]">
+                                        <Mail className="h-4 w-4 text-[#2E8F8A]" />
+                                        {t('contactPage.form.mailtoPreparedTitle')}
+                                    </h3>
+                                    <p className="mt-2 text-sm leading-7 text-slate-700">
+                                        {t('contactPage.form.mailtoPreparedBody')}
+                                    </p>
+                                    <a
+                                        href={lastMailtoHref}
+                                        className="mt-3 inline-flex items-center gap-2 text-sm font-black text-[#2E8F8A] underline-offset-4 hover:underline"
+                                    >
+                                        {t('contactPage.form.mailtoFallbackCta')}
+                                        <CtaArrow className="h-4 w-4" />
+                                    </a>
+                                </div>
+                            )}
+
+                            <div className="mt-6 grid gap-5 md:grid-cols-2">
+                                <FieldShell id="fullName" label={labels.fullName} error={errors.fullName} required>
+                                    <TextInput
+                                        id="fullName"
+                                        value={form.fullName}
+                                        placeholder={t('contactPage.form.placeholders.fullName')}
+                                        error={errors.fullName}
+                                        autoComplete="name"
+                                        onChange={(event) => updateField('fullName', event.target.value)}
+                                    />
+                                </FieldShell>
+
+                                <FieldShell id="company" label={labels.company} error={errors.company} required>
+                                    <TextInput
+                                        id="company"
+                                        value={form.company}
+                                        placeholder={t('contactPage.form.placeholders.company')}
+                                        error={errors.company}
+                                        autoComplete="organization"
+                                        onChange={(event) => updateField('company', event.target.value)}
+                                    />
+                                </FieldShell>
+
+                                <FieldShell id="email" label={labels.email} error={errors.email} required>
+                                    <TextInput
+                                        id="email"
+                                        type="email"
+                                        value={form.email}
+                                        placeholder={t('contactPage.form.placeholders.email')}
+                                        error={errors.email}
+                                        autoComplete="email"
+                                        dir="ltr"
+                                        onChange={(event) => updateField('email', event.target.value)}
+                                    />
+                                </FieldShell>
+
+                                <FieldShell id="phone" label={labels.phone} error={errors.phone} required>
+                                    <TextInput
+                                        id="phone"
+                                        type="tel"
+                                        value={form.phone}
+                                        placeholder={t('contactPage.form.placeholders.phone')}
+                                        error={errors.phone}
+                                        autoComplete="tel"
+                                        dir="ltr"
+                                        onChange={(event) => updateField('phone', event.target.value)}
+                                    />
+                                </FieldShell>
+
+                                <FieldShell id="facilityType" label={labels.facilityType} error={errors.facilityType} required>
+                                    <select
+                                        id="facilityType"
+                                        value={form.facilityType}
+                                        onChange={(event) => updateField('facilityType', event.target.value)}
+                                        className={fieldClass(errors.facilityType)}
+                                        aria-invalid={Boolean(errors.facilityType)}
+                                    >
+                                        <option value="" disabled>
+                                            {t('contactPage.form.placeholders.facilityType')}
+                                        </option>
+                                        {facilityOptions.map((option) => (
+                                            <option key={option} value={option}>
+                                                {option}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </FieldShell>
+                            </div>
+
+                            <fieldset className="mt-6">
+                                <legend className="text-sm font-black text-slate-900">
+                                    {labels.improvements}
+                                    <span className="mx-1 text-[#2E8F8A]">*</span>
+                                </legend>
+                                <p className="mt-1 text-xs font-semibold text-slate-500">{t('contactPage.form.improvementsHint')}</p>
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                                    {improvementOptions.map((option) => {
+                                        const checked = form.improvements.includes(option)
+                                        return (
+                                            <label
+                                                key={option}
+                                                className={cn(
+                                                    'flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-bold transition-colors',
+                                                    checked
+                                                        ? 'border-[#3AAFA9]/50 bg-[#3AAFA9]/10 text-[#172027]'
+                                                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-[#3AAFA9]/35'
+                                                )}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={(event) => handleImprovementChange(option, event.target.checked)}
+                                                    className="h-4 w-4 rounded border-slate-300 text-[#2E8F8A] focus:ring-[#3AAFA9]"
+                                                />
+                                                <span>{option}</span>
+                                            </label>
+                                        )
+                                    })}
+                                </div>
+                                {errors.improvements && <FieldError id="improvements-error">{errors.improvements}</FieldError>}
+                            </fieldset>
+
+                            <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+                                <p className="text-sm font-black text-slate-800">{t('contactPage.form.optionalTitle')}</p>
+                                <div className="mt-4 grid gap-5 md:grid-cols-2">
+                                    <FieldShell id="jobTitle" label={labels.jobTitle}>
+                                        <TextInput
+                                            id="jobTitle"
+                                            value={form.jobTitle}
+                                            placeholder={t('contactPage.form.placeholders.jobTitle')}
+                                            onChange={(event) => updateField('jobTitle', event.target.value)}
+                                        />
+                                    </FieldShell>
+
+                                    <FieldShell id="scale" label={labels.scale}>
+                                        <TextInput
+                                            id="scale"
+                                            value={form.scale}
+                                            placeholder={t('contactPage.form.placeholders.scale')}
+                                            onChange={(event) => updateField('scale', event.target.value)}
+                                        />
+                                    </FieldShell>
+                                </div>
+
+                                <div className="mt-5">
+                                    <FieldShell id="message" label={labels.message}>
+                                        <textarea
+                                            id="message"
+                                            value={form.message}
+                                            placeholder={t('contactPage.form.placeholders.message')}
+                                            onChange={(event) => updateField('message', event.target.value)}
+                                            rows={4}
+                                            className="min-h-[112px] w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-7 text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-[#3AAFA9] focus:ring-2 focus:ring-[#3AAFA9]/20"
+                                        />
+                                    </FieldShell>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                                <p className="text-sm font-bold leading-6 text-amber-800">{t('contactPage.form.mailtoNoticeBody')}</p>
+                            </div>
+
+                            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <button
+                                    type="submit"
+                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2E8F8A] px-6 text-sm font-black text-white shadow-[0_18px_44px_-30px_rgba(46,143,138,0.95)] transition-colors hover:bg-[#267d78] sm:w-auto"
+                                >
+                                    <Mail className="h-4 w-4" />
+                                    {t('contactPage.form.submit')}
+                                </button>
+                                <a
+                                    href={directEmailHref}
+                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 text-sm font-black text-slate-700 transition-colors hover:border-[#3AAFA9]/45 hover:text-[#2E8F8A] sm:w-auto"
+                                    dir="ltr"
+                                >
+                                    {CONTACT_EMAIL}
+                                    <CtaArrow className="h-4 w-4" />
+                                </a>
+                            </div>
+                        </form>
+
+                        <aside className="lg:sticky lg:top-28">
+                            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#3AAFA9]/10 text-[#2E8F8A]">
+                                        <Mail className="h-5 w-5" />
+                                    </span>
+                                    <h2 className="text-xl font-black text-slate-950">{t('contactPage.directTitle')}</h2>
+                                </div>
+                                <p className="mt-3 text-sm leading-7 text-slate-600">
+                                    {t('contactPage.directBody')}
                                 </p>
+                                <a
+                                    href={directEmailHref}
+                                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 transition-colors hover:border-[#3AAFA9]/40 hover:text-[#2E8F8A]"
+                                    dir="ltr"
+                                >
+                                    <Mail className="h-4 w-4" />
+                                    {CONTACT_EMAIL}
+                                </a>
                             </div>
-
-                            <Link
-                                to="/register"
-                                className="mt-5 inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition-colors hover:bg-slate-50 sm:w-auto"
-                            >
-                                {t('contactPage.trialCta')}
-                            </Link>
-                        </div>
+                        </aside>
                     </div>
                 </section>
             </main>
@@ -119,4 +367,121 @@ export default function ContactPage() {
             <SiteFooter />
         </div>
     )
+}
+
+function TextInput({
+    error,
+    onChange,
+    ...props
+}: {
+    error?: string
+    onChange: (event: ChangeEvent<HTMLInputElement>) => void
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
+    return (
+        <input
+            {...props}
+            onChange={onChange}
+            className={fieldClass(error)}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? `${props.id}-error` : undefined}
+        />
+    )
+}
+
+function FieldShell({
+    id,
+    label,
+    required = false,
+    error,
+    children,
+}: {
+    id: string
+    label: string
+    required?: boolean
+    error?: string
+    children: ReactNode
+}) {
+    return (
+        <div>
+            <label htmlFor={id} className="mb-2 block text-sm font-black text-slate-900">
+                {label}
+                {required && <span className="mx-1 text-[#2E8F8A]">*</span>}
+            </label>
+            {children}
+            {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
+        </div>
+    )
+}
+
+function FieldError({ id, children }: { id: string; children: ReactNode }) {
+    return (
+        <p id={id} className="mt-2 text-xs font-bold leading-5 text-red-600">
+            {children}
+        </p>
+    )
+}
+
+function fieldClass(error?: string) {
+    return cn(
+        'h-12 w-full rounded-lg border bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:ring-2',
+        error
+            ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+            : 'border-slate-200 focus:border-[#3AAFA9] focus:ring-[#3AAFA9]/20'
+    )
+}
+
+function validateForm(form: DemoRequestForm, validation: ValidationCopy) {
+    const errors: FieldErrors = {}
+
+    if (!form.fullName.trim()) {
+        errors.fullName = validation.required
+    }
+
+    if (!form.company.trim()) {
+        errors.company = validation.required
+    }
+
+    if (!form.email.trim()) {
+        errors.email = validation.required
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+        errors.email = validation.email
+    }
+
+    if (!form.phone.trim()) {
+        errors.phone = validation.required
+    }
+
+    if (!form.facilityType.trim()) {
+        errors.facilityType = validation.required
+    }
+
+    if (form.improvements.length === 0) {
+        errors.improvements = validation.improvements
+    }
+
+    return errors
+}
+
+function buildMailtoHref(form: DemoRequestForm, labels: FormLabels, copy: EmailBodyCopy, subject: string) {
+    const bodyLines = [
+        copy.intro,
+        '',
+        `${labels.fullName}: ${form.fullName.trim()}`,
+        `${labels.company}: ${form.company.trim()}`,
+        optionalLine(labels.jobTitle, form.jobTitle),
+        `${labels.email}: ${form.email.trim()}`,
+        `${labels.phone}: ${form.phone.trim()}`,
+        `${labels.facilityType}: ${form.facilityType}`,
+        optionalLine(labels.scale, form.scale),
+        `${labels.improvements}: ${form.improvements.join(', ')}`,
+        form.message.trim() ? `${labels.message}:\n${form.message.trim()}` : null,
+        '',
+        copy.footer,
+    ].filter((line): line is string => line !== null)
+
+    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join('\n'))}`
+}
+
+function optionalLine(label: string, value: string) {
+    return value.trim() ? `${label}: ${value.trim()}` : null
 }

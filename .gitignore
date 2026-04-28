@@ -33,6 +33,10 @@ dev-server*.log
 # Local agent/worktree state
 .claude/
 
+# Local tool runtimes and browser profiles
+.tools/
+screenshots/chrome-profile*/
+
 # TypeScript cache
 *.tsbuildinfo
 

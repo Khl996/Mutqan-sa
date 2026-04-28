@@ -9,13 +9,16 @@ import {
     ArrowRight,
     Building2,
     Calendar,
+    CalendarClock,
     CheckCircle2,
     ClipboardList,
     Download,
     FileText,
     ImageIcon,
     Loader2,
+    MapPin,
     Printer,
+    ShieldAlert,
     Wrench,
     XCircle,
 } from 'lucide-react'
@@ -35,9 +38,11 @@ import {
 import { useAsset } from '@/hooks/useAssets'
 import { useChangeAssetStatus } from '@/hooks/useAssetOperations'
 import { useAssetMaintenance } from '@/hooks/useAssetMaintenance'
-import { useWorkOrders } from '@/hooks/useWorkOrders'
+import { useWorkOrders, isPreventiveWorkOrder } from '@/hooks/useWorkOrders'
+import { usePMSchedules } from '@/hooks/usePMFoundation'
 import { usePermission } from '@/hooks/usePermission'
 import { useModuleAccess } from '@/hooks/useTenantModules'
+import { STATUS_DISPLAY, isOverdueWorkOrder } from '@/config/workOrderStatus'
 import { getTaskStatusClass } from '@/lib/pm'
 import { cn, formatDate } from '@/lib/utils'
 
@@ -54,6 +59,23 @@ const STATUS_OPTIONS: Array<{
     { value: 'out_of_service', icon: AlertTriangle, colorClass: 'bg-rose-500/15 text-rose-700 border-rose-500/20', labelKey: 'assets.outOfService' },
     { value: 'retired', icon: XCircle, colorClass: 'bg-slate-200/70 text-slate-700 border-slate-300', labelKey: 'assets.retired' },
 ]
+
+const CRITICALITY_CONFIG: Record<string, { colorClass: string; labelKey: string }> = {
+    critical: { colorClass: 'bg-rose-500/15 text-rose-700 border-rose-500/20', labelKey: 'assets.critical' },
+    high:     { colorClass: 'bg-orange-500/15 text-orange-700 border-orange-500/20', labelKey: 'assets.high' },
+    medium:   { colorClass: 'bg-amber-500/15 text-amber-700 border-amber-500/20', labelKey: 'assets.medium' },
+    low:      { colorClass: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/20', labelKey: 'assets.low' },
+}
+
+const FREQUENCY_LABEL: Record<string, { en: string; ar: string }> = {
+    daily:       { en: 'Daily', ar: 'يومي' },
+    weekly:      { en: 'Weekly', ar: 'أسبوعي' },
+    monthly:     { en: 'Monthly', ar: 'شهري' },
+    quarterly:   { en: 'Quarterly', ar: 'ربع سنوي' },
+    semi_annual: { en: 'Semi-Annual', ar: 'نصف سنوي' },
+    annual:      { en: 'Annual', ar: 'سنوي' },
+    custom:      { en: 'Custom', ar: 'مخصص' },
+}
 
 export default function AssetDetailsPage() {
     const { id } = useParams<{ id: string }>()
@@ -74,11 +96,27 @@ export default function AssetDetailsPage() {
     const { data: asset, isLoading, error } = useAsset(id!)
     const changeAssetStatus = useChangeAssetStatus()
     const { data: allWorkOrders } = useWorkOrders()
+    const { data: allPMSchedules } = usePMSchedules()
     const { history, stats, isLoading: historyLoading } = useAssetMaintenance(id ?? '')
 
     const assetWorkOrders = useMemo(
         () => (allWorkOrders ?? []).filter((workOrder) => workOrder.asset_id === id),
         [allWorkOrders, id]
+    )
+
+    const assetPMSchedules = useMemo(
+        () => (allPMSchedules ?? []).filter(s => s.assets?.some(a => a.asset_id === id)),
+        [allPMSchedules, id]
+    )
+
+    const overdueWorkOrders = useMemo(
+        () => assetWorkOrders.filter(wo => isOverdueWorkOrder(wo.due_date, wo.status)),
+        [assetWorkOrders]
+    )
+
+    const openWorkOrders = useMemo(
+        () => assetWorkOrders.filter(wo => !['completed', 'auto_closed', 'cancelled', 'rejected_by_technician', 'archived'].includes(wo.status)),
+        [assetWorkOrders]
     )
 
     const filteredHistory = useMemo(() => {
@@ -208,10 +246,26 @@ export default function AssetDetailsPage() {
                                 <Badge className={cn('border', STATUS_OPTIONS.find((option) => option.value === asset.status)?.colorClass)}>
                                     {t(STATUS_OPTIONS.find((option) => option.value === asset.status)?.labelKey ?? 'assets.operational')}
                                 </Badge>
+                                {asset.criticality && CRITICALITY_CONFIG[asset.criticality] && (
+                                    <Badge className={cn('border', CRITICALITY_CONFIG[asset.criticality].colorClass)}>
+                                        <ShieldAlert className="me-1 h-3 w-3" />
+                                        {t(CRITICALITY_CONFIG[asset.criticality].labelKey)}
+                                    </Badge>
+                                )}
                             </div>
                             <div>
                                 <h1 className="text-3xl font-bold font-cairo text-primary">{isRTL ? asset.name_ar || asset.name : asset.name}</h1>
                                 {asset.description ? <p className="mt-2 text-muted-foreground font-cairo">{asset.description}</p> : null}
+                                {(asset.building || asset.floor || asset.room) && (
+                                    <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground font-cairo">
+                                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                                        {[
+                                            isRTL ? asset.building?.name_ar || asset.building?.name : asset.building?.name,
+                                            isRTL ? asset.floor?.name_ar || asset.floor?.name : asset.floor?.name,
+                                            isRTL ? asset.room?.name_ar || asset.room?.name : asset.room?.name,
+                                        ].filter(Boolean).join(' / ')}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -253,22 +307,142 @@ export default function AssetDetailsPage() {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
+                    {/* Attention Signals — only shown when there is something to act on */}
+                    {(overdueWorkOrders.length > 0 || (asset.status === 'out_of_service' && openWorkOrders.length === 0)) && (
+                        <div className="flex flex-wrap gap-3">
+                            {overdueWorkOrders.length > 0 && (
+                                <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive font-cairo">
+                                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                                    {isRTL
+                                        ? `${overdueWorkOrders.length} ${overdueWorkOrders.length === 1 ? 'أمر عمل متأخر' : 'أوامر عمل متأخرة'} لهذا الأصل`
+                                        : `${overdueWorkOrders.length} overdue work ${overdueWorkOrders.length === 1 ? 'order' : 'orders'} on this asset`}
+                                </div>
+                            )}
+                            {asset.status === 'out_of_service' && openWorkOrders.length === 0 && (
+                                <div className="flex items-center gap-2 rounded-lg border border-orange-400/30 bg-orange-400/5 px-4 py-2.5 text-sm text-orange-700 font-cairo">
+                                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                                    {isRTL ? 'الأصل خارج الخدمة ولا توجد أوامر عمل مفتوحة.' : 'Asset is out of service with no open work orders.'}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
                         <div className="space-y-6">
+                            {/* A. Asset Overview — identity, location, key metadata */}
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="font-cairo">{t('common.details')}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="grid gap-4 md:grid-cols-2">
-                                    <InfoLine label={t('assets.location')} value={asset.building?.name || t('common.none')} icon={Building2} />
+                                    <InfoLine
+                                        label={t('assets.location')}
+                                        value={[
+                                            isRTL ? asset.building?.name_ar || asset.building?.name : asset.building?.name,
+                                            isRTL ? asset.floor?.name_ar || asset.floor?.name : asset.floor?.name,
+                                            isRTL ? asset.room?.name_ar || asset.room?.name : asset.room?.name,
+                                        ].filter(Boolean).join(' / ') || t('common.none')}
+                                        icon={Building2}
+                                    />
                                     <InfoLine label={t('assets.category')} value={asset.category?.name || t('common.none')} icon={FileText} />
-                                    <InfoLine label={t('assets.purchaseDate')} value={asset.purchase_date ? formatDate(asset.purchase_date, locale) : t('common.none')} icon={Calendar} />
-                                    <InfoLine label={t('assets.warrantyExpiry')} value={asset.warranty_expiry ? formatDate(asset.warranty_expiry, locale) : t('common.none')} icon={CheckCircle2} />
+                                    <InfoLine
+                                        label={t('assets.criticality')}
+                                        value={asset.criticality ? t(`assets.${asset.criticality}`) : t('common.none')}
+                                        icon={ShieldAlert}
+                                    />
                                     <InfoLine label={t('assets.model')} value={asset.model || t('common.none')} icon={Wrench} />
                                     <InfoLine label={t('assets.serialNumber')} value={asset.serial_number || t('common.none')} icon={ClipboardList} />
+                                    <InfoLine label={t('assets.purchaseDate')} value={asset.purchase_date ? formatDate(asset.purchase_date, locale) : t('common.none')} icon={Calendar} />
+                                    <InfoLine label={t('assets.warrantyExpiry')} value={asset.warranty_expiry ? formatDate(asset.warranty_expiry, locale) : t('common.none')} icon={CheckCircle2} />
                                 </CardContent>
                             </Card>
 
+                            {/* C. Preventive Maintenance — linked PM schedules */}
+                            {canViewPm && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 font-cairo">
+                                            <CalendarClock className="h-5 w-5 text-info" />
+                                            {isRTL ? 'جداول الصيانة الوقائية' : 'Preventive Maintenance Schedules'}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {assetPMSchedules.length === 0 ? (
+                                            <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground font-cairo">
+                                                {isRTL
+                                                    ? 'لا توجد جداول صيانة وقائية مرتبطة بهذا الأصل.'
+                                                    : 'No preventive maintenance schedules are linked to this asset.'}
+                                            </p>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {assetPMSchedules.map((schedule) => {
+                                                    const freqLabel = schedule.frequency_type
+                                                        ? (isRTL ? FREQUENCY_LABEL[schedule.frequency_type]?.ar : FREQUENCY_LABEL[schedule.frequency_type]?.en) ?? schedule.frequency_type
+                                                        : null
+                                                    const schedName = isRTL ? schedule.name_ar || schedule.name : schedule.name
+                                                    return (
+                                                        <div
+                                                            key={schedule.id}
+                                                            className="rounded-xl border bg-muted/5 px-4 py-3 space-y-2"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                                                                <div>
+                                                                    <p className="font-medium font-cairo">{schedName}</p>
+                                                                    {schedule.code && (
+                                                                        <p className="text-xs font-mono text-muted-foreground">{schedule.code}</p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    {freqLabel && (
+                                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-info/10 text-info border border-info/20 font-cairo">
+                                                                            {freqLabel}
+                                                                        </span>
+                                                                    )}
+                                                                    <span className={cn(
+                                                                        'text-xs px-2 py-0.5 rounded-full border font-cairo',
+                                                                        schedule.status === 'active' ? 'bg-success/10 text-success border-success/20' : 'bg-muted/10 text-muted-foreground border-muted/20'
+                                                                    )}>
+                                                                        {schedule.status === 'active'
+                                                                            ? (isRTL ? 'نشط' : 'Active')
+                                                                            : (isRTL ? schedule.status : schedule.status)}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground font-cairo">
+                                                                {schedule.next_due_date && (
+                                                                    <span>
+                                                                        {isRTL ? 'الاستحقاق التالي: ' : 'Next due: '}
+                                                                        <span className="font-medium text-foreground">{formatDate(schedule.next_due_date, locale)}</span>
+                                                                    </span>
+                                                                )}
+                                                                {schedule.last_generated_date && (
+                                                                    <span>
+                                                                        {isRTL ? 'آخر تنفيذ: ' : 'Last run: '}
+                                                                        <span className="font-medium text-foreground">{formatDate(schedule.last_generated_date, locale)}</span>
+                                                                    </span>
+                                                                )}
+                                                                {typeof schedule.compliance_rate === 'number' && (
+                                                                    <span>
+                                                                        {isRTL ? 'الامتثال: ' : 'Compliance: '}
+                                                                        <span className={cn(
+                                                                            'font-medium',
+                                                                            schedule.compliance_rate >= 80 ? 'text-success' : schedule.compliance_rate >= 50 ? 'text-warning' : 'text-destructive'
+                                                                        )}>
+                                                                            {schedule.compliance_rate.toFixed(0)}%
+                                                                        </span>
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* B. Operational Memory / Work History */}
                             <Card>
                                 <CardHeader className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                                     <CardTitle className="font-cairo">{t('workOrders.title')}</CardTitle>
@@ -280,21 +454,50 @@ export default function AssetDetailsPage() {
                                             {t('common.noData')}
                                         </p>
                                     ) : (
-                                        <div className="space-y-3">
-                                            {assetWorkOrders.slice(0, 6).map((workOrder) => (
-                                                <button
-                                                    key={workOrder.id}
-                                                    type="button"
-                                                    className="flex w-full items-center justify-between rounded-xl border px-4 py-3 text-start transition hover:border-primary/40 hover:bg-muted/20"
-                                                    onClick={() => navigate(`/work-orders/${workOrder.id}`)}
-                                                >
-                                                    <div>
-                                                        <p className="font-medium">{workOrder.title}</p>
-                                                        <p className="text-sm text-muted-foreground">{formatDate(workOrder.created_at, locale)}</p>
-                                                    </div>
-                                                    <Badge variant="outline">{workOrder.code}</Badge>
-                                                </button>
-                                            ))}
+                                        <div className="space-y-2">
+                                            {assetWorkOrders.slice(0, 8).map((workOrder) => {
+                                                const statusConf = STATUS_DISPLAY[workOrder.status as keyof typeof STATUS_DISPLAY] ?? STATUS_DISPLAY.pending
+                                                const preventive = isPreventiveWorkOrder(workOrder)
+                                                const overdue = isOverdueWorkOrder(workOrder.due_date, workOrder.status)
+                                                return (
+                                                    <button
+                                                        key={workOrder.id}
+                                                        type="button"
+                                                        className={cn(
+                                                            'flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-start transition hover:border-primary/40 hover:bg-muted/20',
+                                                            overdue && 'border-destructive/30 bg-destructive/5'
+                                                        )}
+                                                        onClick={() => navigate(`/work-orders/${workOrder.id}`)}
+                                                    >
+                                                        <div className="flex-1 min-w-0 space-y-1">
+                                                            <p className="font-medium font-cairo truncate">{workOrder.title}</p>
+                                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                                <span className={cn(
+                                                                    'px-2 py-0.5 rounded-full text-[10px] font-cairo font-medium border',
+                                                                    statusConf.bg, statusConf.color, statusConf.borderColor
+                                                                )}>
+                                                                    {isRTL ? statusConf.labelAr : t(`workOrders.${statusConf.label}`)}
+                                                                </span>
+                                                                <span className={cn(
+                                                                    'px-2 py-0.5 rounded-full text-[10px] font-cairo font-medium border',
+                                                                    preventive ? 'text-info bg-info/10 border-info/20' : 'text-muted-foreground bg-muted/10 border-muted/20'
+                                                                )}>
+                                                                    {preventive ? (isRTL ? 'وقائي' : 'Preventive') : (isRTL ? 'تصحيحي' : 'Corrective')}
+                                                                </span>
+                                                                {overdue && (
+                                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-cairo font-medium border text-destructive bg-destructive/10 border-destructive/20">
+                                                                        {isRTL ? 'متأخر' : 'Overdue'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-shrink-0 text-end space-y-1">
+                                                            <p className="text-xs font-mono text-muted-foreground">{workOrder.code}</p>
+                                                            <p className="text-xs text-muted-foreground">{formatDate(workOrder.created_at, locale)}</p>
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
                                         </div>
                                     )}
                                 </CardContent>

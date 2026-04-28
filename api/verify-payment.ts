@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
-import { activatePaidSubscription } from './_lib/paymentActivation.js'
+import { activatePaidSubscription, PaymentActivationError } from './_lib/paymentActivation.js'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
@@ -219,14 +219,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Cannot resolve plan ID from metadata' })
         }
 
-        const activateResult = await activatePaidSubscription(supabase, {
-            tenantId,
-            planId: finalPlanId,
-            billingCycle,
-            paymentReference: charge.id,
-            amount: paidAmount,
-            adminNote: null,
-        })
+        let activateResult
+        try {
+            activateResult = await activatePaidSubscription(supabase, {
+                tenantId,
+                planId: finalPlanId,
+                billingCycle,
+                paymentReference: charge.id,
+                amount: paidAmount,
+                adminNote: null,
+            })
+        } catch (activationError: any) {
+            const isActivationError = activationError instanceof PaymentActivationError
+            console.error('Payment activation failed after gateway capture:', {
+                tapId: charge.id,
+                tenantId,
+                planId: finalPlanId,
+                message: activationError?.message || activationError,
+                code: isActivationError ? activationError.code : undefined,
+                details: isActivationError ? activationError.details : undefined,
+                hint: isActivationError ? activationError.hint : undefined,
+            })
+
+            return res.status(500).json({
+                success: false,
+                status: 'CAPTURED',
+                error: 'Payment captured but subscription activation failed',
+                details: 'No fallback activation was attempted; support review is required',
+            })
+        }
 
         return res.status(200).json({
             success: true,

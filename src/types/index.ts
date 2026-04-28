@@ -152,6 +152,8 @@ export interface WorkOrder extends BaseEntity {
     start_time: string | null
     end_time: string | null
     completed_at: string | null
+    cancelled_at?: string | null
+    cancellation_reason?: string | null
 }
 
 // Re-export from canonical source

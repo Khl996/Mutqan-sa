@@ -117,25 +117,20 @@ export function useMaintenanceTasks(filters?: MaintenanceTaskFilters) {
             let relatedWorkOrderId: string | null = null
 
             if (input.shouldCreateWorkOrder) {
-                const { data: workOrder, error: workOrderError } = await (supabase.from('work_orders') as any)
-                    .insert({
-                        tenant_id: tenantId,
-                        code: createWorkOrderCode(),
-                        title: input.title,
-                        description: input.description?.trim() || null,
-                        status: assignedTo || input.assigned_team_id ? 'assigned' : 'pending',
-                        priority: input.priority ?? 'medium',
-                        assigned_to: assignedTo,
-                        assigned_team: normalizeOptionalUuid(input.assigned_team_id),
-                        reported_by: user.id,
-                        created_by: user.id,
-                        maintenance_plan_id: input.maintenance_plan_id ?? null,
-                        building_id: input.building_id ?? null,
-                        asset_id: input.asset_id ?? null,
-                        due_date: input.due_date ?? null,
+                const { data: workOrder, error: workOrderError } = await (supabase as any)
+                    .rpc('create_work_order', {
+                        p_work_order: {
+                            code: createWorkOrderCode(),
+                            title: input.title,
+                            description: input.description?.trim() || null,
+                            priority: input.priority ?? 'medium',
+                            assigned_team: normalizeOptionalUuid(input.assigned_team_id),
+                            reported_by: user.id,
+                            building_id: input.building_id ?? null,
+                            asset_id: input.asset_id ?? null,
+                            due_date: input.due_date ?? null,
+                        },
                     })
-                    .select('id')
-                    .single()
 
                 if (workOrderError) throw workOrderError
                 relatedWorkOrderId = workOrder.id

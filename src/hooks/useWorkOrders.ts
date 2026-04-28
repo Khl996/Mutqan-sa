@@ -28,9 +28,13 @@ export interface WorkOrder {
     start_time: string | null
     end_time: string | null
     completed_at: string | null
+    cancelled_at?: string | null
+    cancellation_reason?: string | null
     due_date: string | null
     estimated_cost: number | null
     actual_cost: number | null
+    tags?: string[] | null
+    custom_fields?: Record<string, unknown> | null
     attachments: unknown[] | null
     before_images: unknown[] | null
     after_images: unknown[] | null
@@ -53,6 +57,10 @@ export interface WorkOrder {
         room?: { id: string; name: string; name_ar: string | null }
     }
 
+    // PM provenance fields
+    work_type?: 'corrective' | 'preventive' | string | null
+    source_schedule_id?: string | null
+
     // Workflow tracking fields
     technician_notes?: string | null
     supervisor_notes?: string | null
@@ -66,6 +74,10 @@ export interface WorkOrder {
     engineer_approved_at?: string | null
     maintenance_manager_approved_by?: string | null
     maintenance_manager_approved_at?: string | null
+}
+
+export function isPreventiveWorkOrder(wo: Pick<WorkOrder, 'work_type' | 'source_schedule_id'>): boolean {
+    return wo.work_type === 'preventive' || !!wo.source_schedule_id
 }
 
 export interface IssueType {
@@ -83,31 +95,105 @@ export interface IssueType {
 }
 
 export interface CreateWorkOrderInput {
-    tenant_id: string
-    code: string
+    code?: string | null
     title: string
     description?: string | null
     issue_type_id?: string | null
     issue_type?: string | null
-    status?: WorkOrder['status']
     priority?: WorkOrder['priority']
     reported_by?: string | null
-    assigned_to?: string | null
     assigned_team?: string | null
-    created_by?: string | null
     building_id?: string | null
     floor_id?: string | null
     department_id?: string | null
     room_id?: string | null
     asset_id?: string | null
     due_date?: string | null
+    reporter_name?: string | null
+    reporter_phone?: string | null
+}
+
+const WORK_ORDER_METADATA_UPDATE_FIELDS = [
+    'title',
+    'description',
+    'issue_type_id',
+    'issue_type',
+    'priority',
+    'due_date',
+    'building_id',
+    'floor_id',
+    'department_id',
+    'room_id',
+    'asset_id',
+    'estimated_cost',
+    'tags',
+    'custom_fields',
+] as const
+
+type WorkOrderMetadataUpdateField = typeof WORK_ORDER_METADATA_UPDATE_FIELDS[number]
+
+export type UpdateWorkOrderMetadataInput = {
+    id: string
+} & Partial<Pick<WorkOrder, WorkOrderMetadataUpdateField>>
+
+type WorkOrderMetadataUpdatePayload = Partial<Pick<WorkOrder, WorkOrderMetadataUpdateField>>
+
+const CREATE_WORK_ORDER_FIELDS = [
+    'code',
+    'title',
+    'description',
+    'issue_type_id',
+    'issue_type',
+    'priority',
+    'reported_by',
+    'assigned_team',
+    'building_id',
+    'floor_id',
+    'department_id',
+    'room_id',
+    'asset_id',
+    'due_date',
+    'reporter_name',
+    'reporter_phone',
+] as const
+
+function sanitizeWorkOrderMetadataUpdates(input: WorkOrderMetadataUpdatePayload): WorkOrderMetadataUpdatePayload {
+    const sanitized: Record<string, unknown> = {}
+
+    for (const field of WORK_ORDER_METADATA_UPDATE_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(input, field) && input[field] !== undefined) {
+            sanitized[field] = input[field]
+        }
+    }
+
+    if (Object.keys(sanitized).length === 0) {
+        throw new Error('No safe work order metadata fields provided for update.')
+    }
+
+    return sanitized as WorkOrderMetadataUpdatePayload
+}
+
+function sanitizeCreateWorkOrderInput(input: CreateWorkOrderInput): CreateWorkOrderInput {
+    const sanitized: Record<string, unknown> = {}
+
+    for (const field of CREATE_WORK_ORDER_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(input, field) && input[field] !== undefined) {
+            sanitized[field] = input[field]
+        }
+    }
+
+    if (!sanitized.title || typeof sanitized.title !== 'string' || sanitized.title.trim() === '') {
+        throw new Error('Work order title is required.')
+    }
+
+    return sanitized as CreateWorkOrderInput
 }
 
 export interface OperationLog {
     id: string
     tenant_id: string
     code: string
-    type: 'maintenance' | 'repair' | 'inspection' | 'emergency' | 'routine' | 'installation' | 'calibration' | 'status_change' | 'comment' | 'other'
+    type: 'maintenance' | 'repair' | 'inspection' | 'emergency' | 'routine' | 'installation' | 'calibration' | 'status_change' | 'comment' | 'assignment' | 'create' | 'update' | 'cancellation' | 'other'
     asset_id: string | null
     work_order_id: string | null
     description: string
@@ -278,13 +364,15 @@ export function useCreateWorkOrder() {
 
     return useMutation({
         mutationFn: async (workOrder: CreateWorkOrderInput) => {
-            const { data, error } = await (supabase.from('work_orders') as any)
-                .insert(workOrder)
-                .select()
-                .single()
+            const payload = sanitizeCreateWorkOrderInput(workOrder)
+            const { data, error } = await (supabase as any).rpc('create_work_order', {
+                p_work_order: payload,
+            })
 
-            if (error) throw error
-            return data
+            if (error) {
+                throw new Error(error.message || 'Failed to create work order through the audited creation RPC.')
+            }
+            return data as WorkOrder
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: workOrdersKeys.list() })
@@ -293,14 +381,19 @@ export function useCreateWorkOrder() {
     })
 }
 
-// Update Work Order
+// Phase 1 safety pass: direct work-order table writes may update metadata only.
+// Lifecycle-sensitive fields such as status, assignment, approvals, completion,
+// closure, evidence, and deletion must use workflow RPCs. This client allowlist
+// is temporary protection; database-level sensitive-field guards are still
+// required in a future task.
 export function useUpdateWorkOrder() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: async ({ id, ...updates }: Partial<WorkOrder> & { id: string }) => {
+        mutationFn: async ({ id, ...updates }: UpdateWorkOrderMetadataInput) => {
+            const sanitizedUpdates = sanitizeWorkOrderMetadataUpdates(updates)
             const { data, error } = await (supabase.from('work_orders') as any)
-                .update(updates)
+                .update(sanitizedUpdates)
                 .eq('id', id)
                 .select()
                 .single()
@@ -316,44 +409,20 @@ export function useUpdateWorkOrder() {
     })
 }
 
-// Update Work Order Status
+// Direct status mutation is disabled for Pilot v1. Use useWorkOrderWorkflow RPCs.
 export function useUpdateWorkOrderStatus() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: async ({ id, status }: { id: string; status: WorkOrder['status'] }) => {
-            const { data, error } = await (supabase.from('work_orders') as any)
-                .update({ status, updated_at: new Date().toISOString() })
-                .eq('id', id)
-                .select()
-                .single()
-
-            if (error) throw error
-            return data
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: workOrdersKeys.list() })
-            queryClient.invalidateQueries({ queryKey: workOrdersKeys.workOrder(variables.id) })
-            queryClient.invalidateQueries({ queryKey: workOrdersKeys.stats() })
+    return useMutation<never, Error, { id: string; status: WorkOrder['status'] }>({
+        mutationFn: async () => {
+            throw new Error('Direct work order status updates are disabled. Use workflow RPC actions instead.')
         },
     })
 }
 
-// Delete Work Order
+// Direct hard deletion is disabled for Pilot v1 to preserve operational memory.
 export function useDeleteWorkOrder() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: async (id: string) => {
-            const { error } = await (supabase.from('work_orders') as any)
-                .delete()
-                .eq('id', id)
-
-            if (error) throw error
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: workOrdersKeys.list() })
-            queryClient.invalidateQueries({ queryKey: workOrdersKeys.stats() })
+    return useMutation<never, Error, string>({
+        mutationFn: async () => {
+            throw new Error('Direct work order deletion is disabled for operational memory protection. Use the audited cancel workflow.')
         },
     })
 }

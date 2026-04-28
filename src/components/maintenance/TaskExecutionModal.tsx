@@ -618,14 +618,11 @@ export default function TaskExecutionModal({
         try {
             setIsBusy(true)
             const workOrder = await createWorkOrderMutation.mutateAsync({
-                tenant_id: currentTenant.id,
                 code: `WO-${Date.now().toString().slice(-8)}`,
                 title: taskSnapshot.title,
                 description: taskSnapshot.description ?? null,
-                status: taskSnapshot.assigned_to || taskSnapshot.assigned_team_id ? 'assigned' : 'pending',
                 priority: taskSnapshot.priority === 'critical' ? 'high' : (taskSnapshot.priority as 'low' | 'medium' | 'high'),
                 reported_by: user.id,
-                assigned_to: taskSnapshot.assigned_to ?? null,
                 assigned_team: taskSnapshot.assigned_team_id ?? null,
                 building_id: taskSnapshot.building_id ?? null,
                 asset_id: taskSnapshot.asset_id ?? null,

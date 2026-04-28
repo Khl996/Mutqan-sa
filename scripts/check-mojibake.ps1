@@ -61,7 +61,7 @@ foreach ($root in $roots) {
             }
         }
 
-        $lines = Get-Content -LiteralPath $file.FullName -Encoding UTF8
+        $lines = @(Get-Content -LiteralPath $file.FullName -Encoding UTF8)
         for ($i = 0; $i -lt $lines.Count; $i++) {
             foreach ($fragment in $fragments) {
                 if ($lines[$i].Contains($fragment)) {

@@ -12,6 +12,7 @@ type UserFixture = {
     role: string
     tenantId: string | null
     superAdmin?: boolean
+    active?: boolean
 }
 
 const ids = {
@@ -30,11 +31,22 @@ const ids = {
     invoiceB: '88888888-8888-4888-8888-888888888882',
     jobPlanA: '99999999-9999-4999-8999-999999999991',
     jobPlanB: '99999999-9999-4999-8999-999999999992',
+    jobPlanGen: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd1',
     scheduleA: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
     scheduleB: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
+    scheduleGen: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd4',
+    jobPlanItemGen1: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd2',
+    jobPlanItemGen2: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd3',
+    teamA: 'abababab-abab-4aba-8aba-ababababab01',
+    teamB: 'abababab-abab-4aba-8aba-ababababab02',
     assignedWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',
     unassignedWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2',
     tenantBWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3',
+    reactiveWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4',
+    rejectableWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb5',
+    rejectSupervisorWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb6',
+    rejectEngineerWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb7',
+    rejectReporterWo: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb8',
     notificationA: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
     notificationB: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc2',
 }
@@ -47,7 +59,8 @@ const users: UserFixture[] = [
     ['RLS_TENANT_A_TECHNICIAN_JWT', 'fixture.tenant.a.technician@mutqan.test', 'Fixture Technician', 'فني اختباري', 'technician', ids.tenantA],
     ['RLS_TENANT_A_REPORTER_JWT', 'fixture.tenant.a.reporter@mutqan.test', 'Fixture Reporter', 'مبلغ اختباري', 'reporter', ids.tenantA],
     ['RLS_TENANT_B_USER_JWT', 'fixture.tenant.b.user@mutqan.test', 'Fixture Tenant B User', 'مستخدم المستأجر ب', 'tenant_admin', ids.tenantB],
-].map(([envKey, email, name, nameAr, role, tenantId, superAdmin]) => ({
+    ['RLS_TENANT_A_INACTIVE_TECHNICIAN_JWT', 'fixture.tenant.a.inactive.technician@mutqan.test', 'Fixture Inactive Technician', 'Inactive fixture technician', 'technician', ids.tenantA, false, false],
+].map(([envKey, email, name, nameAr, role, tenantId, superAdmin, active]) => ({
     envKey: String(envKey),
     email: String(email),
     name: String(name),
@@ -55,7 +68,19 @@ const users: UserFixture[] = [
     role: String(role),
     tenantId: tenantId ? String(tenantId) : null,
     superAdmin: Boolean(superAdmin),
+    active: active === false ? false : true,
 }))
+
+users.push({
+    envKey: 'RLS_TENANT_A_ENGINEER_JWT',
+    email: 'fixture.tenant.a.engineer@mutqan.test',
+    name: 'Fixture Engineer',
+    nameAr: 'Fixture Engineer',
+    role: 'engineer',
+    tenantId: ids.tenantA,
+    superAdmin: false,
+    active: true,
+})
 
 function readEnv(path: string): EnvMap {
     const map: EnvMap = {}
@@ -138,6 +163,41 @@ async function upsert(table: string, payload: UpsertPayload, onConflict?: string
     for (const row of rows) await upsertOne(table, row, onConflict)
 }
 
+// INSERT-only helper for tables guarded by a BEFORE UPDATE trigger.
+// Plain INSERT is not subject to BEFORE UPDATE — the trigger never fires.
+// Use this only after deleting the target rows so there is no conflict to resolve.
+// DO NOT use this pattern in application runtime code: production lifecycle
+// transitions must go through workflow RPCs that set app.work_order_workflow_authorized.
+async function insertOne(table: string, payload: Record<string, unknown>) {
+    let currentPayload = payload
+    const droppedColumns: string[] = []
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+        const { error } = await service.from(table).insert(currentPayload)
+        if (!error) {
+            if (droppedColumns.length > 0) {
+                console.warn(`${table}: skipped missing staging columns: ${droppedColumns.join(', ')}`)
+            }
+            return
+        }
+
+        const column = missingColumn(error.message)
+        if (!column || !hasColumn(currentPayload, column)) {
+            throw new Error(`${table}: ${error.message}`)
+        }
+
+        droppedColumns.push(column)
+        currentPayload = dropColumn(currentPayload, column) as Record<string, unknown>
+    }
+
+    throw new Error(`${table}: too many missing-column retries`)
+}
+
+async function insertMany(table: string, payload: UpsertPayload) {
+    const rows = Array.isArray(payload) ? payload : [payload]
+    for (const row of rows) await insertOne(table, row)
+}
+
 async function findAuthUser(email: string) {
     for (let page = 1; page < 20; page += 1) {
         const { data, error } = await service.auth.admin.listUsers({ page, perPage: 1000 })
@@ -184,9 +244,11 @@ async function main() {
     const admin = userIds.get('fixture.tenant.a.admin@mutqan.test')!
     const manager = userIds.get('fixture.tenant.a.manager@mutqan.test')!
     const supervisor = userIds.get('fixture.tenant.a.supervisor@mutqan.test')!
+    const engineer = userIds.get('fixture.tenant.a.engineer@mutqan.test')!
     const technician = userIds.get('fixture.tenant.a.technician@mutqan.test')!
     const reporter = userIds.get('fixture.tenant.a.reporter@mutqan.test')!
     const tenantBUser = userIds.get('fixture.tenant.b.user@mutqan.test')!
+    const inactiveTechnician = userIds.get('fixture.tenant.a.inactive.technician@mutqan.test')!
 
     await upsert('subscription_plans', {
         id: ids.plan, code: 'fixture-professional', name: 'Fixture Professional',
@@ -231,20 +293,197 @@ async function main() {
     await upsert('job_plans', [
         { id: ids.jobPlanA, tenant_id: ids.tenantA, code: 'FX-A-JP-01', name: 'Fixture AHU Monthly PM', name_ar: 'خطة وقائية شهرية لوحدة الهواء', category: 'hvac', status: 'active', estimated_duration_minutes: 45, requires_safety_checks: true, created_by: manager },
         { id: ids.jobPlanB, tenant_id: ids.tenantB, code: 'FX-B-JP-01', name: 'Fixture Pump Monthly PM', name_ar: 'خطة وقائية شهرية للمضخة', category: 'mechanical', status: 'active', estimated_duration_minutes: 30, requires_safety_checks: true, created_by: tenantBUser },
+        { id: ids.jobPlanGen, tenant_id: ids.tenantA, code: 'FX-A-JP-GEN', name: 'Fixture PM Generation Test Plan', name_ar: 'خطة اختبار توليد الصيانة الوقائية', category: 'hvac', status: 'active', estimated_duration_minutes: 20, requires_safety_checks: false, created_by: manager },
     ])
+    await upsert('job_plan_items', [
+        { id: ids.jobPlanItemGen1, job_plan_id: ids.jobPlanGen, sort_order: 1, label: 'Check filter condition', label_ar: 'فحص حالة الفلتر', item_type: 'yes_no', is_required: true, is_critical: false },
+        { id: ids.jobPlanItemGen2, job_plan_id: ids.jobPlanGen, sort_order: 0, label: 'Pre-check Header', label_ar: 'رأس الفحوصات الأولية', item_type: 'header', is_required: false, is_critical: false },
+    ])
+    const today = new Date().toISOString().slice(0, 10)
     await upsert('pm_schedules', [
-        { id: ids.scheduleA, tenant_id: ids.tenantA, code: 'FX-A-PM-01', name: 'Fixture AHU PM Schedule', name_ar: 'جدول صيانة وقائية لوحدة الهواء', job_plan_id: ids.jobPlanA, primary_asset_id: ids.assetA, trigger_type: 'calendar', frequency_type: 'monthly', frequency_interval: 1, start_date: new Date().toISOString().slice(0, 10), next_due_date: new Date(Date.now() + 604800000).toISOString().slice(0, 10), default_assignee_id: technician, default_priority: 'medium', status: 'active', created_by: manager, generation_mode: 'per_asset' },
-        { id: ids.scheduleB, tenant_id: ids.tenantB, code: 'FX-B-PM-01', name: 'Fixture Pump PM Schedule', name_ar: 'جدول صيانة وقائية للمضخة', job_plan_id: ids.jobPlanB, primary_asset_id: ids.assetB, trigger_type: 'calendar', frequency_type: 'monthly', frequency_interval: 1, start_date: new Date().toISOString().slice(0, 10), next_due_date: new Date(Date.now() + 604800000).toISOString().slice(0, 10), default_priority: 'medium', status: 'active', created_by: tenantBUser, generation_mode: 'per_asset' },
+        { id: ids.scheduleA, tenant_id: ids.tenantA, code: 'FX-A-PM-01', name: 'Fixture AHU PM Schedule', name_ar: 'جدول صيانة وقائية لوحدة الهواء', job_plan_id: ids.jobPlanA, primary_asset_id: ids.assetA, trigger_type: 'calendar', frequency_type: 'monthly', frequency_interval: 1, start_date: today, next_due_date: new Date(Date.now() + 604800000).toISOString().slice(0, 10), default_assignee_id: technician, default_priority: 'medium', status: 'active', created_by: manager, generation_mode: 'per_asset', total_completed: 0, total_generated: 1, compliance_rate: 0 },
+        { id: ids.scheduleB, tenant_id: ids.tenantB, code: 'FX-B-PM-01', name: 'Fixture Pump PM Schedule', name_ar: 'جدول صيانة وقائية للمضخة', job_plan_id: ids.jobPlanB, primary_asset_id: ids.assetB, trigger_type: 'calendar', frequency_type: 'monthly', frequency_interval: 1, start_date: today, next_due_date: new Date(Date.now() + 604800000).toISOString().slice(0, 10), default_priority: 'medium', status: 'active', created_by: tenantBUser, generation_mode: 'per_asset', total_completed: 0, total_generated: 1, compliance_rate: 0 },
+        { id: ids.scheduleGen, tenant_id: ids.tenantA, code: 'FX-A-PM-GEN', name: 'Fixture PM Generation Test Schedule', name_ar: 'جدول اختبار توليد الصيانة الوقائية', job_plan_id: ids.jobPlanGen, primary_asset_id: ids.assetA, trigger_type: 'calendar', frequency_type: 'monthly', frequency_interval: 1, start_date: today, next_due_date: today, default_assignee_id: technician, default_team_id: null, default_priority: 'medium', status: 'active', created_by: manager, generation_mode: 'per_asset', total_completed: 0, total_generated: 0, compliance_rate: 0 },
     ])
-    await upsert('work_orders', [
-        { id: ids.assignedWo, tenant_id: ids.tenantA, code: 'FX-A-WO-ASSIGNED', title: 'Fixture assigned work order', description: 'Disposable WO assigned to fixture technician', issue_type: 'preventive_maintenance', status: 'assigned', priority: 'medium', reported_by: reporter, assigned_to: technician, created_by: manager, building_id: ids.buildingA, asset_id: ids.assetA, due_date: new Date(Date.now() + 172800000).toISOString(), estimated_cost: 250, actual_cost: 0, work_type: 'preventive', source_schedule_id: ids.scheduleA, job_plan_id: ids.jobPlanA, scheduled_date: new Date().toISOString().slice(0, 10), compliance_deadline: new Date(Date.now() + 172800000).toISOString().slice(0, 10) },
-        { id: ids.unassignedWo, tenant_id: ids.tenantA, code: 'FX-A-WO-UNASSIGNED', title: 'Fixture unassigned-to-technician work order', description: 'Disposable WO assigned to supervisor, not technician', issue_type: 'corrective_maintenance', status: 'assigned', priority: 'medium', reported_by: reporter, assigned_to: supervisor, created_by: manager, building_id: ids.buildingA, asset_id: ids.assetA, due_date: new Date(Date.now() + 172800000).toISOString(), estimated_cost: 150, actual_cost: 0, work_type: 'corrective' },
-        { id: ids.tenantBWo, tenant_id: ids.tenantB, code: 'FX-B-WO-01', title: 'Fixture tenant B work order', description: 'Tenant B isolation row', issue_type: 'inspection', status: 'assigned', priority: 'medium', reported_by: tenantBUser, assigned_to: tenantBUser, created_by: tenantBUser, building_id: ids.buildingB, asset_id: ids.assetB, due_date: new Date(Date.now() + 172800000).toISOString(), estimated_cost: 100, actual_cost: 0, work_type: 'preventive', source_schedule_id: ids.scheduleB, job_plan_id: ids.jobPlanB },
-    ], 'tenant_id,code')
+    // ── Work Orders ─────────────────────────────────────────────────────────
+    await upsert('teams', [
+        { id: ids.teamA, tenant_id: ids.tenantA, code: 'FX-A-TEAM-HVAC', name: 'Fixture A HVAC Team', name_ar: 'Fixture A HVAC Team', description: 'Fixture team for assignment verification', type: 'maintenance', specializations: ['hvac'], status: 'active' },
+        { id: ids.teamB, tenant_id: ids.tenantB, code: 'FX-B-TEAM-MECH', name: 'Fixture B Mechanical Team', name_ar: 'Fixture B Mechanical Team', description: 'Fixture team for cross-tenant assignment verification', type: 'maintenance', specializations: ['mechanical'], status: 'active' },
+    ])
+
+    await upsert('team_members', [
+        { team_id: ids.teamA, user_id: technician, role: 'member', specializations: ['hvac'], is_active: true },
+        { team_id: ids.teamA, user_id: engineer, role: 'member', specializations: ['hvac'], is_active: true },
+        { team_id: ids.teamA, user_id: inactiveTechnician, role: 'member', specializations: ['hvac'], is_active: true },
+        { team_id: ids.teamB, user_id: tenantBUser, role: 'member', specializations: ['mechanical'], is_active: true },
+    ], 'team_id,user_id')
+
+    // Migration 120 adds a BEFORE UPDATE trigger (trg_guard_work_order_sensitive_fields)
+    // that blocks direct changes to ~35 lifecycle-sensitive fields (status, assigned_to,
+    // work_type, source_schedule_id, job_plan_id, scheduled_date, compliance_deadline,
+    // and others) unless the transaction is first authorized via:
+    //   set_config('app.work_order_workflow_authorized', 'true', TRUE)
+    //
+    // upsert() resolves conflicts with an UPDATE statement, which fires the trigger
+    // and is rejected whenever the payload contains any sensitive field.
+    //
+    // Fixture strategy — delete-then-insert:
+    //   1. DELETE existing fixture rows by primary key. DELETE is not a BEFORE UPDATE
+    //      event, so the trigger never fires. Dependent rows in work_order_checks and
+    //      operation_logs cascade-delete (acceptable for fixture reset).
+    //   2. INSERT fresh rows in the desired initial state. INSERT is also not a
+    //      BEFORE UPDATE event.
+    // This resets every test fixture to a predictable state on each script run
+    // without bypassing or weakening the production trigger in any way.
+    //
+    // Deletion order matters: operation_logs.work_order_id has no ON DELETE CASCADE
+    // (migration 002), so it must be cleared before work_orders can be deleted.
+    // All other FK dependents (work_order_checks, etc.) use ON DELETE CASCADE.
+    //
+    // DO NOT copy this delete-then-insert pattern into application runtime code.
+    // In production all lifecycle transitions must go through the approved workflow
+    // RPCs (start_work_order, wo_start, complete_work_order_technician, wo_complete,
+    // approve_work_order_supervisor, etc.) which call set_config(...) internally.
+    const fixtureWoIds = [
+        ids.assignedWo,
+        ids.unassignedWo,
+        ids.tenantBWo,
+        ids.reactiveWo,
+        ids.rejectableWo,
+        ids.rejectSupervisorWo,
+        ids.rejectEngineerWo,
+        ids.rejectReporterWo,
+    ]
+
+    // Step 1: clear operation_logs for these WOs (RESTRICT FK — no cascade)
+    const { error: logsDelError } = await service
+        .from('operation_logs')
+        .delete()
+        .in('work_order_id', fixtureWoIds)
+    if (logsDelError) throw new Error(`operation_logs fixture cleanup: ${logsDelError.message}`)
+
+    // Step 2: delete the work orders (remaining dependents cascade automatically)
+    const { error: woDelError } = await service
+        .from('work_orders')
+        .delete()
+        .in('id', fixtureWoIds)
+    if (woDelError) throw new Error(`work_orders fixture cleanup: ${woDelError.message}`)
+
+    await insertMany('work_orders', [
+        {
+            id: ids.assignedWo, tenant_id: ids.tenantA, code: 'FX-A-WO-ASSIGNED',
+            title: 'Fixture assigned work order',
+            description: 'Disposable WO assigned to fixture technician',
+            issue_type: 'preventive_maintenance', status: 'assigned', priority: 'medium',
+            reported_by: reporter, assigned_to: technician, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 250, actual_cost: 0, work_type: 'preventive',
+            source_schedule_id: ids.scheduleA, job_plan_id: ids.jobPlanA,
+            scheduled_date: new Date().toISOString().slice(0, 10),
+            compliance_deadline: new Date(Date.now() + 172800000).toISOString().slice(0, 10),
+        },
+        {
+            id: ids.unassignedWo, tenant_id: ids.tenantA, code: 'FX-A-WO-UNASSIGNED',
+            title: 'Fixture unassigned-to-technician work order',
+            description: 'Disposable WO assigned to supervisor, not technician',
+            issue_type: 'corrective_maintenance', status: 'assigned', priority: 'medium',
+            reported_by: reporter, assigned_to: supervisor, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 150, actual_cost: 0, work_type: 'corrective',
+        },
+        {
+            id: ids.tenantBWo, tenant_id: ids.tenantB, code: 'FX-B-WO-01',
+            title: 'Fixture tenant B work order',
+            description: 'Tenant B isolation row',
+            issue_type: 'inspection', status: 'assigned', priority: 'medium',
+            reported_by: tenantBUser, assigned_to: tenantBUser, created_by: tenantBUser,
+            building_id: ids.buildingB, asset_id: ids.assetB,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 100, actual_cost: 0, work_type: 'preventive',
+            source_schedule_id: ids.scheduleB, job_plan_id: ids.jobPlanB,
+        },
+        {
+            id: ids.reactiveWo, tenant_id: ids.tenantA, code: 'FX-A-WO-REACTIVE',
+            title: 'Fixture reactive corrective work order',
+            description: 'Disposable reactive WO for full lifecycle verification (start→complete→approve→close)',
+            issue_type: 'corrective_maintenance', status: 'assigned', priority: 'medium',
+            reported_by: reporter, assigned_to: technician, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 150, actual_cost: 0, work_type: 'corrective',
+        },
+        {
+            id: ids.rejectableWo, tenant_id: ids.tenantA, code: 'FX-A-WO-REJECTABLE',
+            title: 'Fixture rejectable work order',
+            description: 'Disposable WO for reject_work_order RPC verification',
+            issue_type: 'corrective_maintenance', status: 'assigned', priority: 'medium',
+            reported_by: reporter, assigned_to: technician, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 100, actual_cost: 0, work_type: 'corrective',
+        },
+        {
+            id: ids.rejectSupervisorWo, tenant_id: ids.tenantA, code: 'FX-A-WO-REJECT-SUP',
+            title: 'Fixture supervisor rejection branch work order',
+            description: 'Disposable WO for reject_work_order pending_supervisor_approval branch verification',
+            issue_type: 'corrective_maintenance', status: 'pending_supervisor_approval', priority: 'medium',
+            reported_by: reporter, assigned_to: technician, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 100, actual_cost: 0, work_type: 'corrective',
+            started_at: new Date(Date.now() - 7200000).toISOString(),
+            technician_completed_at: new Date(Date.now() - 3600000).toISOString(),
+            technician_notes: 'Fixture setup: ready for supervisor rejection branch',
+        },
+        {
+            id: ids.rejectEngineerWo, tenant_id: ids.tenantA, code: 'FX-A-WO-REJECT-ENG',
+            title: 'Fixture engineer rejection branch work order',
+            description: 'Disposable WO for reject_work_order pending_engineer_review branch verification',
+            issue_type: 'corrective_maintenance', status: 'pending_engineer_review', priority: 'medium',
+            reported_by: reporter, assigned_to: technician, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 100, actual_cost: 0, work_type: 'corrective',
+            started_at: new Date(Date.now() - 7200000).toISOString(),
+            technician_completed_at: new Date(Date.now() - 3600000).toISOString(),
+            technician_notes: 'Fixture setup: ready for engineer rejection branch',
+            supervisor_approved_by: supervisor,
+            supervisor_approved_at: new Date(Date.now() - 1800000).toISOString(),
+            supervisor_notes: 'Fixture setup: supervisor approval already present',
+        },
+        {
+            id: ids.rejectReporterWo, tenant_id: ids.tenantA, code: 'FX-A-WO-REJECT-REP',
+            title: 'Fixture reporter closure rejection branch work order',
+            description: 'Disposable WO for reject_work_order pending_reporter_closure branch verification',
+            issue_type: 'corrective_maintenance', status: 'pending_reporter_closure', priority: 'medium',
+            reported_by: reporter, assigned_to: technician, created_by: manager,
+            building_id: ids.buildingA, asset_id: ids.assetA,
+            due_date: new Date(Date.now() + 172800000).toISOString(),
+            estimated_cost: 100, actual_cost: 0, work_type: 'corrective',
+            started_at: new Date(Date.now() - 7200000).toISOString(),
+            technician_completed_at: new Date(Date.now() - 3600000).toISOString(),
+            technician_notes: 'Fixture setup: ready for reporter closure rejection branch',
+            supervisor_approved_by: supervisor,
+            supervisor_approved_at: new Date(Date.now() - 1800000).toISOString(),
+            supervisor_notes: 'Fixture setup: supervisor approval already present',
+            engineer_approved_by: engineer,
+            engineer_approved_at: new Date(Date.now() - 900000).toISOString(),
+            engineer_notes: 'Fixture setup: engineer review already present',
+            pending_closure_since: new Date(Date.now() - 600000).toISOString(),
+        },
+    ])
     await upsert('notifications', [
         { id: ids.notificationA, tenant_id: ids.tenantA, user_id: technician, title: 'Fixture assignment', message: 'Fixture work order assigned', type: 'work_order', link: `/work-orders/${ids.assignedWo}`, metadata: { fixture: true }, is_read: false },
         { id: ids.notificationB, tenant_id: ids.tenantB, user_id: tenantBUser, title: 'Fixture tenant B', message: 'Tenant B isolation notification', type: 'info', metadata: { fixture: true }, is_read: false },
     ])
+
+    const { error: inactiveProfileError } = await service
+        .from('profiles')
+        .update({ is_active: false })
+        .eq('id', inactiveTechnician)
+    if (inactiveProfileError) throw new Error(`inactive technician profile update: ${inactiveProfileError.message}`)
 
     const lines = [
         '# Generated by scripts/prepare-staging-fixtures.ts',
@@ -254,6 +493,20 @@ async function main() {
         'RLS_ALLOW_MUTATION_TESTS=1',
         `RLS_TECHNICIAN_ASSIGNED_WO_ID=${ids.assignedWo}`,
         `RLS_TECHNICIAN_UNASSIGNED_WO_ID=${ids.unassignedWo}`,
+        `RLS_REACTIVE_WO_ID=${ids.reactiveWo}`,
+        `RLS_REJECTABLE_WO_ID=${ids.rejectableWo}`,
+        `RLS_REJECT_SUPERVISOR_WO_ID=${ids.rejectSupervisorWo}`,
+        `RLS_REJECT_ENGINEER_WO_ID=${ids.rejectEngineerWo}`,
+        `RLS_REJECT_REPORTER_WO_ID=${ids.rejectReporterWo}`,
+        `RLS_PM_GEN_SCHEDULE_ID=${ids.scheduleGen}`,
+        `RLS_PM_GEN_JOB_PLAN_ID=${ids.jobPlanGen}`,
+        `RLS_TENANT_A_TEAM_ID=${ids.teamA}`,
+        `RLS_TENANT_B_TEAM_ID=${ids.teamB}`,
+        `RLS_TENANT_A_TECHNICIAN_USER_ID=${technician}`,
+        `RLS_TENANT_A_SUPERVISOR_USER_ID=${supervisor}`,
+        `RLS_TENANT_A_ENGINEER_USER_ID=${engineer}`,
+        `RLS_TENANT_A_INACTIVE_TECHNICIAN_USER_ID=${inactiveTechnician}`,
+        `RLS_TENANT_B_USER_ID=${tenantBUser}`,
         `MUTQAN_FIXTURE_PLAN_ID=${ids.plan}`,
     ]
 

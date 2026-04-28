@@ -15,9 +15,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageHeader } from '@/components/ui/page-header'
+import { ReportsDecisionBrief } from '@/components/reports/ReportsDecisionBrief'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
-import { useReportingFoundation, type ReportingFoundationMetrics } from '@/hooks/useReports'
+import { useInventoryReport, useReportingFoundation, useWorkOrdersReport, type ReportingFoundationMetrics } from '@/hooks/useReports'
 import { cn, formatCurrency, formatNumber } from '@/lib/utils'
 
 function pct(value: number | null | undefined) {
@@ -64,6 +65,8 @@ export default function ReportsPage() {
     const isOperationalReportsEnabled = useFeatureEnabled('reports', 'operational_reports')
     const isExportEnabled = useFeatureEnabled('reports', 'export')
     const { data: metrics, isLoading, error } = useReportingFoundation()
+    const { data: workOrderReport } = useWorkOrdersReport()
+    const { data: inventoryReport } = useInventoryReport()
 
     const pmCompliance = calculatePmCompliance(metrics)
     const slaMetRate = calculateSlaMetRate(metrics)
@@ -75,13 +78,24 @@ export default function ReportsPage() {
         if (!metrics) return
 
         try {
-            const rows = [
+            const rows = isRTL ? [
+                ['المقياس', 'القيمة'],
+                ['أوامر العمل المفتوحة', metrics.work_orders.open],
+                ['أوامر العمل المتأخرة', metrics.work_orders.overdue_open],
+                ['التزام الصيانة الوقائية %', pmCompliance ?? 'N/A'],
+                ['معدل التزام SLA %', slaMetRate ?? 'N/A'],
+                ['نسبة الوقائي %', preventiveRatio ?? 'N/A'],
+                ['التكلفة المقدرة', metrics.cost.work_order_estimated_total],
+                ['التكلفة الفعلية', actualCost(metrics)],
+                ['قيمة الاستهلاك (30 يوم)', metrics.inventory.consumed_value_30d],
+                ['عناصر مخاطر المخزون', stockRisk],
+            ] : [
                 ['Metric', 'Value'],
                 ['Open work orders', metrics.work_orders.open],
                 ['Overdue work orders', metrics.work_orders.overdue_open],
-                ['PM compliance', pmCompliance ?? 'N/A'],
-                ['SLA met rate', slaMetRate ?? 'N/A'],
-                ['Preventive ratio', preventiveRatio ?? 'N/A'],
+                ['PM compliance %', pmCompliance ?? 'N/A'],
+                ['SLA met rate %', slaMetRate ?? 'N/A'],
+                ['Preventive ratio %', preventiveRatio ?? 'N/A'],
                 ['Estimated cost', metrics.cost.work_order_estimated_total],
                 ['Actual cost', actualCost(metrics)],
                 ['Inventory consumed value 30d', metrics.inventory.consumed_value_30d],
@@ -159,6 +173,15 @@ export default function ReportsPage() {
                 ) : null}
             />
 
+            <ReportsDecisionBrief
+                metrics={metrics}
+                workOrderReport={workOrderReport}
+                inventoryReport={inventoryReport}
+                pmCompliance={pmCompliance}
+                locale={locale}
+                isRTL={isRTL}
+            />
+
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     icon={ClipboardList}
@@ -198,13 +221,17 @@ export default function ReportsPage() {
                         <RatioRow
                             label={isRTL ? 'الوقائي مقابل التصحيحي' : 'Preventive vs Corrective'}
                             value={pct(preventiveRatio)}
-                            hint={`${formatNumber(metrics.work_orders.preventive, locale)} PM / ${formatNumber(metrics.work_orders.corrective, locale)} corrective`}
+                            hint={isRTL
+                                ? `${formatNumber(metrics.work_orders.preventive, locale)} وقائي / ${formatNumber(metrics.work_orders.corrective, locale)} تصحيحي`
+                                : `${formatNumber(metrics.work_orders.preventive, locale)} PM / ${formatNumber(metrics.work_orders.corrective, locale)} corrective`}
                             progress={safeNumber(preventiveRatio)}
                         />
                         <RatioRow
-                            label={isRTL ? 'SLA met vs breached' : 'SLA Met vs Breached'}
+                            label={isRTL ? 'التزام SLA مقابل الانتهاكات' : 'SLA Met vs Breached'}
                             value={pct(slaMetRate)}
-                            hint={`${formatNumber(metrics.sla.met, locale)} met / ${formatNumber(metrics.sla.breached, locale)} breached`}
+                            hint={isRTL
+                                ? `${formatNumber(metrics.sla.met, locale)} محقق / ${formatNumber(metrics.sla.breached, locale)} منتهك`
+                                : `${formatNumber(metrics.sla.met, locale)} met / ${formatNumber(metrics.sla.breached, locale)} breached`}
                             progress={safeNumber(slaMetRate)}
                         />
                         <div className="grid gap-3 md:grid-cols-3">

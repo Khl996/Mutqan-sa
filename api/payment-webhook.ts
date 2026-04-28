@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import { timingSafeEqual } from 'crypto'
-import { activatePaidSubscription } from './_lib/paymentActivation.js'
+import { activatePaidSubscription, PaymentActivationError } from './_lib/paymentActivation.js'
 
 const TAP_SECRET_KEY = process.env.TAP_SECRET_KEY
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
@@ -302,14 +302,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ received: true, processed: false, reason: 'plan_id_unresolvable' })
         }
 
-        const activateResult = await activatePaidSubscription(supabase, {
-            tenantId,
-            planId: finalPlanId,
-            billingCycle,
-            paymentReference: charge.id,
-            amount: paidAmount,
-            adminNote: null,
-        })
+        let activateResult
+        try {
+            activateResult = await activatePaidSubscription(supabase, {
+                tenantId,
+                planId: finalPlanId,
+                billingCycle,
+                paymentReference: charge.id,
+                amount: paidAmount,
+                adminNote: null,
+            })
+        } catch (activationError: any) {
+            const isActivationError = activationError instanceof PaymentActivationError
+            logWebhook('error', 'activation_failed', {
+                chargeId,
+                tenantId,
+                planId: finalPlanId,
+                error: activationError?.message || activationError,
+                code: isActivationError ? activationError.code : undefined,
+                details: isActivationError ? activationError.details : undefined,
+                hint: isActivationError ? activationError.hint : undefined,
+            })
+
+            return res.status(500).json({
+                received: true,
+                processed: false,
+                reason: 'activation_failed',
+            })
+        }
 
         logWebhook('log', 'subscription_activated', {
             chargeId,

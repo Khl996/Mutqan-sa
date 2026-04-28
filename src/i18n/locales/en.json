@@ -13,11 +13,11 @@
             "about": "About Mutqan",
             "contact": "Request a demo",
             "login": "Log in",
-            "startShort": "Start",
-            "start": "Start now"
+            "startShort": "Demo",
+            "start": "Book a demo"
         },
         "footer": {
-            "description": "Mutqan is an Arabic-first platform for maintenance, facilities, and asset operations, built for teams that need clarity and faster daily decisions.",
+            "description": "Mutqan is a maintenance and facility operations platform that connects work orders, assets, locations, preventive maintenance, and operational reporting.",
             "linksTitle": "Links",
             "about": "About Mutqan",
             "contact": "Request a demo",
@@ -33,133 +33,282 @@
     },
     "landing": {
         "hero": {
-            "eyebrow": "متقن | Maintenance and operations management",
-            "headlineTop": "Operations are not chaos",
-            "headlineAccent": "when the system is clear",
-            "subheadline": "Mutqan brings maintenance and assets into one clear workflow",
-            "description": "Instead of losing requests across WhatsApp, spreadsheets, and email, Mutqan turns every request into a clear path: request → work order → execution → closure → report.",
+            "eyebrow": "Maintenance and facility operations platform",
+            "headlineTop": "Turn maintenance work into operational clarity",
+            "headlineAccent": "and sharper decisions",
+            "subheadline": "Mutqan connects work orders, assets, locations, preventive maintenance, and reports in one platform, making follow-up clearer, operating records more dependable, and management decisions closer to reality.",
+            "description": "From the first request to the operating decision, details stay organized and traceable in one system.",
             "primaryCta": "Request a demo",
-            "secondaryCta": "Try Mutqan for free",
-            "trustBullets": [
-                "Arabic-first interface built for operations teams",
-                "Clear tracking for statuses, priorities, and SLA",
-                "Roles and permissions for every management level"
+            "secondaryCta": "See how Mutqan works",
+            "highlights": [
+                "A platform connecting work, assets, and locations",
+                "Operating records teams can return to",
+                "Reports closer to management decisions"
+            ]
+        },
+        "heroPreview": {
+            "title": "Mutqan | Operations board",
+            "eyebrow": "Main Facility",
+            "heading": "One system connecting maintenance details",
+            "body": "Work orders, assets, locations, preventive maintenance, and reports stay connected in one operating context for execution and follow-up.",
+            "badge": "Execution follow-up",
+            "metrics": [
+                {
+                    "label": "Work Order",
+                    "value": "Linked"
+                },
+                {
+                    "label": "Operational Asset",
+                    "value": "Recorded"
+                },
+                {
+                    "label": "Preventive Maintenance",
+                    "value": "Organized"
+                },
+                {
+                    "label": "Operational Report",
+                    "value": "Clear"
+                }
+            ],
+            "recordTitle": "Connected Work Order",
+            "recordMeta": "Main Facility | Building A | Operational Asset",
+            "recordStatus": "Execution follow-up"
+        },
+        "trust": {
+            "items": [
+                "Connected work orders",
+                "Clear asset and operational records",
+                "Organized preventive maintenance",
+                "Reports that support decisions",
+                "Easier team and site follow-up"
+            ]
+        },
+        "opportunity": {
+            "eyebrow": "Operational reality",
+            "title": "When details scatter, operational clarity weakens.",
+            "body": "Maintenance work does not break down only because teams are stretched. It breaks down when details scatter: a request in a message, a follow-up on a call, an asset without a clear record, and a report that does not explain what should happen next.",
+            "closing": "Mutqan brings these details together in one connected system.",
+            "items": [
+                {
+                    "title": "A request in a message",
+                    "body": "The request enters a clear path instead of staying separate from execution."
+                },
+                {
+                    "title": "A follow-up on a call",
+                    "body": "Status, ownership, and the next step become visible without manually chasing updates."
+                },
+                {
+                    "title": "An asset without a clear record",
+                    "body": "Work connects to the affected asset so its operating history is available when needed."
+                },
+                {
+                    "title": "A report without the next action",
+                    "body": "Work records become signals that help management see what needs action."
+                }
+            ]
+        },
+        "pillars": {
+            "eyebrow": "Connected capabilities",
+            "title": "Every maintenance element connects to what comes before and after it",
+            "body": "Mutqan brings work orders, assets, locations, preventive maintenance, and reports into one clear experience.",
+            "items": [
+                {
+                    "title": "Work Orders",
+                    "body": "Create, assign, follow, and close work with a clear record."
+                },
+                {
+                    "title": "Assets",
+                    "body": "Connect every job to the affected asset so the asset gains an operating history teams can return to."
+                },
+                {
+                    "title": "Locations",
+                    "body": "Organize work by facility, building, floor, area, or any operating structure that fits your team."
+                },
+                {
+                    "title": "Preventive Maintenance",
+                    "body": "Connect preventive schedules to assets and work orders instead of keeping them separate from execution."
+                },
+                {
+                    "title": "Operational Reports",
+                    "body": "Turn work records into indicators that help management see what needs action."
+                },
+                {
+                    "title": "Inventory",
+                    "body": "Give teams clearer visibility into parts and materials connected to maintenance execution."
+                },
+                {
+                    "title": "Roles & Permissions",
+                    "body": "Align access and responsibility with the way the operations team works."
+                }
+            ]
+        },
+        "flow": {
+            "eyebrow": "Connected workflow",
+            "title": "From request to decision in one operating line",
+            "body": "Each step adds clear context: where the work is, which asset is affected, who executes, and what appears in the report.",
+            "steps": [
+                {
+                    "title": "Request",
+                    "body": "A maintenance need enters a structured workflow."
+                },
+                {
+                    "title": "Location",
+                    "body": "The work is tied to the relevant facility, building, or area."
+                },
+                {
+                    "title": "Asset",
+                    "body": "The connected operational asset and its history appear."
+                },
+                {
+                    "title": "Work Order",
+                    "body": "The request becomes work with clear status and ownership."
+                },
+                {
+                    "title": "Execution",
+                    "body": "The team follows progress and updates in one place."
+                },
+                {
+                    "title": "Completion Record",
+                    "body": "Notes, dates, and closure details remain preserved."
+                },
+                {
+                    "title": "Asset Record",
+                    "body": "Completed work strengthens the asset history."
+                },
+                {
+                    "title": "Report",
+                    "body": "Work and progress signals become visible to management."
+                },
+                {
+                    "title": "Decision",
+                    "body": "The data supports sharper operating decisions."
+                }
             ]
         },
         "preview": {
-            "mobileTitle": "Operations center",
-            "mobileSubtitle": "Critical work summary",
-            "windowTitle": "Operations monitoring center",
-            "modulesTitle": "Modules",
-            "summaryTitle": "Today summary",
-            "summaryBody": "Priority is overdue and critical work",
-            "slaActive": "SLA active",
-            "todayPriority": "Today priority",
+            "eyebrow": "Product preview",
+            "title": "A calm interface connecting work, assets, locations, and reports",
+            "body": "Mutqan surfaces what teams need without clutter: what work is open, where it is located, which asset is involved, and what management needs to review.",
+            "windowTitle": "Mutqan | Maintenance Operations",
+            "navTitle": "Workspaces",
+            "boardTitle": "Main Facility Follow-up",
+            "boardBody": "Work orders, assets, locations, preventive maintenance, and reports in one connected view.",
+            "badge": "Connected context",
+            "nav": [
+                "Work Orders",
+                "Assets",
+                "Locations",
+                "Preventive Maintenance",
+                "Operational Reports"
+            ],
+            "metrics": [
+                {
+                    "label": "Work Order",
+                    "value": "Execution follow-up"
+                },
+                {
+                    "label": "Operational Asset",
+                    "value": "Record"
+                },
+                {
+                    "label": "Preventive Maintenance",
+                    "value": "Schedule"
+                },
+                {
+                    "label": "Operational Report",
+                    "value": "Visibility"
+                }
+            ],
             "headers": {
-                "code": "Code",
-                "work": "Work",
+                "code": "Type",
+                "work": "Operational Context",
                 "status": "Status",
                 "owner": "Owner"
             },
-            "signals": [
-                { "label": "Active orders", "value": "42" },
-                { "label": "Overdue", "value": "7" },
-                { "label": "SLA on target", "value": "91%" },
-                { "label": "Due today", "value": "18" }
-            ],
-            "nav": [
-                "Operations dashboard",
-                "Work orders",
-                "Assets",
-                "Preventive maintenance",
-                "Reports"
-            ],
             "rows": [
-                { "code": "WO-1048", "title": "Leak in pump room", "status": "Overdue", "priority": "High", "owner": "Electrical team" },
-                { "code": "WO-1049", "title": "AC unit inspection", "status": "In progress", "priority": "Medium", "owner": "HVAC team" },
-                { "code": "PM-220", "title": "Preventive maintenance round", "status": "Due today", "priority": "Scheduled", "owner": "Site supervisor" }
+                {
+                    "code": "Work Order",
+                    "title": "Execution follow-up",
+                    "location": "Main Facility",
+                    "asset": "Operational Asset",
+                    "status": "Execution follow-up",
+                    "owner": "Maintenance Team"
+                },
+                {
+                    "code": "Preventive Maintenance",
+                    "title": "Scheduled work",
+                    "location": "Building A",
+                    "asset": "Operational Asset",
+                    "status": "Scheduled",
+                    "owner": "Maintenance Team"
+                },
+                {
+                    "code": "Operational Report",
+                    "title": "Operational Report",
+                    "location": "Main Facility",
+                    "asset": "Operational Asset",
+                    "status": "Execution follow-up",
+                    "owner": "Maintenance Team"
+                }
+            ],
+            "details": [
+                {
+                    "title": "Work Orders",
+                    "body": "Status, owner, and location stay visible in one operating context."
+                },
+                {
+                    "title": "Asset Records",
+                    "body": "Asset history remains tied to what was executed and what needs attention."
+                },
+                {
+                    "title": "Preventive Maintenance",
+                    "body": "Scheduled work becomes organized follow-up instead of separate lists."
+                }
             ]
         },
-        "problem": {
-            "eyebrow": "Problem diagnosis",
-            "title": "Where does maintenance work get lost?",
-            "body": "The issue often does not start with the technician or supervisor. It starts when everyone is working without one shared workflow.",
-            "closing": "The problem is not the team. It is the absence of a clear system.",
+        "audience": {
+            "eyebrow": "Who it is for",
+            "title": "Built for organizations managing maintenance and facilities at serious scale",
+            "body": "Mutqan fits teams that need to control daily work, care for assets, and follow execution across multiple sites and teams.",
             "items": [
-                { "title": "The request arrives in a chat", "body": "The work begins as a passing message, then it becomes hard to know who received it and what happened next." },
-                { "title": "It gets delayed or lost", "body": "Small details turn into waiting, repeated follow-up, and pressure on supervisors." },
-                { "title": "There is no clear tracking", "body": "Priority, status, and the next responsible person are not visible enough." },
-                { "title": "Management lacks real visibility", "body": "Decisions depend on calls and messages instead of an operational record the team can trust." }
+                "Facility management companies",
+                "Operations and maintenance teams",
+                "Residential and commercial compounds",
+                "Multi-site facilities",
+                "Asset-heavy organizations"
             ]
         },
-        "solution": {
-            "eyebrow": "Solution",
-            "title": "Mutqan turns chaos into a clear workflow",
-            "body": "Everything starts with a request and ends with a clear report, without loss, guesswork, or random follow-up.",
-            "points": [
-                "Every request has a clear status and path",
-                "Every task has a known owner",
-                "Every decision is based on data, not intuition"
-            ]
-        },
-        "workflow": {
-            "eyebrow": "Operating flow",
-            "title": "From request to closure, everything is clear",
-            "body": "The flow is not just visual. It is how the team understands what needs to happen, when it is due, and who owns it.",
-            "steps": [
-                { "title": "Clear request", "body": "The request enters with a code, status, priority, and location" },
-                { "title": "Direct assignment", "body": "It is routed to the right team without delay" },
-                { "title": "Continuous tracking", "body": "You see overdue and critical work before escalation" },
-                { "title": "Documented closure", "body": "Everything ends with a clear record and ready reports" }
-            ]
-        },
-        "modules": {
-            "eyebrow": "Core modules",
-            "title": "Everything you need to manage operations in one place",
-            "body": "Mutqan does not scatter operations across disconnected tools. Each module connects to the one before and after it, so the picture stays clear.",
+        "benefits": {
+            "eyebrow": "Value for management and teams",
+            "title": "Operational value that shows up in follow-up and decisions",
+            "body": "Mutqan helps management and teams read open and overdue work, follow assets, and coordinate teams from one clearer record.",
             "items": [
-                { "title": "Work orders", "body": "Complete management from request to closure" },
-                { "title": "Assets and locations", "body": "A record for every asset and its full history" },
-                { "title": "Preventive maintenance", "body": "Plans that reduce failures before they happen" },
-                { "title": "Inventory and costs", "body": "Track parts and costs without surprises" }
-            ]
-        },
-        "fit": {
-            "eyebrow": "Who is it for?",
-            "title": "Built for environments that cannot tolerate chaos",
-            "industries": [
-                "Operations and maintenance companies",
-                "Hospitals",
-                "Factories",
-                "Commercial facilities"
-            ]
-        },
-        "outcomes": {
-            "eyebrow": "Practical impact",
-            "title": "What actually changes?",
-            "body": "The value is not just in how the interface looks. It is in reducing daily ambiguity and making work easier to follow.",
-            "items": [
-                "Lost requests decrease",
-                "Work becomes clearer",
-                "The team works without guesswork",
-                "Management sees the full picture"
-            ]
-        },
-        "management": {
-            "eyebrow": "Decision confidence",
-            "title": "Decisions based on data, not guesswork",
-            "body": "Managers do not need to chase details across multiple sources. Records, statuses, performance, and reports are available in one place.",
-            "items": [
-                "Complete record for every operation",
-                "Clear reports",
-                "Performance tracking",
-                "Management visibility"
+                {
+                    "title": "Clearer visibility into open and overdue work",
+                    "body": "Status, responsibility, and progress appear in one view that helps teams prioritize."
+                },
+                {
+                    "title": "Continuous asset records",
+                    "body": "Each job connects to the affected asset so operating history remains reviewable."
+                },
+                {
+                    "title": "Less dependence on individual memory",
+                    "body": "Details live in the system instead of staying scattered across people and messages."
+                },
+                {
+                    "title": "Better team follow-up",
+                    "body": "Teams know what is needed, where it is, and what status it is in without adding heavy tracking."
+                },
+                {
+                    "title": "Reports closer to decisions",
+                    "body": "Work records become practical indicators that help management see what needs action."
+                }
             ]
         },
         "finalCta": {
-            "eyebrow": "Next step",
-            "title": "Try Mutqan and see the difference yourself",
-            "body": "We will walk through how Mutqan can fit your work environment in a practical way, not a theoretical one."
+            "eyebrow": "Start with clearer operations",
+            "title": "See how Mutqan supports clearer maintenance operations",
+            "body": "Explore how Mutqan connects work orders, assets, locations, preventive maintenance, and reporting in a professional operating experience."
         }
     },
     "aboutPage": {
@@ -192,28 +341,85 @@
     },
     "contactPage": {
         "heroEyebrow": "Request a demo",
-        "heroTitle": "See how Mutqan fits your facility",
-        "heroBody": "We will review your work orders, assets, preventive maintenance, and reporting workflows in a practical, clear way without a long sales presentation.",
+        "heroTitle": "Book a Mutqan demo",
+        "heroBody": "Leave your details and we will contact you to show how Mutqan helps organize work orders, assets, preventive maintenance, and reports.",
         "directTitle": "Direct contact",
-        "directBody": "Send us a short note about your facility, and we will get back to you with a clear next step for the right demo.",
+        "directBody": "You can email us directly.",
         "emailSubject": "Mutqan demo request",
-        "prepTitle": "What do we need before the demo?",
-        "prepBody": "These details help us keep the demo focused and useful, but they are not required.",
-        "goalTitle": "Demo goal",
-        "goalBody": "You should leave with a clear answer: is Mutqan a fit for your current need, and which operational workflow is the best place to start?",
-        "trialCta": "Or start a free trial",
+        "prepTitle": "Before the demo",
+        "prepBody": "Three points help us prepare the right demo.",
         "prepItems": [
-            "Facility type or sector",
-            "Approximate number of sites or buildings",
-            "Maintenance and operations team size",
-            "The first problem you want to solve"
+            "Facility type",
+            "Approximate sites or assets",
+            "The main area you want to improve"
         ],
         "cards": [
-            { "title": "Clear response", "body": "We define the best way to start with you." },
-            { "title": "Practical demo", "body": "We connect the walkthrough to your real workflow." },
-            { "title": "Facility fit", "body": "We review sites, teams, and assets." },
-            { "title": "No complexity", "body": "No technical preparation is required." }
-        ]
+            { "title": "Structured request", "body": "The core details arrive in a format that helps arrange the demo." },
+            { "title": "Practical demo", "body": "The walkthrough connects to your work order and asset workflows." },
+            { "title": "Facility fit", "body": "We review the nature of your sites and team before framing the demo." },
+            { "title": "Clear follow-up", "body": "We use your details to coordinate by email or phone." }
+        ],
+        "form": {
+            "eyebrow": "Demo request form",
+            "title": "Contact details",
+            "body": "Share the basics and we will arrange the right demo.",
+            "requiredNote": "Required",
+            "optionalTitle": "Optional details",
+            "errorSummary": "Complete the required fields.",
+            "improvementsHint": "You can select more than one area.",
+            "submit": "Send by email",
+            "mailtoNoticeTitle": "Note",
+            "mailtoNoticeBody": "Your email app will open to send the request to the Mutqan team.",
+            "mailtoPreparedTitle": "Email draft prepared",
+            "mailtoPreparedBody": "Send the draft from your email to complete the request.",
+            "mailtoFallbackCta": "Open draft",
+            "labels": {
+                "fullName": "Name",
+                "company": "Organization",
+                "jobTitle": "Title",
+                "email": "Email",
+                "phone": "Mobile number",
+                "facilityType": "Facility type",
+                "scale": "Sites or assets",
+                "improvements": "What would you like to improve?",
+                "message": "Notes"
+            },
+            "placeholders": {
+                "fullName": "Full name",
+                "company": "Company or facility name",
+                "jobTitle": "Optional",
+                "email": "name@company.com",
+                "phone": "+966 5x xxx xxxx",
+                "facilityType": "Select facility type",
+                "scale": "Example: 4 sites or 300 assets",
+                "message": "Any extra details..."
+            },
+            "facilityOptions": [
+                "Facility management company",
+                "Residential or commercial complex",
+                "Operations and maintenance",
+                "Multi-site facility",
+                "Other"
+            ],
+            "improvementOptions": [
+                "Work orders",
+                "Assets",
+                "Preventive maintenance",
+                "Reports",
+                "Inventory",
+                "Team organization",
+                "Other"
+            ],
+            "validation": {
+                "required": "This field is required.",
+                "email": "Enter a valid email address.",
+                "improvements": "Select at least one area."
+            },
+            "emailBody": {
+                "intro": "Hello Mutqan team, I would like to book a demo. Here are the request details:",
+                "footer": "Thank you."
+            }
+        }
     },
     "authPages": {
         "layoutTitle": "A complete platform for assets, maintenance, and operations",
@@ -478,6 +684,8 @@
         "medium": "Medium",
         "high": "High",
         "urgent": "Urgent",
+        "preventive": "Preventive",
+        "corrective": "Corrective",
         "statuses": {
             "pending": "Pending",
             "assigned": "Assigned",

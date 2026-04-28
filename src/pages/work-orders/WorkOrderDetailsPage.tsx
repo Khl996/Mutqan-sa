@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
-import { useWorkOrder, useWorkOrderLogs } from '@/hooks/useWorkOrders'
+import { useWorkOrder, useWorkOrderLogs, isPreventiveWorkOrder } from '@/hooks/useWorkOrders'
+import type { PMWorkOrder } from '@/hooks/usePMFoundation'
 import { useQueryClient } from '@tanstack/react-query'
 import { ErrorBoundary } from '@/components/ErrorBoundary' // Assuming we have one or will create simple wrapper
 import { toast } from 'sonner'
@@ -11,14 +12,16 @@ import { toast } from 'sonner'
 import WorkOrderHeader from '@/components/work-orders/WorkOrderHeader'
 import WorkOrderWorkflow from '@/components/work-orders/WorkOrderWorkflow'
 import WorkOrderInfo from '@/components/work-orders/WorkOrderInfo'
+import WorkOrderPMContext from '@/components/work-orders/WorkOrderPMContext'
 import WorkOrderOperationsLog from '@/components/work-orders/WorkOrderOperationsLog'
 import WorkOrderQuickInfo from '@/components/work-orders/WorkOrderQuickInfo'
 import WorkOrderAssetLocation from '@/components/work-orders/WorkOrderAssetLocation'
 import WorkOrderActions from '@/components/work-orders/WorkOrderActions'
 import WorkOrderPrintView from '@/components/work-orders/WorkOrderPrintView'
+import ExecutionDialog from '@/components/maintenance/ExecutionDialog'
+import { en as pmEn, ar as pmAr } from '@/components/maintenance/foundationPmUtils'
 import { AlertTriangle } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
-import { useRef } from 'react'
 
 // Simple Skeleton Loader
 const WorkOrderDetailsSkeleton = () => (
@@ -43,7 +46,12 @@ export default function WorkOrderDetailsPage() {
     const navigate = useNavigate()
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
+    const locale = isRTL ? 'ar-SA' : 'en-US'
+    const pmCopy = isRTL ? pmAr : pmEn
     const queryClient = useQueryClient()
+
+    // PM execution dialog state
+    const [pmExecutionWorkOrder, setPmExecutionWorkOrder] = useState<PMWorkOrder | null>(null)
 
     // 1. Fetch Work Order Data
     const { data: workOrder, isLoading: wLoading, error: wError, refetch: refetchWO } = useWorkOrder(id!)
@@ -134,6 +142,15 @@ export default function WorkOrderDetailsPage() {
                     {/* Basic Info */}
                     <WorkOrderInfo workOrder={workOrder} isRTL={isRTL} />
 
+                    {/* PM Context — only for preventive work orders */}
+                    {isPreventiveWorkOrder(workOrder) && id && (
+                        <WorkOrderPMContext
+                            workOrderId={id}
+                            isRTL={isRTL}
+                            onOpenExecution={(pmWo) => setPmExecutionWorkOrder(pmWo)}
+                        />
+                    )}
+
                     {/* Operations Log */}
                     <WorkOrderOperationsLog logs={logs as any || []} isRTL={isRTL} />
                 </div>
@@ -167,6 +184,16 @@ export default function WorkOrderDetailsPage() {
                     logs={logs || []}
                 />
             </div>
+
+            {/* PM Execution Dialog — opened via WorkOrderPMContext "Open PM Execution" button */}
+            <ExecutionDialog
+                open={!!pmExecutionWorkOrder}
+                onOpenChange={(open) => { if (!open) setPmExecutionWorkOrder(null) }}
+                workOrder={pmExecutionWorkOrder}
+                copy={pmCopy}
+                isAr={isRTL}
+                locale={locale}
+            />
         </div>
     )
 }

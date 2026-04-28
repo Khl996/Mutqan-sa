@@ -58,6 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('[pm-generate-wos] Complete', {
         runId,
+        dbRunId: 'run_id' in result ? result.run_id : undefined,
         triggeredBy,
         durationMs,
         generated: 'generated' in result ? result.generated : undefined,

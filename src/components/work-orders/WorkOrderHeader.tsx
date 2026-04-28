@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowLeft, Printer, Share2 } from 'lucide-react'
-import { WorkOrder } from '@/hooks/useWorkOrders'
+import { WorkOrder, isPreventiveWorkOrder } from '@/hooks/useWorkOrders'
 import { cn } from '@/lib/utils'
 import { STATUS_DISPLAY } from '@/config/workOrderStatus'
 
@@ -26,6 +26,7 @@ export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrder
     const navigate = useNavigate()
     const statusConfig = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
     const priorityConfig = getPriorityConfig(workOrder.priority)
+    const preventive = isPreventiveWorkOrder(workOrder)
 
     return (
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
@@ -45,12 +46,20 @@ export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrder
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium border font-cairo", statusConfig.bg, statusConfig.color, statusConfig.borderColor)}>
                             {t(`workOrders.${statusConfig.label}`)}
                         </span>
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium font-cairo", priorityConfig.color)}>
                             {t(`workOrders.${priorityConfig.label}`)}
+                        </span>
+                        <span className={cn(
+                            "px-2.5 py-0.5 rounded-full text-xs font-medium font-cairo border",
+                            preventive
+                                ? 'text-info bg-info/10 border-info/20'
+                                : 'text-muted-foreground bg-muted/10 border-muted/20'
+                        )}>
+                            {preventive ? t('workOrders.preventive') : t('workOrders.corrective')}
                         </span>
                     </div>
                 </div>

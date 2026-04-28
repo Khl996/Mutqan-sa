@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
-import { useWorkOrders, useWorkOrderStats, WorkOrder } from '@/hooks/useWorkOrders'
+import { useWorkOrders, useWorkOrderStats, isPreventiveWorkOrder, WorkOrder } from '@/hooks/useWorkOrders'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 import AddWorkOrderModal from '@/components/work-orders/AddWorkOrderModal'
@@ -75,6 +75,7 @@ export default function WorkOrdersPage() {
 
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState<WorkOrderFilterKey>('all')
+    const [typeFilter, setTypeFilter] = useState<'all' | 'preventive' | 'corrective'>('all')
     const [showFilters, setShowFilters] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
@@ -96,7 +97,13 @@ export default function WorkOrdersPage() {
             (selectedFilter.derived === 'overdue' && isOverdueWorkOrder(wo.due_date, wo.status)) ||
             Boolean(selectedFilter.statuses?.includes(wo.status))
 
-        return matchesSearch && matchesStatus
+        const preventive = isPreventiveWorkOrder(wo)
+        const matchesType =
+            typeFilter === 'all' ||
+            (typeFilter === 'preventive' && preventive) ||
+            (typeFilter === 'corrective' && !preventive)
+
+        return matchesSearch && matchesStatus && matchesType
     }) || []
 
     if (isLoading) {
@@ -224,7 +231,8 @@ export default function WorkOrdersPage() {
 
                 {/* Filter Panel */}
                 {showFilters && (
-                    <div className="rounded-lg border border-border bg-background p-3">
+                    <div className="rounded-lg border border-border bg-background p-3 space-y-3">
+                        {/* Status filters */}
                         <div className="flex flex-wrap gap-2">
                             {WORK_ORDER_FILTERS.map((filter) => (
                                 <button
@@ -238,6 +246,30 @@ export default function WorkOrdersPage() {
                                     )}
                                 >
                                     {isRTL ? filter.labelAr : filter.label}
+                                </button>
+                            ))}
+                        </div>
+                        {/* Type filter */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
+                            <span className="text-xs text-muted-foreground font-cairo">
+                                {isRTL ? 'النوع:' : 'Type:'}
+                            </span>
+                            {([
+                                { key: 'all', en: 'All Types', ar: 'كل الأنواع' },
+                                { key: 'preventive', en: 'Preventive', ar: 'وقائي' },
+                                { key: 'corrective', en: 'Corrective', ar: 'تصحيحي' },
+                            ] as const).map(({ key, en, ar }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setTypeFilter(key)}
+                                    className={cn(
+                                        'px-3 py-1.5 rounded-lg text-sm font-cairo transition-colors',
+                                        typeFilter === key
+                                            ? 'bg-secondary text-white'
+                                            : 'bg-muted/10 text-primary hover:bg-muted/20'
+                                    )}
+                                >
+                                    {isRTL ? ar : en}
                                 </button>
                             ))}
                         </div>
@@ -314,6 +346,7 @@ function WorkOrdersTable({
                         const status = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
                         const priority = priorityConfig[workOrder.priority] || priorityConfig.medium
                         const overdue = isOverdueWorkOrder(workOrder.due_date, workOrder.status)
+                        const preventive = isPreventiveWorkOrder(workOrder)
                         const assetName = workOrder.asset
                             ? (isRTL ? workOrder.asset.name_ar || workOrder.asset.name : workOrder.asset.name)
                             : null
@@ -336,10 +369,18 @@ function WorkOrdersTable({
                             >
                                 <TableCell className="min-w-[260px]">
                                     <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <span className="font-cairo font-semibold text-primary">{workOrder.title}</span>
                                             <span className="rounded border bg-background px-2 py-0.5 font-mono text-xs text-muted-foreground">
                                                 {workOrder.code}
+                                            </span>
+                                            <span className={cn(
+                                                'px-2 py-0.5 rounded-full text-[10px] font-cairo font-medium border',
+                                                preventive
+                                                    ? 'text-info bg-info/10 border-info/20'
+                                                    : 'text-muted-foreground bg-muted/10 border-muted/20'
+                                            )}>
+                                                {preventive ? t('workOrders.preventive') : t('workOrders.corrective')}
                                             </span>
                                         </div>
                                         {workOrder.description ? (
@@ -431,6 +472,7 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
     const status = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
     const priority = priorityConfig[workOrder.priority] || priorityConfig.medium
     const StatusIcon = statusIcons[workOrder.status] || Clock
+    const preventive = isPreventiveWorkOrder(workOrder)
 
     return (
         <div
@@ -488,7 +530,7 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
                         </div>
                     </div>
 
-                    {/* Right side - Status & Priority */}
+                    {/* Right side - Status, Priority, Type */}
                     <div className="flex flex-col items-end gap-2">
                         <span className={cn(
                             'px-3 py-1 rounded-full text-xs font-medium font-cairo',
@@ -501,6 +543,14 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
                             priority.bg, priority.color
                         )}>
                             {t(`workOrders.${priority.label}`)}
+                        </span>
+                        <span className={cn(
+                            'px-2 py-0.5 rounded-full text-xs font-cairo border',
+                            preventive
+                                ? 'text-info bg-info/10 border-info/20'
+                                : 'text-muted-foreground bg-muted/10 border-muted/20'
+                        )}>
+                            {preventive ? t('workOrders.preventive') : t('workOrders.corrective')}
                         </span>
                     </div>
                 </div>

@@ -165,9 +165,7 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
             return
         }
 
-        const tenantId = profile?.tenant_id
-
-        if (!tenantId) {
+        if (!profile?.tenant_id) {
             toast.error(isRTL ? 'لم يتم العثور على معرف المؤسسة' : 'Tenant ID not found')
             return
         }
@@ -186,7 +184,6 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
 
         try {
             await createWorkOrder.mutateAsync({
-                tenant_id: tenantId,
                 code: formData.code,
                 title: formData.title,
                 description: formData.description || null,
@@ -197,7 +194,6 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
                 due_date: formData.due_date || null,
                 reported_by: user?.id || null,
                 assigned_team: isAssignmentEnabled ? (formData.assigned_team || null) : null, // Only send if enabled and permitted
-                status: 'pending',
             })
 
             toast.success(isRTL ? 'تم إنشاء البلاغ بنجاح' : 'Work order created successfully')

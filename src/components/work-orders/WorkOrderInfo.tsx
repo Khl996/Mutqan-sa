@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { WorkOrder } from '@/hooks/useWorkOrders'
-import { FileText, Calendar, Wallet, User } from 'lucide-react'
+import { FileText, Calendar, Wallet, User, MessageSquare } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/utils'
 
 interface WorkOrderInfoProps {
@@ -25,6 +25,58 @@ export default function WorkOrderInfo({ workOrder, isRTL }: WorkOrderInfoProps) 
                     </p>
                 </div>
             </div>
+
+            {/* Workflow Notes Section — shown when any notes field is populated */}
+            {(workOrder.technician_notes || workOrder.supervisor_notes || workOrder.engineer_notes || workOrder.reporter_notes) && (
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary font-bold font-cairo border-b pb-2">
+                        <MessageSquare className="w-5 h-5" />
+                        <h3>{isRTL ? 'ملاحظات العمل' : 'Work Notes'}</h3>
+                    </div>
+                    <div className="space-y-3">
+                        {workOrder.technician_notes && (
+                            <div className="bg-muted/10 rounded-lg p-4 space-y-1">
+                                <p className="text-xs font-bold text-muted-foreground font-cairo uppercase tracking-wide">
+                                    {isRTL ? 'ملاحظات الفني' : 'Technician Notes'}
+                                </p>
+                                <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed font-cairo">
+                                    {workOrder.technician_notes}
+                                </p>
+                            </div>
+                        )}
+                        {workOrder.supervisor_notes && (
+                            <div className="bg-muted/10 rounded-lg p-4 space-y-1">
+                                <p className="text-xs font-bold text-muted-foreground font-cairo uppercase tracking-wide">
+                                    {isRTL ? 'ملاحظات المشرف' : 'Supervisor Notes'}
+                                </p>
+                                <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed font-cairo">
+                                    {workOrder.supervisor_notes}
+                                </p>
+                            </div>
+                        )}
+                        {workOrder.engineer_notes && (
+                            <div className="bg-muted/10 rounded-lg p-4 space-y-1">
+                                <p className="text-xs font-bold text-muted-foreground font-cairo uppercase tracking-wide">
+                                    {isRTL ? 'ملاحظات المهندس' : 'Engineer Notes'}
+                                </p>
+                                <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed font-cairo">
+                                    {workOrder.engineer_notes}
+                                </p>
+                            </div>
+                        )}
+                        {workOrder.reporter_notes && (
+                            <div className="bg-muted/10 rounded-lg p-4 space-y-1">
+                                <p className="text-xs font-bold text-muted-foreground font-cairo uppercase tracking-wide">
+                                    {isRTL ? 'ملاحظات المراسل' : 'Reporter Notes'}
+                                </p>
+                                <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed font-cairo">
+                                    {workOrder.reporter_notes}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Additional Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">

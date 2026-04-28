@@ -73,7 +73,7 @@ export function SiteNav({ variant = 'light' }: SiteNavProps) {
                     </Link>
                     <LanguageToggle variant={isDark ? 'dark' : 'light'} compact />
                     <Link
-                        to="/register"
+                        to="/contact"
                         className={cn(
                             'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-bold transition-all sm:gap-2 sm:px-4 sm:text-sm',
                             isDark

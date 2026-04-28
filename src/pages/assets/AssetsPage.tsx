@@ -1,4 +1,5 @@
 ﻿import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
@@ -394,6 +395,7 @@ function TreeNode({
     const [isExpanded, setIsExpanded] = useState(depth < 1)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -456,7 +458,13 @@ function TreeNode({
                 </div>
 
                 {/* Content Clickable Area */}
-                <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => { if (node.type !== 'asset') setIsExpanded(!isExpanded) }}>
+                <div
+                    className="flex items-center gap-2 flex-1 cursor-pointer"
+                    onClick={() => {
+                        if (node.type === 'asset') navigate(`/assets/${node.id}`)
+                        else setIsExpanded(!isExpanded)
+                    }}
+                >
                     <Icon className={cn("w-4 h-4", colorClass)} />
                     <span className={cn(
                         "flex-1 text-sm",
@@ -652,6 +660,7 @@ function AssetCard({ asset, isRTL, onDelete, onAction, isQrEnabled, isHistoryEna
     canManage: boolean
 }) {
     const { t } = useTranslation()
+    const navigate = useNavigate()
     const status = statusConfig[asset.status]
     const criticality = criticalityConfig[asset.criticality]
     const StatusIcon = status.icon
@@ -659,7 +668,10 @@ function AssetCard({ asset, isRTL, onDelete, onAction, isQrEnabled, isHistoryEna
     const displayName = isRTL ? (asset.name_ar || asset.name) : asset.name
 
     return (
-        <div className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group relative">
+        <div
+            className="bg-card rounded-xl shadow-card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group relative"
+            onClick={() => navigate(`/assets/${asset.id}`)}
+        >
             {canManage && (
                 <div className="absolute top-2 left-2 rtl:right-auto rtl:left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                     {/* Feature Actions */}

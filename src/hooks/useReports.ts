@@ -2,6 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useCurrentTenantId } from '@/hooks/useTenantQuery'
 
+export interface ReportDemandSignal {
+    name: string
+    name_ar: string | null
+    code?: string | null
+    count: number
+}
+
 export interface WorkOrderReport {
     total: number
     byStatus: Record<string, number>
@@ -11,6 +18,9 @@ export interface WorkOrderReport {
     completedThisMonth: number
     openCount: number
     overdueCount: number
+    topIssueType: ReportDemandSignal | null
+    topAssetDemand: ReportDemandSignal | null
+    topLocationPressure: ReportDemandSignal | null
 }
 
 export interface MaintenanceReport {
@@ -26,6 +36,14 @@ export interface InventoryReport {
     totalValue: number
     lowStockCount: number
     outOfStockCount: number
+    lowStockItems: {
+        code: string | null
+        name: string
+        name_ar: string | null
+        quantity: number
+        min_quantity: number
+        unit_of_measure: string | null
+    }[]
     topUsedItems: { name: string, name_ar: string | null, usage: number }[]
 }
 
@@ -95,6 +113,61 @@ export const reportKeys = {
     teamPerformance: (tenantId: string | null) => [...reportKeys.all, 'team-performance', tenantId] as const,
 }
 
+type ReportRelation = {
+    id: string
+    code?: string | null
+    name: string | null
+    name_ar: string | null
+} | null
+
+type WorkOrderReportRow = {
+    status: string | null
+    priority: string | null
+    issue_type: string | null
+    due_date: string | null
+    completed_at: string | null
+    created_at: string | null
+    issue_type_rel?: ReportRelation
+    asset?: ReportRelation
+    building?: ReportRelation
+}
+
+type InventoryReportRow = {
+    id: string
+    code: string | null
+    name: string | null
+    name_ar: string | null
+    quantity: number | null
+    min_quantity: number | null
+    unit_of_measure: string | null
+    unit_cost: number | null
+}
+
+function incrementSignal(
+    map: Map<string, ReportDemandSignal>,
+    key: string | null | undefined,
+    name: string | null | undefined,
+    name_ar: string | null | undefined,
+    code?: string | null,
+) {
+    if (!key || !name) return
+    const current = map.get(key)
+    if (current) {
+        current.count += 1
+        return
+    }
+    map.set(key, {
+        name,
+        name_ar: name_ar ?? null,
+        code: code ?? null,
+        count: 1,
+    })
+}
+
+function topSignal(map: Map<string, ReportDemandSignal>) {
+    return Array.from(map.values()).sort((a, b) => b.count - a.count)[0] ?? null
+}
+
 export function useReportingFoundation() {
     const tenantId = useCurrentTenantId()
 
@@ -126,14 +199,17 @@ export function useWorkOrdersReport() {
                 .from('work_orders')
                 .select(`
                     *,
-                    issue_type_rel:issue_types(id, name, name_ar)
+                    issue_type_rel:issue_types(id, name, name_ar),
+                    asset:assets(id, code, name, name_ar),
+                    building:buildings(id, name, name_ar)
                 `)
                 .eq('tenant_id', tenantId) as any
 
             if (error) throw error
+            const rows = (data ?? []) as WorkOrderReportRow[]
 
             const report: WorkOrderReport = {
-                total: data?.length || 0,
+                total: rows.length,
                 byStatus: {},
                 byPriority: {},
                 byType: {},
@@ -141,36 +217,46 @@ export function useWorkOrdersReport() {
                 completedThisMonth: 0,
                 openCount: 0,
                 overdueCount: 0,
+                topIssueType: null,
+                topAssetDemand: null,
+                topLocationPressure: null,
             }
 
             const now = new Date()
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
             let totalCompletionTime = 0
             let completedCount = 0
+            const issueTypeDemand = new Map<string, ReportDemandSignal>()
+            const assetDemand = new Map<string, ReportDemandSignal>()
+            const locationPressure = new Map<string, ReportDemandSignal>()
 
-            data?.forEach((wo: any) => {
-                report.byStatus[wo.status] = (report.byStatus[wo.status] || 0) + 1
+            rows.forEach((wo) => {
+                const status = wo.status ?? 'unknown'
+                report.byStatus[status] = (report.byStatus[status] || 0) + 1
 
                 if (wo.priority) {
                     report.byPriority[wo.priority] = (report.byPriority[wo.priority] || 0) + 1
                 }
 
-                const typeName = wo.issue_type_rel?.name || wo.issue_type || 'unclassified'
+                const typeName = wo.issue_type_rel?.name || wo.issue_type || 'Unclassified'
                 report.byType[typeName] = (report.byType[typeName] || 0) + 1
+                incrementSignal(issueTypeDemand, typeName, typeName, wo.issue_type_rel?.name_ar ?? null)
+                incrementSignal(assetDemand, wo.asset?.id, wo.asset?.name, wo.asset?.name_ar, wo.asset?.code)
 
-                const isCompleted = ['completed', 'cancelled', 'auto_closed', 'rejected_by_technician'].includes(wo.status)
+                const isCompleted = ['completed', 'cancelled', 'auto_closed', 'rejected_by_technician'].includes(status)
                 if (!isCompleted) {
                     report.openCount++
                     if (wo.due_date && new Date(wo.due_date) < now) {
                         report.overdueCount++
                     }
+                    incrementSignal(locationPressure, wo.building?.id, wo.building?.name, wo.building?.name_ar)
                 }
 
-                if ((wo.status === 'completed' || wo.status === 'auto_closed') && wo.completed_at && new Date(wo.completed_at) >= monthStart) {
+                if ((status === 'completed' || status === 'auto_closed') && wo.completed_at && new Date(wo.completed_at) >= monthStart) {
                     report.completedThisMonth++
                 }
 
-                if ((wo.status === 'completed' || wo.status === 'auto_closed') && wo.completed_at && wo.created_at) {
+                if ((status === 'completed' || status === 'auto_closed') && wo.completed_at && wo.created_at) {
                     const created = new Date(wo.created_at).getTime()
                     const completed = new Date(wo.completed_at).getTime()
                     const diffHours = (completed - created) / (1000 * 60 * 60)
@@ -185,6 +271,10 @@ export function useWorkOrdersReport() {
             if (completedCount > 0) {
                 report.avgCompletionTime = Math.round(totalCompletionTime / completedCount)
             }
+
+            report.topIssueType = topSignal(issueTypeDemand)
+            report.topAssetDemand = topSignal(assetDemand)
+            report.topLocationPressure = topSignal(locationPressure)
 
             return report
         },
@@ -255,10 +345,11 @@ export function useInventoryReport() {
 
             const { data: items, error: itemsError } = await supabase
                 .from('inventory_items')
-                .select('id, name, name_ar, quantity, min_quantity, unit_cost')
+                .select('id, code, name, name_ar, quantity, min_quantity, unit_of_measure, unit_cost')
                 .eq('tenant_id', tenantId) as any
 
             if (itemsError) throw itemsError
+            const inventoryItems = (items ?? []) as InventoryReportRow[]
 
             const { data: transactions, error: txError } = await supabase
                 .from('inventory_transactions')
@@ -269,21 +360,24 @@ export function useInventoryReport() {
             if (txError) throw txError
 
             const report: InventoryReport = {
-                totalItems: items?.length || 0,
+                totalItems: inventoryItems.length,
                 totalValue: 0,
                 lowStockCount: 0,
                 outOfStockCount: 0,
+                lowStockItems: [],
                 topUsedItems: [],
             }
 
             const usageMap = new Map<string, number>()
 
-            items?.forEach((item: any) => {
-                report.totalValue += (item.quantity || 0) * (item.unit_cost || 0)
+            inventoryItems.forEach((item) => {
+                const quantity = Number(item.quantity || 0)
+                const minQuantity = Number(item.min_quantity || 0)
+                report.totalValue += quantity * Number(item.unit_cost || 0)
 
-                if (item.quantity <= 0) {
+                if (quantity <= 0) {
                     report.outOfStockCount++
-                } else if (item.quantity <= (item.min_quantity || 0)) {
+                } else if (quantity <= minQuantity) {
                     report.lowStockCount++
                 }
             })
@@ -297,13 +391,34 @@ export function useInventoryReport() {
                 .slice(0, 5)
 
             report.topUsedItems = sortedUsage.map(([itemId, usage]) => {
-                const item = items?.find((inventoryItem: any) => inventoryItem.id === itemId)
+                const item = inventoryItems.find((inventoryItem) => inventoryItem.id === itemId)
                 return {
                     name: item?.name || 'Unknown',
                     name_ar: item?.name_ar || null,
                     usage,
                 }
             })
+
+            report.lowStockItems = inventoryItems
+                .filter((item) => Number(item.quantity || 0) <= Number(item.min_quantity || 0))
+                .sort((a, b) => {
+                    const aQuantity = Number(a.quantity || 0)
+                    const bQuantity = Number(b.quantity || 0)
+                    const aMin = Number(a.min_quantity || 0)
+                    const bMin = Number(b.min_quantity || 0)
+                    const aRatio = aMin > 0 ? aQuantity / aMin : aQuantity
+                    const bRatio = bMin > 0 ? bQuantity / bMin : bQuantity
+                    return aRatio - bRatio
+                })
+                .slice(0, 5)
+                .map((item) => ({
+                    code: item.code,
+                    name: item.name || 'Unknown',
+                    name_ar: item.name_ar || null,
+                    quantity: Number(item.quantity || 0),
+                    min_quantity: Number(item.min_quantity || 0),
+                    unit_of_measure: item.unit_of_measure,
+                }))
 
             return report
         },
