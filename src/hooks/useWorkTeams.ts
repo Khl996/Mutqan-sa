@@ -10,7 +10,7 @@ export interface WorkTeam {
     name: string
     name_ar: string | null
     description: string | null
-    type: string // Stores specialization like 'electrical', 'mechanical', etc.
+    type: string
     specializations: string[] | null
     status: 'active' | 'inactive' | 'archived'
     created_at: string
@@ -76,6 +76,26 @@ export const TEAM_SPECIALIZATIONS = [
 ] as const
 
 export type TeamSpecialization = typeof TEAM_SPECIALIZATIONS[number]['value']
+
+const TEAM_DB_TYPES = ['maintenance', 'engineering', 'operations', 'support', 'custom'] as const
+const TEAM_SPECIALIZATION_VALUES = TEAM_SPECIALIZATIONS.map((spec) => spec.value)
+
+export function isTeamSpecialization(value: string | null | undefined): value is TeamSpecialization {
+    return !!value && TEAM_SPECIALIZATION_VALUES.includes(value as TeamSpecialization)
+}
+
+export function getTeamPrimarySpecialization(team: Pick<WorkTeam, 'type' | 'specializations'>): TeamSpecialization | 'general' {
+    const specialization = team.specializations?.find(isTeamSpecialization)
+    if (specialization) return specialization
+
+    if (isTeamSpecialization(team.type)) return team.type
+
+    return 'general'
+}
+
+function normalizeTeamDbType(value: string | null | undefined): string {
+    return value && (TEAM_DB_TYPES as readonly string[]).includes(value) ? value : 'maintenance'
+}
 
 // Fetch all teams for current tenant
 export function useWorkTeams() {
@@ -165,11 +185,18 @@ export function useCreateWorkTeam() {
         mutationFn: async (input: CreateWorkTeamInput) => {
             if (!currentTenant?.id) throw new Error('No tenant selected')
 
+            const { type, specializations, ...teamFields } = input
+            const normalizedSpecializations = specializations?.length
+                ? specializations
+                : (isTeamSpecialization(type) ? [type] : null)
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data, error } = await (supabase
                 .from('teams')
                 .insert({
-                    ...input,
+                    ...teamFields,
+                    type: normalizeTeamDbType(type),
+                    specializations: normalizedSpecializations,
                     tenant_id: currentTenant.id
                 })
                 .select()

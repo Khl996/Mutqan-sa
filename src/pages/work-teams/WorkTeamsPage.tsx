@@ -9,7 +9,9 @@ import {
     useAddTeamMember,
     useRemoveTeamMember,
     WorkTeam,
-    TEAM_SPECIALIZATIONS
+    TEAM_SPECIALIZATIONS,
+    TeamSpecialization,
+    getTeamPrimarySpecialization
 } from '@/hooks/useWorkTeams'
 import { useTeamMembers as useEmployees } from '@/hooks/useTeams'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
@@ -95,7 +97,7 @@ export default function WorkTeamsPage() {
         name: '',
         name_ar: '',
         description: '',
-        type: 'electrical' as WorkTeam['type']
+        specialization: 'electrical' as TeamSpecialization
     })
 
     // Filter teams
@@ -113,10 +115,17 @@ export default function WorkTeamsPage() {
         }
 
         try {
-            await createTeam.mutateAsync(newTeam)
+            await createTeam.mutateAsync({
+                code: newTeam.code,
+                name: newTeam.name,
+                name_ar: newTeam.name_ar,
+                description: newTeam.description,
+                type: 'maintenance',
+                specializations: [newTeam.specialization],
+            })
             toast.success(isRTL ? 'تم إنشاء الفريق بنجاح' : 'Team created successfully')
             setShowCreateModal(false)
-            setNewTeam({ code: '', name: '', name_ar: '', description: '', type: 'electrical' })
+            setNewTeam({ code: '', name: '', name_ar: '', description: '', specialization: 'electrical' })
         } catch (error: any) {
             toast.error(isRTL ? `فشل إنشاء الفريق: ${error.message}` : `Failed to create team: ${error.message}`)
         }
@@ -290,8 +299,8 @@ export default function WorkTeamsPage() {
                                         {isRTL ? 'التخصص' : 'Specialization'} *
                                     </label>
                                     <select
-                                        value={newTeam.type}
-                                        onChange={(e) => setNewTeam({ ...newTeam, type: e.target.value as WorkTeam['type'] })}
+                                        value={newTeam.specialization}
+                                        onChange={(e) => setNewTeam({ ...newTeam, specialization: e.target.value as TeamSpecialization })}
                                         className="w-full py-2 px-3 bg-background border rounded-lg focus:ring-2 focus:ring-secondary/20 outline-none font-cairo"
                                     >
                                         {TEAM_SPECIALIZATIONS.map(spec => (
@@ -405,13 +414,14 @@ function TeamCard({
     canManage: boolean
 }) {
     const [showMenu, setShowMenu] = useState(false)
-    const SpecIcon = specIcons[team.type] || Users2
-    const specConfig = TEAM_SPECIALIZATIONS.find(s => s.value === team.type)
+    const primarySpecialization = getTeamPrimarySpecialization(team)
+    const SpecIcon = specIcons[primarySpecialization] || Users2
+    const specConfig = TEAM_SPECIALIZATIONS.find(s => s.value === primarySpecialization)
 
     return (
         <div className="bg-card rounded-xl border shadow-card overflow-hidden hover:border-primary/30 transition-colors">
             {/* Header */}
-            <div className={cn("p-4 flex items-start justify-between", specColors[team.type] || specColors.general)}>
+            <div className={cn("p-4 flex items-start justify-between", specColors[primarySpecialization] || specColors.general)}>
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-white/50">
                         <SpecIcon className="w-5 h-5" />
@@ -456,7 +466,7 @@ function TeamCard({
             {/* Body */}
             <div className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                    <span className={cn("px-2 py-0.5 rounded-full text-xs border", specColors[team.type] || specColors.general)}>
+                    <span className={cn("px-2 py-0.5 rounded-full text-xs border", specColors[primarySpecialization] || specColors.general)}>
                         {isRTL ? specConfig?.label_ar : specConfig?.label}
                     </span>
                     <span className={cn(

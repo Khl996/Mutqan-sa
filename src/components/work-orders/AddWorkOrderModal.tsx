@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useCreateWorkOrder, useIssueTypes } from '@/hooks/useWorkOrders'
 import { useBuildings } from '@/hooks/useFacilities'
 import { useAssets } from '@/hooks/useAssets'
-import { useWorkTeams } from '@/hooks/useWorkTeams'
+import { getTeamPrimarySpecialization, useWorkTeams } from '@/hooks/useWorkTeams'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { useTenantSubscription, useTenantUsage } from '@/hooks/useSubscription'
 import { usePermission } from '@/hooks/usePermission'
@@ -123,9 +123,7 @@ export default function AddWorkOrderModal({ isOpen, onClose }: AddWorkOrderModal
 
                 if (targetSpec) {
                     // Find team with matching type/specialization
-                    const matchingTeam = teams.find(team =>
-                        team.type?.toLowerCase() === targetSpec
-                    )
+                    const matchingTeam = teams.find(team => getTeamPrimarySpecialization(team) === targetSpec)
                     if (matchingTeam && formData.assigned_team !== matchingTeam.id) {
                         setFormData(prev => ({ ...prev, assigned_team: matchingTeam.id }))
                     }
