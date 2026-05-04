@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mutqan PDF & Social Templates — Board F · قوالب PDF والسوشال</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --deep:#0F1B2B; --teal:#00B2A9; --teal-dim:#008F87; --teal-lt:#E0F5F4;
+  --surf:#F2F4F6; --card:#fff; --subtle:#F8F9FA;
+  --t1:#0F1B2B; --t2:#3E4E61; --t3:#6B7785; --t4:#9BAAB8;
+  --bdr:#DDE3EA; --bdr-lt:#EDF0F3;
+  --ok:#1A8F5E; --ok-bg:#E8F5EF;
+  --warn:#B97D00; --warn-bg:#FFF8E6;
+  --risk:#C0392B; --risk-bg:#FDECEA;
+  --info:#1A6FBF; --info-bg:#EBF3FD;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--surf);color:var(--t1);font-size:14px;-webkit-font-smoothing:antialiased;}
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:48px;background:var(--deep);border-bottom:1px solid #253347;display:flex;align-items:center;}
+.nav-logo{display:flex;align-items:center;gap:8px;padding:0 18px;border-right:1px solid #253347;height:100%;flex-shrink:0;}
+.nav-brand{font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#fff;}
+.nav-title{padding:0 18px;font-size:12px;font-weight:500;color:#6B7785;letter-spacing:0.04em;}
+.nav-tabs{display:flex;align-items:center;height:100%;flex:1;overflow-x:auto;}
+.nav-tab{height:100%;padding:0 14px;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#6B7785;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-tab:hover{color:#fff;}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+.nav-back{padding:0 18px;font-size:12px;color:#6B7785;text-decoration:none;border-left:1px solid #253347;height:100%;display:flex;align-items:center;flex-shrink:0;}
+.nav-back:hover{color:var(--teal);}
+.page{max-width:1440px;margin:0 auto;padding:68px 48px 80px;}
+.board{display:none;}
+.board.active{display:block;}
+
+/* ── SHARED ── */
+.sec-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);margin-bottom:4px;}
+.sec-title{font-size:20px;font-weight:700;color:var(--deep);margin-bottom:4px;}
+.sec-desc{font-size:13px;color:var(--t3);margin-bottom:20px;line-height:1.6;}
+.sec-divider{height:1px;background:var(--bdr);margin-bottom:20px;}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+.b-ok{background:var(--ok-bg);color:var(--ok);}
+.b-warn{background:var(--warn-bg);color:var(--warn);}
+.b-risk{background:var(--risk-bg);color:var(--risk);}
+.b-teal{background:var(--teal-lt);color:var(--teal-dim);}
+.b-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;cursor:pointer;font-weight:600;border-radius:6px;transition:all .15s;padding:10px 20px;font-size:13px;}
+.btn-p{background:var(--deep);color:#fff;}
+.btn-t{background:var(--teal);color:#fff;}
+.btn-o{background:transparent;color:var(--t2);border:1px solid var(--bdr);}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn-ar{font-family:'Cairo',sans-serif;}
+.ar{font-family:'Cairo',sans-serif;direction:rtl;text-align:right;}
+.ltr-tag{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--info);background:var(--info-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;}
+.rtl-tag{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);background:var(--teal-lt);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;}
+.bi-tag{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ok);background:var(--ok-bg);padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:10px;}
+.section{margin-bottom:56px;}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr-lt);}
+.check-item:last-child{border-bottom:none;}
+.check-icon{width:18px;height:18px;border-radius:50%;background:var(--ok-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.x-icon{background:var(--risk-bg);}
+.check-text{font-size:13px;color:var(--t2);line-height:1.5;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <svg viewBox="0 0 56 40" width="24" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 32 L4 26 L16 26 L16 18 L28 18" stroke="#6B7785" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/><circle cx="46" cy="14" r="4.5" fill="#00B2A9"/></svg>
+    <span class="nav-brand">متقن · Mutqan</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showBoard('onepager',this)">F1 · PDF Templates</button>
+    <button class="nav-tab" onclick="showBoard('deck',this)">F2 · Presentation</button>
+    <button class="nav-tab" onclick="showBoard('pilot',this)">F3 · Social Cards</button>
+    <button class="nav-tab" onclick="showBoard('linkedin',this)">F4 · LinkedIn</button>
+    <button class="nav-tab" onclick="showBoard('campaigns',this)">F5 · Campaigns</button>
+    <button class="nav-tab" onclick="showBoard('templates',this)">F6 · Report Templates</button>
+  </div>
+  <a class="nav-back" href="mutqan-brand-system.html">← Visual Identity</a>
+</nav>
+
+<div class="page">
+
+<!-- ══════════ F1: PDF TEMPLATES ══════════ -->
+<div class="board active" id="board-onepager">
+  <div class="section">
+    <div class="sec-label">F1 · قوالب المستندات</div>
+    <div class="sec-title">قوالب PDF — Document Templates</div>
+    <div class="sec-desc" dir="rtl" style="font-family:'Cairo',sans-serif;">تُستخدم هذه القوالب في: PDF Cover Page · Executive Summary · Decision Brief · Weekly O&M Report · Proof of Work PDF · One-Page Brief. تنسيق A4. ثنائي اللغة. جاهز للطباعة.</div>
+    <div class="sec-divider"></div>
+    <div class="g2">
+      <!-- AR Version -->
+      <div>
+        <div class="rtl-tag">AR Version · النسخة العربية</div>
+        <div style="background:var(--deep);border-radius:12px;padding:32px;min-height:600px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,178,169,0.08) 0%,transparent 70%);"></div>
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-direction:row-reverse;">
+            <div style="display:flex;align-items:center;gap:8px;flex-direction:row-reverse;">
+              <svg viewBox="0 0 56 40" width="28" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 32 L4 26 L16 26 L16 18 L28 18" stroke="#6B7785" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+              <span style="font-family:'Cairo',sans-serif;font-size:20px;font-weight:800;color:#fff;">متقن</span>
+            </div>
+            <div style="text-align:left;"><span style="font-size:12px;color:#3E4E61;font-family:'Inter';">Mutqan · Smart Operations</span></div>
+          </div>
+          <!-- Hero text -->
+          <div style="margin-bottom:24px;direction:rtl;">
+            <div style="font-family:'Cairo',sans-serif;font-size:26px;font-weight:900;color:#fff;line-height:1.4;margin-bottom:8px;">الذاكرة التشغيلية الحية<br>لمنشأتك</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:14px;color:#9BAAB8;line-height:1.7;">يربط متقن بين التقارير والمواقع والأصول والفنيين والمخزون وسجلات العمل والقرارات في صورة تشغيلية واحدة متكاملة.</div>
+          </div>
+          <!-- PDF Scope Label -->
+          <div style="margin-bottom:16px;padding:10px 14px;background:#162233;border-radius:8px;direction:rtl;">
+            <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.06em;color:#9BAAB8;margin-bottom:6px;">نوع المستند · Document Type</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:var(--teal);">[Decision Brief / O&M Report / Proof of Work / Proposal / One-Pager]</div>
+          </div>
+          <!-- Flow -->
+          <div style="margin-bottom:16px;padding:14px;background:#162233;border-radius:8px;direction:rtl;">
+            <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--teal);margin-bottom:10px;">مسار التشغيل — Visual Operating Graph</div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex-direction:row-reverse;">
+              <span style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:var(--teal);background:rgba(0,178,169,0.1);padding:3px 8px;border-radius:4px;">تقرير</span>
+              <span style="color:#3E4E61;font-size:10px;">←</span>
+              <span style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:#9BAAB8;background:#1D2E45;padding:3px 8px;border-radius:4px;">موقع</span>
+              <span style="color:#3E4E61;font-size:10px;">←</span>
+              <span style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:#9BAAB8;background:#1D2E45;padding:3px 8px;border-radius:4px;">أصل</span>
+              <span style="color:#3E4E61;font-size:10px;">←</span>
+              <span style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:#9BAAB8;background:#1D2E45;padding:3px 8px;border-radius:4px;">فني</span>
+              <span style="color:#3E4E61;font-size:10px;">←</span>
+              <span style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:var(--teal);background:rgba(0,178,169,0.1);padding:3px 8px;border-radius:4px;">قرار</span>
+            </div>
+          </div>
+          <!-- Benefits -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="padding:10px 12px;background:#162233;border-radius:8px;direction:rtl;border-top:2px solid var(--teal);">
+              <div style="font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;">إثبات العمل</div>
+              <div style="font-family:'Cairo',sans-serif;font-size:11px;color:#9BAAB8;">توثيق كامل لكل إغلاق</div>
+            </div>
+            <div style="padding:10px 12px;background:#162233;border-radius:8px;direction:rtl;border-top:2px solid var(--ok);">
+              <div style="font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;">جواز الأصل</div>
+              <div style="font-family:'Cairo',sans-serif;font-size:11px;color:#9BAAB8;">تاريخ كامل لكل أصل</div>
+            </div>
+            <div style="padding:10px 12px;background:#162233;border-radius:8px;direction:rtl;border-top:2px solid var(--warn);">
+              <div style="font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;">نبض المنشأة</div>
+              <div style="font-family:'Cairo',sans-serif;font-size:11px;color:#9BAAB8;">مراقبة حية للتشغيل</div>
+            </div>
+            <div style="padding:10px 12px;background:#162233;border-radius:8px;direction:rtl;border-top:2px solid var(--info);">
+              <div style="font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;">ملخص القرار</div>
+              <div style="font-family:'Cairo',sans-serif;font-size:11px;color:#9BAAB8;">من الأرقام إلى القرارات</div>
+            </div>
+          </div>
+          <!-- Document Footer Spec -->
+          <div style="padding:12px 14px;background:#162233;border-radius:8px;display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse;border-top:1px solid #253347;">
+            <svg viewBox="0 0 56 40" width="18" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+            <div style="direction:rtl;"><div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;color:#6B7785;">[اسم المستند] · [التاريخ] · صفحة [X] من [Y]</div><div style="font-size:9px;color:#3E4E61;margin-top:2px;font-family:'Inter';">Footer template — يظهر في كل صفحة داخلية PDF</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EN Version -->
+      <div>
+        <div class="ltr-tag">EN Version · English</div>
+        <div style="background:#fff;border:1px solid var(--bdr);border-radius:12px;padding:32px;min-height:600px;">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 56 40" width="24" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 32 L4 26 L16 26 L16 18 L28 18" stroke="#6B7785" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+              <span style="font-size:16px;font-weight:800;color:var(--deep);">Mutqan</span>
+            </div>
+            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--t3);">Facility Operations Intelligence</div>
+          </div>
+          <!-- Hero -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:24px;font-weight:800;color:var(--deep);line-height:1.25;letter-spacing:-0.02em;margin-bottom:8px;">The Living Operational<br>Memory of Your Facility</div>
+            <div style="font-size:13px;color:var(--t3);line-height:1.7;">Mutqan connects reports, locations, assets, technicians, inventory, work records, and decisions into one coherent operational picture.</div>
+          </div>
+          <!-- Document Type Label -->
+          <div style="margin-bottom:14px;padding:10px 14px;background:var(--subtle);border-radius:8px;border-left:3px solid var(--teal);">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--teal);margin-bottom:4px;">DOCUMENT TYPE</div>
+            <div style="font-size:12px;color:var(--t2);">[Decision Brief / O&M Report / Proof of Work / Proposal / One-Pager]</div>
+          </div>
+          <!-- Benefits grid — Visual Keys -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+            <div style="padding:10px 12px;background:var(--subtle);border-radius:8px;border-left:2px solid var(--teal);">
+              <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px;">Proof of Work</div>
+              <div style="font-size:11px;color:var(--t3);">Full closure documentation</div>
+            </div>
+            <div style="padding:10px 12px;background:var(--subtle);border-radius:8px;border-left:2px solid var(--ok);">
+              <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px;">Asset Passport</div>
+              <div style="font-size:11px;color:var(--t3);">Complete asset history</div>
+            </div>
+            <div style="padding:10px 12px;background:var(--subtle);border-radius:8px;border-left:2px solid var(--warn);">
+              <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px;">Facility Pulse</div>
+              <div style="font-size:11px;color:var(--t3);">Live operational awareness</div>
+            </div>
+            <div style="padding:10px 12px;background:var(--subtle);border-radius:8px;border-left:2px solid var(--info);">
+              <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:2px;">Decision Brief</div>
+              <div style="font-size:11px;color:var(--t3);">From numbers to decisions</div>
+            </div>
+          </div>
+          <!-- Document Footer Spec -->
+          <div style="padding:12px 14px;background:var(--surf);border-radius:8px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--bdr);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 56 40" width="18" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+              <span style="font-size:11px;font-weight:700;color:var(--deep);">Mutqan</span>
+            </div>
+            <div style="font-size:11px;color:var(--t3);">[Document Name] · [Date] · Page [X] of [Y]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /board onepager -->
+
+
+<!-- ══════════ F2: PRESENTATION TEMPLATE ══════════ -->
+<div class="board" id="board-deck">
+  <div class="section">
+    <div class="sec-label">F2 · قوالب العروض</div>
+    <div class="sec-title">Presentation Template — قالب العرض التقديمي</div>
+    <div class="sec-desc" dir="rtl" style="font-family:'Cairo',sans-serif;">هيكل شرائح العرض لـ: Proposal · Pilot Report · Executive Briefing · Operational Review. ثنائي اللغة، عربي أولاً. كل شريحة تمثّل قالباً بصرياً قابلاً للتنفيذ.</div>
+    <div class="sec-divider"></div>
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
+
+      <!-- Slide 1: Cover -->
+      <div style="aspect-ratio:16/9;background:var(--deep);border-radius:10px;overflow:hidden;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border:1px solid #253347;">
+        <svg viewBox="0 0 56 40" width="32" fill="none" style="margin-bottom:8px;"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+        <div style="font-family:'Cairo',sans-serif;font-size:14px;font-weight:900;color:#fff;text-align:center;line-height:1.4;">الذاكرة التشغيلية الحية</div>
+        <div style="font-size:10px;color:#6B7785;margin-top:4px;font-family:'Inter';">Living Operational Memory</div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#3E4E61;letter-spacing:0.06em;">01 · COVER</div>
+      </div>
+
+      <!-- Slide 2: Problem -->
+      <div style="aspect-ratio:16/9;background:#fff;border-radius:10px;overflow:hidden;padding:14px;border:1px solid var(--bdr);position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--risk);margin-bottom:6px;">المشكلة · THE PROBLEM</div>
+        <div style="font-family:'Cairo',sans-serif;font-size:12px;font-weight:800;color:var(--deep);direction:rtl;text-align:right;margin-bottom:8px;">ليس كل إغلاق يعني إنجازاً</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:9px;color:var(--t3);padding:4px 6px;background:var(--risk-bg);border-radius:4px;direction:rtl;font-family:'Cairo';">أوامر مغلقة بلا توثيق</div>
+          <div style="font-size:9px;color:var(--t3);padding:4px 6px;background:var(--warn-bg);border-radius:4px;direction:rtl;font-family:'Cairo';">قرارات مبنية على أرقام منقوصة</div>
+          <div style="font-size:9px;color:var(--t3);padding:4px 6px;background:var(--bdr-lt);border-radius:4px;direction:rtl;font-family:'Cairo';">تكرار الأعطال بلا ذاكرة</div>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--t4);letter-spacing:0.06em;">02 · PROBLEM</div>
+      </div>
+
+      <!-- Slide 3: Context / Background -->
+      <div style="aspect-ratio:16/9;background:#fff;border-radius:10px;overflow:hidden;padding:14px;border:1px solid var(--bdr);position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:6px;">السياق · Context</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="font-size:9px;color:var(--t2);font-family:'Cairo';direction:rtl;">[وصف السياق أو الخلفية التشغيلية]</div>
+          <div style="height:1px;background:var(--bdr-lt);"></div>
+          <div style="font-size:9px;color:var(--t3);font-family:'Cairo';direction:rtl;">[تفاصيل إضافية أو بيانات داعمة]</div>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--t4);letter-spacing:0.06em;">03 · CONTEXT</div>
+      </div>
+
+      <!-- Slide 4: What is Mutqan -->
+      <div style="aspect-ratio:16/9;background:var(--deep);border-radius:10px;overflow:hidden;padding:14px;position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:6px;">ما هو متقن؟</div>
+        <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:800;color:#fff;direction:rtl;text-align:right;line-height:1.4;margin-bottom:6px;">منصة إدارة المنشآت والأصول العربية الأولى</div>
+        <div style="font-size:9px;color:#9BAAB8;line-height:1.5;direction:rtl;font-family:'Cairo';">يربط التقارير والأصول والقرارات في ذاكرة تشغيلية واحدة</div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#3E4E61;letter-spacing:0.06em;">04 · WHAT IS MUTQAN</div>
+      </div>
+
+      <!-- Slide 5: Operational flow -->
+      <div style="aspect-ratio:16/9;background:#fff;border-radius:10px;overflow:hidden;padding:12px;border:1px solid var(--bdr);position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:8px;">مسار التشغيل · Operational Flow</div>
+        <div style="display:flex;align-items:center;gap:2px;flex-direction:row-reverse;flex-wrap:wrap;">
+          <span style="font-size:8px;font-weight:600;color:var(--teal);background:var(--teal-lt);padding:2px 5px;border-radius:3px;font-family:'Cairo';">تقرير</span>
+          <span style="font-size:8px;color:var(--t4);">←</span>
+          <span style="font-size:8px;font-weight:600;color:var(--t2);background:var(--subtle);padding:2px 5px;border-radius:3px;font-family:'Cairo';">موقع</span>
+          <span style="font-size:8px;color:var(--t4);">←</span>
+          <span style="font-size:8px;font-weight:600;color:var(--t2);background:var(--subtle);padding:2px 5px;border-radius:3px;font-family:'Cairo';">أصل</span>
+          <span style="font-size:8px;color:var(--t4);">←</span>
+          <span style="font-size:8px;font-weight:600;color:var(--t2);background:var(--subtle);padding:2px 5px;border-radius:3px;font-family:'Cairo';">فني</span>
+          <span style="font-size:8px;color:var(--t4);">←</span>
+          <span style="font-size:8px;font-weight:600;color:var(--teal);background:var(--teal-lt);padding:2px 5px;border-radius:3px;font-family:'Cairo';">قرار</span>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--t4);letter-spacing:0.06em;">05 · FLOW</div>
+      </div>
+
+      <!-- Slide 6: Screens -->
+      <div style="aspect-ratio:16/9;background:var(--surf);border-radius:10px;overflow:hidden;padding:12px;border:1px solid var(--bdr);position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:6px;">شاشات المنتج</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:var(--deep);border-radius:4px;padding:6px;"><div style="font-size:8px;color:var(--teal);font-family:'Cairo';">لوحة القيادة</div></div>
+          <div style="background:#fff;border:1px solid var(--bdr);border-radius:4px;padding:6px;"><div style="font-size:8px;color:var(--t3);font-family:'Cairo';">جواز الأصل</div></div>
+          <div style="background:#fff;border:1px solid var(--bdr);border-radius:4px;padding:6px;"><div style="font-size:8px;color:var(--t3);font-family:'Cairo';">أمر العمل</div></div>
+          <div style="background:#fff;border:1px solid var(--bdr);border-radius:4px;padding:6px;"><div style="font-size:8px;color:var(--t3);font-family:'Cairo';">التقرير</div></div>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--t4);letter-spacing:0.06em;">06 · PRODUCT</div>
+      </div>
+
+      <!-- Slide 7: Benefits by role -->
+      <div style="aspect-ratio:16/9;background:#fff;border-radius:10px;overflow:hidden;padding:12px;border:1px solid var(--bdr);position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:6px;">الفوائد حسب الدور</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:4px 6px;background:var(--teal-lt);border-radius:4px;">
+            <span style="font-size:9px;font-weight:600;color:var(--teal);font-family:'Cairo';">مدير التشغيل</span>
+            <span style="font-size:8px;color:var(--teal-dim);font-family:'Cairo';">رؤية كاملة</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:4px 6px;background:var(--ok-bg);border-radius:4px;">
+            <span style="font-size:9px;font-weight:600;color:var(--ok);font-family:'Cairo';">مشرف الصيانة</span>
+            <span style="font-size:8px;color:var(--ok);font-family:'Cairo';">إدارة فعّالة</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;direction:rtl;padding:4px 6px;background:var(--info-bg);border-radius:4px;">
+            <span style="font-size:9px;font-weight:600;color:var(--info);font-family:'Cairo';">الفني الميداني</span>
+            <span style="font-size:8px;color:var(--info);font-family:'Cairo';">مهام واضحة</span>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--t4);letter-spacing:0.06em;">07 · ROLES</div>
+      </div>
+
+      <!-- Slide 8: Key Metrics / Data -->
+      <div style="aspect-ratio:16/9;background:var(--deep);border-radius:10px;overflow:hidden;padding:14px;position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:6px;">الأرقام والمؤشرات · Data & Metrics</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#162233;border-radius:4px;padding:6px;text-align:center;"><div style="font-size:16px;font-weight:800;color:var(--teal);">[X]%</div><div style="font-size:8px;color:#6B7785;font-family:'Cairo';">[المؤشر]</div></div>
+          <div style="background:#162233;border-radius:4px;padding:6px;text-align:center;"><div style="font-size:16px;font-weight:800;color:var(--ok);">[Y]%</div><div style="font-size:8px;color:#6B7785;font-family:'Cairo';">[المؤشر]</div></div>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#3E4E61;letter-spacing:0.06em;">08 · DATA</div>
+      </div>
+
+      <!-- Slide 9: Timeline / Roadmap -->
+      <div style="aspect-ratio:16/9;background:#fff;border-radius:10px;overflow:hidden;padding:12px;border:1px solid var(--bdr);position:relative;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--teal);margin-bottom:8px;">الجدول الزمني · Timeline</div>
+        <div style="display:flex;gap:0;align-items:center;">
+          <div style="flex:1;text-align:center;padding:4px;border-right:1px solid var(--bdr);">
+            <div style="font-size:8px;font-weight:700;color:var(--teal);">أسبوع 1</div>
+            <div style="font-size:7px;color:var(--t3);font-family:'Cairo';">[الخطوة]</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:4px;border-right:1px solid var(--bdr);">
+            <div style="font-size:8px;font-weight:700;color:var(--t3);">أسابيع 2-4</div>
+            <div style="font-size:7px;color:var(--t3);font-family:'Cairo';">[الخطوة]</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:4px;">
+            <div style="font-size:8px;font-weight:700;color:var(--ok);">اليوم [X]</div>
+            <div style="font-size:7px;color:var(--t3);font-family:'Cairo';">[النتيجة]</div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--t4);letter-spacing:0.06em;">09 · TIMELINE</div>
+      </div>
+
+      <!-- Slide 10: Close / Summary -->
+      <div style="aspect-ratio:16/9;background:var(--deep);border-radius:10px;overflow:hidden;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
+        <svg viewBox="0 0 56 40" width="24" fill="none" style="margin-bottom:8px;"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+        <div style="font-family:'Cairo',sans-serif;font-size:12px;font-weight:800;color:#fff;text-align:center;margin-bottom:6px;">[عنوان الختام · Closing Title]</div>
+        <div style="font-size:8px;color:var(--teal);text-align:center;letter-spacing:0.06em;">[معلومات التواصل أو المرجع]</div>
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#3E4E61;letter-spacing:0.06em;">10 · CLOSE</div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /board deck -->
+
+
+<!-- ══════════ F3: SOCIAL CARDS GALLERY ══════════ -->
+<div class="board" id="board-pilot">
+  <div class="section">
+    <div class="sec-label">F3 · Social Cards Gallery</div>
+    <div class="sec-title">بطاقات السوشال ميديا — Social Cards</div>
+    <div class="sec-desc" dir="rtl" style="font-family:'Cairo',sans-serif;">8 أنواع من بطاقات السوشال ميديا الجاهزة للتنفيذ. تُستخدم في LinkedIn، Instagram، Twitter/X، وأي منصة. المقاسات: 1200×627 (LinkedIn) · 1080×1080 (Square).</div>
+    <div class="sec-divider"></div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+
+      <!-- Feature Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">01 · Feature Card</div>
+        <div style="aspect-ratio:1;background:var(--deep);border-radius:12px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #253347;">
+          <svg viewBox="0 0 56 40" width="20" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+          <div>
+            <div style="font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--teal);text-transform:uppercase;margin-bottom:4px;">Feature</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;color:#fff;direction:rtl;line-height:1.4;">[اسم الميزة]</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:10px;color:#6B7785;direction:rtl;margin-top:4px;">[وصف مختصر]</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">02 · Metric Card</div>
+        <div style="aspect-ratio:1;background:#fff;border-radius:12px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--bdr);">
+          <div style="font-size:9px;font-weight:600;letter-spacing:0.08em;color:var(--teal);text-transform:uppercase;">Metric</div>
+          <div style="text-align:center;">
+            <div style="font-size:36px;font-weight:800;color:var(--deep);letter-spacing:-0.03em;">[X]%</div>
+            <div style="font-size:11px;font-weight:600;color:var(--t2);margin-top:4px;">[اسم المؤشر]</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 56 40" width="16" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+            <span style="font-size:10px;font-weight:700;color:var(--deep);">Mutqan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Before / After Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">03 · Before / After</div>
+        <div style="aspect-ratio:1;border-radius:12px;overflow:hidden;display:grid;grid-template-rows:1fr 1fr;border:1px solid var(--bdr);">
+          <div style="background:var(--risk-bg);padding:12px;display:flex;flex-direction:column;justify-content:center;border-bottom:1px solid var(--bdr);">
+            <div style="font-size:9px;font-weight:700;color:var(--risk);margin-bottom:3px;">BEFORE · قبل</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:11px;color:var(--risk);direction:rtl;">[الوضع السابق]</div>
+          </div>
+          <div style="background:var(--ok-bg);padding:12px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-size:9px;font-weight:700;color:var(--ok);margin-bottom:3px;">AFTER · بعد</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:11px;color:var(--ok);direction:rtl;">[الوضع مع متقن]</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">04 · Quote Card</div>
+        <div style="aspect-ratio:1;background:var(--deep);border-radius:12px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #253347;">
+          <div style="font-size:24px;color:var(--teal);font-weight:800;line-height:1;">"</div>
+          <div style="font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;color:#fff;direction:rtl;text-align:right;line-height:1.6;">[النص الاقتباسي]</div>
+          <div style="font-family:'Cairo',sans-serif;font-size:10px;color:#6B7785;direction:rtl;text-align:right;">[الاسم · المنصب]</div>
+        </div>
+      </div>
+
+      <!-- Screenshot Story Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">05 · Screenshot Story</div>
+        <div style="aspect-ratio:1;background:var(--surf);border-radius:12px;overflow:hidden;padding:12px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--bdr);">
+          <div style="font-size:10px;font-weight:600;color:var(--t2);">Product Screenshot</div>
+          <div style="flex:1;background:#fff;border-radius:8px;border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <div style="width:80%;height:80%;background:var(--deep);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+              <div style="font-size:10px;color:var(--teal);">[ لقطة المنتج ]</div>
+            </div>
+          </div>
+          <div style="font-family:'Cairo',sans-serif;font-size:10px;font-weight:600;color:var(--t1);direction:rtl;text-align:right;">[اسم الميزة المُصوَّرة]</div>
+        </div>
+      </div>
+
+      <!-- Demo Announcement Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">06 · Demo Announcement</div>
+        <div style="aspect-ratio:1;background:var(--deep);border-radius:12px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:2px solid var(--teal);position:relative;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal);"></div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--teal);text-transform:uppercase;">Demo</div>
+          <div>
+            <div style="font-family:'Cairo',sans-serif;font-size:16px;font-weight:800;color:#fff;direction:rtl;line-height:1.35;">[عنوان الـ Demo]</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:10px;color:#6B7785;direction:rtl;margin-top:4px;">[التاريخ / المنصة]</div>
+          </div>
+          <div style="font-size:9px;color:var(--teal);">mutqan.sa</div>
+        </div>
+      </div>
+
+      <!-- Flow Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">07 · Flow Card</div>
+        <div style="aspect-ratio:1;background:#fff;border-radius:12px;overflow:hidden;padding:16px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--bdr);">
+          <div style="font-size:10px;font-weight:600;color:var(--t2);">Visual Operating Graph</div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+            <div style="display:flex;align-items:center;gap:6px;direction:rtl;">
+              <span style="font-size:9px;font-weight:600;color:var(--teal);background:var(--teal-lt);padding:2px 6px;border-radius:3px;font-family:'Cairo';">تقرير</span>
+              <span style="font-size:9px;color:var(--t4);">←</span>
+              <span style="font-size:9px;font-weight:600;color:var(--t2);background:var(--surf);padding:2px 6px;border-radius:3px;font-family:'Cairo';">أصل</span>
+              <span style="font-size:9px;color:var(--t4);">←</span>
+              <span style="font-size:9px;font-weight:600;color:var(--teal);background:var(--teal-lt);padding:2px 6px;border-radius:3px;font-family:'Cairo';">قرار</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 56 40" width="14" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+            <span style="font-size:10px;font-weight:700;color:var(--deep);">Mutqan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decision Brief Teaser Card -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">08 · Decision Brief Teaser</div>
+        <div style="aspect-ratio:1;background:var(--deep);border-radius:12px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid #253347;">
+          <div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:var(--info);text-transform:uppercase;margin-bottom:4px;">Decision Brief</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;color:#fff;direction:rtl;">ملخص القرار</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+            <div style="background:#162233;border-radius:4px;padding:6px;border-top:2px solid var(--teal);"><div style="font-size:8px;color:var(--teal);font-family:'Cairo';direction:rtl;">الحالة</div></div>
+            <div style="background:#162233;border-radius:4px;padding:6px;border-top:2px solid var(--ok);"><div style="font-size:8px;color:var(--ok);font-family:'Cairo';direction:rtl;">التوصية</div></div>
+          </div>
+          <div style="font-size:9px;color:#3E4E61;font-family:'Cairo';direction:rtl;">[اسم المنشأة] · [التاريخ]</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Specs Row -->
+    <div style="margin-top:24px;padding:16px;background:#fff;border:1px solid var(--bdr);border-radius:10px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;">مواصفات التصدير — Export Specs</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div style="font-size:12px;color:var(--t2);"><strong style="color:var(--t1);">LinkedIn Post:</strong><br>1200 × 627 px</div>
+        <div style="font-size:12px;color:var(--t2);"><strong style="color:var(--t1);">Square Card:</strong><br>1080 × 1080 px</div>
+        <div style="font-size:12px;color:var(--t2);"><strong style="color:var(--t1);">Carousel Slide:</strong><br>1080 × 1080 px</div>
+        <div style="font-size:12px;color:var(--t2);"><strong style="color:var(--t1);">Format:</strong><br>PNG · JPG · PDF</div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /board pilot -->
+
+
+<!-- ══════════ F4: LINKEDIN ══════════ -->
+<div class="board" id="board-linkedin">
+  <div class="section">
+    <div class="sec-label">F4 · LinkedIn</div>
+    <div class="sec-title">قوالب LinkedIn — Templates</div>
+    <div class="sec-divider"></div>
+
+    <!-- Single post templates -->
+    <div style="margin-bottom:40px;">
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:16px;">Single Post · 1200×627px</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+
+        <!-- Campaign: Not every closure -->
+        <div>
+          <div class="rtl-tag">AR</div>
+          <div style="aspect-ratio:1200/627;background:var(--deep);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:28px;position:relative;border:1px solid #253347;">
+            <div style="position:absolute;top:0;right:0;width:180px;height:100%;background:linear-gradient(to left,rgba(0,178,169,0.04),transparent);"></div>
+            <div style="position:absolute;top:16px;right:16px;"><svg viewBox="0 0 56 40" width="24" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg></div>
+            <div style="font-family:'Cairo',sans-serif;font-size:clamp(16px,2.5vw,22px);font-weight:900;color:#fff;direction:rtl;text-align:right;line-height:1.4;margin-bottom:12px;">ليس كل إغلاق يعني إنجازاً.<br><span style="color:var(--teal);">الإنجاز هو ما يبقى موثّقاً.</span></div>
+            <div style="font-size:11px;color:#6B7785;text-align:right;font-family:'Cairo';">متقن — الذاكرة التشغيلية الحية لمنشأتك</div>
+          </div>
+        </div>
+
+        <!-- EN version -->
+        <div>
+          <div class="ltr-tag">EN</div>
+          <div style="aspect-ratio:1200/627;background:#fff;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:28px;position:relative;border:1px solid var(--bdr);">
+            <div style="position:absolute;bottom:0;left:0;width:100%;height:3px;background:linear-gradient(to right,var(--teal),transparent);"></div>
+            <div style="font-size:clamp(14px,2.5vw,20px);font-weight:800;color:var(--deep);line-height:1.3;letter-spacing:-0.02em;margin-bottom:10px;">Not every closure is achievement.<br><span style="color:var(--teal);">Achievement is what stays documented.</span></div>
+            <div style="font-size:11px;color:var(--t3);">Mutqan — The living operational memory of your facility</div>
+            <div style="position:absolute;top:16px;right:16px;"><svg viewBox="0 0 56 40" width="22" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg></div>
+          </div>
+        </div>
+
+        <!-- Every asset has a story -->
+        <div>
+          <div class="bi-tag">Bilingual</div>
+          <div style="aspect-ratio:1200/627;background:var(--deep);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;border:1px solid #253347;">
+            <div style="padding:24px;border-right:1px solid #253347;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;direction:rtl;">
+              <div style="font-family:'Cairo',sans-serif;font-size:16px;font-weight:900;color:#fff;line-height:1.4;text-align:right;margin-bottom:6px;">لكل أصل<br><span style="color:var(--teal);">قصة تشغيلية</span></div>
+              <div style="font-size:10px;color:#6B7785;text-align:right;font-family:'Cairo';">متقن يحفظها لك</div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:14px;font-weight:800;color:#fff;line-height:1.4;letter-spacing:-0.01em;margin-bottom:6px;">Every Asset<br><span style="color:var(--teal);">Has a Story</span></div>
+              <div style="font-size:10px;color:#6B7785;">Mutqan remembers every detail</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Carousel template -->
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:16px;">Carousel Template · 5 slides · 1080×1080px</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;">
+        <!-- Slide 1 -->
+        <div style="flex:0 0 160px;aspect-ratio:1;background:var(--deep);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;border:1px solid #253347;">
+          <svg viewBox="0 0 56 40" width="20" fill="none" style="margin-bottom:6px;"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+          <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:800;color:#fff;text-align:center;line-height:1.3;">5 أشياء يجب أن تعرفها عن تشغيل منشأتك</div>
+          <div style="font-size:9px;color:#3E4E61;margin-top:4px;">1/5 →</div>
+        </div>
+        <!-- Slides 2-4 -->
+        <div style="flex:0 0 160px;aspect-ratio:1;background:#fff;border-radius:8px;display:flex;flex-direction:column;justify-content:center;padding:12px;border:1px solid var(--bdr);">
+          <div style="font-size:9px;font-weight:700;color:var(--teal);margin-bottom:4px;">٠١</div>
+          <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;color:var(--deep);direction:rtl;text-align:right;">كل أمر عمل مغلق يجب أن يترك أثراً</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;font-family:'Cairo';direction:rtl;">التوثيق ليس ورقاً — هو ذاكرة</div>
+          <div style="font-size:9px;color:var(--t4);margin-top:6px;">2/5 →</div>
+        </div>
+        <div style="flex:0 0 160px;aspect-ratio:1;background:#fff;border-radius:8px;display:flex;flex-direction:column;justify-content:center;padding:12px;border:1px solid var(--bdr);">
+          <div style="font-size:9px;font-weight:700;color:var(--teal);margin-bottom:4px;">٠٢</div>
+          <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;color:var(--deep);direction:rtl;text-align:right;">الأصول لا تتعطل بلا سبب</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;font-family:'Cairo';direction:rtl;">التاريخ يخبرك قبل الكارثة</div>
+          <div style="font-size:9px;color:var(--t4);margin-top:6px;">3/5 →</div>
+        </div>
+        <div style="flex:0 0 160px;aspect-ratio:1;background:#fff;border-radius:8px;display:flex;flex-direction:column;justify-content:center;padding:12px;border:1px solid var(--bdr);">
+          <div style="font-size:9px;font-weight:700;color:var(--teal);margin-bottom:4px;">٠٣</div>
+          <div style="font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;color:var(--deep);direction:rtl;text-align:right;">القرار يحتاج سياقاً — لا مجرد أرقام</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:3px;font-family:'Cairo';direction:rtl;">من التقرير إلى القرار</div>
+          <div style="font-size:9px;color:var(--t4);margin-top:6px;">4/5 →</div>
+        </div>
+        <!-- Final slide - Summary -->
+        <div style="flex:0 0 160px;aspect-ratio:1;background:var(--deep);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;border:1px solid var(--teal);">
+          <svg viewBox="0 0 56 40" width="20" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+          <div style="font-family:'Cairo',sans-serif;font-size:10px;font-weight:800;color:#fff;text-align:center;line-height:1.4;margin-top:6px;">[خلاصة · Summary]</div>
+          <div style="font-size:9px;color:#3E4E61;margin-top:4px;">5/5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /board linkedin -->
+
+
+<!-- ══════════ F5: CAMPAIGNS ══════════ -->
+<div class="board" id="board-campaigns">
+  <div class="section">
+    <div class="sec-label">F5 · Campaigns</div>
+    <div class="sec-title">بطاقات الحملات البصرية — Visual Campaign Cards</div>
+    <div class="sec-desc" dir="rtl" style="font-family:'Cairo',sans-serif;">بطاقات بصرية للحملات: تُستخدم في LinkedIn، ويمكن تكييفها لـ Instagram وTwitter. ثلاثة قوالب أساسية: Feature Campaign، Every Asset Has a Story، Before/After.</div>
+    <div class="sec-divider"></div>
+
+    <div class="g3" style="margin-bottom:32px;">
+      <!-- Campaign 1: Not every closure -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">Campaign 01 — "ليس كل إغلاق"</div>
+        <div style="aspect-ratio:4/3;background:var(--deep);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:24px;border:1px solid #253347;position:relative;">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.01) 40px,rgba(255,255,255,0.01) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,0.01) 40px,rgba(255,255,255,0.01) 41px);"></div>
+          <svg viewBox="0 0 56 40" width="22" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+          <div>
+            <div style="font-size:11px;color:#3E4E61;letter-spacing:0.06em;text-transform:uppercase;font-family:'Inter';margin-bottom:10px;">CAMPAIGN 01</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:22px;font-weight:900;color:#fff;direction:rtl;text-align:right;line-height:1.35;">ليس كل إغلاق<br>يعني <span style="color:var(--teal);">إنجازاً</span></div>
+            <div style="font-family:'Cairo',sans-serif;font-size:12px;color:#6B7785;direction:rtl;text-align:right;margin-top:6px;">الإنجاز الحقيقي هو ما يبقى موثّقاً في ذاكرة المنشأة</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 2: Every asset has a story -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">Campaign 02 — "لكل أصل قصة"</div>
+        <div style="aspect-ratio:4/3;background:#fff;border-radius:12px;overflow:hidden;padding:24px;border:1px solid var(--bdr);position:relative;display:flex;flex-direction:column;justify-content:space-between;">
+          <div style="height:3px;background:var(--teal);position:absolute;top:0;left:0;right:0;border-radius:0;"></div>
+          <div style="padding-top:8px;">
+            <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:10px;">CAMPAIGN 02</div>
+            <div style="font-size:24px;font-weight:800;color:var(--deep);letter-spacing:-0.02em;line-height:1.25;margin-bottom:6px;">Every Asset<br>Has a <span style="color:var(--teal);">Story</span></div>
+            <div style="font-size:12px;color:var(--t3);line-height:1.6;">Mutqan records every repair, replacement, and failure — so your decisions are always informed.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 56 40" width="20" fill="none"><path d="M4 32 L4 22 L18 22 L18 14 L32 14" stroke="#00B2A9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="14" r="5" fill="#00B2A9"/></svg>
+            <span style="font-size:12px;font-weight:700;color:var(--deep);">Mutqan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign 3: Before/After -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;">Campaign 03 — Before / After</div>
+        <div style="aspect-ratio:4/3;border-radius:12px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bdr);">
+          <div style="background:var(--risk-bg);padding:16px;display:flex;flex-direction:column;justify-content:space-between;border-right:1px solid var(--bdr);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--risk);">BEFORE · قبل</div>
+            <div>
+              <div style="font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:var(--risk);direction:rtl;text-align:right;margin-bottom:6px;">فوضى تشغيلية</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:10px;color:var(--risk);font-family:'Cairo';direction:rtl;">✗ إكسل وواتساب</div>
+                <div style="font-size:10px;color:var(--risk);font-family:'Cairo';direction:rtl;">✗ لا توثيق حقيقي</div>
+                <div style="font-size:10px;color:var(--risk);font-family:'Cairo';direction:rtl;">✗ قرارات ارتجالية</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--ok-bg);padding:16px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--ok);">AFTER · بعد</div>
+            <div>
+              <div style="font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;color:var(--ok);direction:rtl;text-align:right;margin-bottom:6px;">ذاكرة تشغيلية</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:10px;color:var(--ok);font-family:'Cairo';direction:rtl;">✓ متقن — كل شيء موثّق</div>
+                <div style="font-size:10px;color:var(--ok);font-family:'Cairo';direction:rtl;">✓ قرارات مبنية على بيانات</div>
+                <div style="font-size:10px;color:var(--ok);font-family:'Cairo';direction:rtl;">✓ ذاكرة مؤسسية حقيقية</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /board campaigns -->
+
+
+<!-- ══════════ F6: TEMPLATES ══════════ -->
+<div class="board" id="board-templates">
+  <div class="section">
+    <div class="sec-label">F6 · Document Templates</div>
+    <div class="sec-title">قوالب المستندات — Proposal · Case Study · Report</div>
+    <div class="sec-divider"></div>
+
+    <div class="g2">
+      <!-- Proposal template -->
+      <div class="card">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--bdr-lt);display:flex;align-items:center;justify-content:space-between;">
+          <div class="sec-label" style="margin:0;">Proposal Template</div>
+          <div class="bi-tag" style="margin:0;">Bilingual</div>
+        </div>
+        <div style="padding:20px;">
+          <div style="background:var(--deep);border-radius:8px;padding:16px;margin-bottom:12px;direction:rtl;">
+            <div style="font-family:'Cairo',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;">عرض تشغيلي — متقن</div>
+            <div style="font-size:11px;color:#6B7785;font-family:'Inter';">Prepared for: [Client Name] · [Date]</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--t2);">
+            <div style="padding:8px 10px;background:var(--subtle);border-radius:6px;display:flex;justify-content:space-between;"><span>01 · Executive Summary</span><span style="color:var(--teal);font-weight:600;">الملخص التنفيذي</span></div>
+            <div style="padding:8px 10px;background:var(--subtle);border-radius:6px;display:flex;justify-content:space-between;"><span>02 · Current State Assessment</span><span style="color:var(--teal);font-weight:600;">تقييم الوضع الحالي</span></div>
+            <div style="padding:8px 10px;background:var(--subtle);border-radius:6px;display:flex;justify-content:space-between;"><span>03 · Proposed Solution</span><span style="color:var(--teal);font-weight:600;">الحل المقترح</span></div>
+            <div style="padding:8px 10px;background:var(--subtle);border-radius:6px;display:flex;justify-content:space-between;"><span>04 · Implementation Timeline</span><span style="color:var(--teal);font-weight:600;">الجدول الزمني</span></div>
+            <div style="padding:8px 10px;background:var(--subtle);border-radius:6px;display:flex;justify-content:space-between;"><span>05 · Scope & Deliverables</span><span style="color:var(--teal);font-weight:600;">النطاق والمخرجات</span></div>
+            <div style="padding:8px 10px;background:var(--teal-lt);border-radius:6px;display:flex;justify-content:space-between;"><span style="font-weight:600;color:var(--teal-dim);">06 · Next Step</span><span style="color:var(--teal);font-weight:600;">الخطوة التالية</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case study template -->
+      <div class="card">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--bdr-lt);display:flex;align-items:center;justify-content:space-between;">
+          <div class="sec-label" style="margin:0;">Case Study Template</div>
+          <div class="bi-tag" style="margin:0;">Bilingual</div>
+        </div>
+        <div style="padding:20px;">
+          <div style="background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:16px;margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);margin-bottom:6px;">Case Study</div>
+            <div style="font-size:15px;font-weight:700;color:var(--deep);margin-bottom:2px;">[Client Name] — [Facility Type]</div>
+            <div style="font-family:'Cairo',sans-serif;font-size:13px;color:var(--t3);direction:rtl;text-align:right;">[اسم العميل] — [نوع المنشأة]</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <div style="padding:10px 12px;background:var(--risk-bg);border-radius:6px;border-top:2px solid var(--risk);">
+              <div style="font-size:10px;font-weight:700;color:var(--risk);margin-bottom:4px;text-transform:uppercase;">Challenge</div>
+              <div style="font-size:11px;color:var(--t3);font-family:'Cairo';direction:rtl;">[وصف التحدي]</div>
+            </div>
+            <div style="padding:10px 12px;background:var(--teal-lt);border-radius:6px;border-top:2px solid var(--teal);">
+              <div style="font-size:10px;font-weight:700;color:var(--teal-dim);margin-bottom:4px;text-transform:uppercase;">Solution</div>
+              <div style="font-size:11px;color:var(--t3);font-family:'Cairo';direction:rtl;">[الحل المُطبَّق]</div>
+            </div>
+            <div style="padding:10px 12px;background:var(--ok-bg);border-radius:6px;border-top:2px solid var(--ok);">
+              <div style="font-size:10px;font-weight:700;color:var(--ok);margin-bottom:4px;text-transform:uppercase;">Results</div>
+              <div style="font-size:11px;color:var(--t3);font-family:'Cairo';direction:rtl;">[النتائج المحققة]</div>
+            </div>
+            <div style="padding:10px 12px;background:var(--info-bg);border-radius:6px;border-top:2px solid var(--info);">
+              <div style="font-size:10px;font-weight:700;color:var(--info);margin-bottom:4px;text-transform:uppercase;">KPIs</div>
+              <div style="font-size:11px;color:var(--t3);font-family:'Cairo';direction:rtl;">[مؤشرات الأداء]</div>
+            </div>
+          </div>
+          <div style="padding:10px 12px;background:var(--deep);border-radius:6px;display:flex;align-items:center;gap:8px;direction:rtl;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00B2A9" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <div style="font-family:'Cairo',sans-serif;font-size:12px;color:#9BAAB8;">[اقتباس من العميل أو مدير التشغيل]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /board templates -->
+
+</div><!-- /page -->
+
+<script>
+function showBoard(name, el) {
+  document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('board-' + name).classList.add('active');
+  el.classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

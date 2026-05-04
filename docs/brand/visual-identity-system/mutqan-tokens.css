@@ -1,0 +1,222 @@
+/* ============================================================
+   MUTQAN BRAND OPERATING SYSTEM v1
+   Design Tokens — Shared CSS Variables
+   Source of truth for all boards and product files
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+
+  /* ── BRAND COLORS ─────────────────────────────────────── */
+  --brand-deep-blue:     #0F1B2B;
+  --brand-turquoise:     #00B2A9;
+  --brand-turquoise-dim: #008F87;
+  --brand-turquoise-lt:  #E0F5F4;
+
+  /* ── SURFACE ──────────────────────────────────────────── */
+  --surface-canvas:    #F8F9FA;
+  --surface-default:   #FFFFFF;
+  --surface-subtle:    #F2F4F6;
+  --surface-elevated:  #FFFFFF;
+  --surface-dark:      #0F1B2B;
+  --surface-dark-2:    #162233;
+  --surface-dark-3:    #1D2E45;
+
+  /* ── TEXT ─────────────────────────────────────────────── */
+  --text-primary:    #0F1B2B;
+  --text-secondary:  #3E4E61;
+  --text-muted:      #6B7785;
+  --text-placeholder:#9BAAB8;
+  --text-inverse:    #FFFFFF;
+  --text-turquoise:  #00B2A9;
+
+  /* ── BORDER ───────────────────────────────────────────── */
+  --border-default:  #DDE3EA;
+  --border-subtle:   #EDF0F3;
+  --border-strong:   #9BAAB8;
+  --border-brand:    #00B2A9;
+
+  /* ── STATUS ───────────────────────────────────────────── */
+  --status-success:      #1A8F5E;
+  --status-success-bg:   #E8F5EF;
+  --status-success-lt:   #D0EDE0;
+  --status-warning:      #B97D00;
+  --status-warning-bg:   #FFF8E6;
+  --status-warning-lt:   #FFE9A0;
+  --status-danger:       #C0392B;
+  --status-danger-bg:    #FDECEA;
+  --status-danger-lt:    #F9C5BF;
+  --status-info:         #1A6FBF;
+  --status-info-bg:      #EBF3FD;
+  --status-info-lt:      #C0D9F5;
+  --status-neutral:      #6B7785;
+  --status-neutral-bg:   #F2F4F6;
+
+  /* ── PRIORITY ─────────────────────────────────────────── */
+  --priority-critical:   #C0392B;
+  --priority-high:       #E07B00;
+  --priority-medium:     #B97D00;
+  --priority-low:        #1A8F5E;
+  --priority-planned:    #1A6FBF;
+
+  /* ── SLATE SCALE ──────────────────────────────────────── */
+  --slate-50:  #F8F9FA;
+  --slate-100: #EDF0F3;
+  --slate-200: #DDE3EA;
+  --slate-300: #C4CDD8;
+  --slate-400: #9BAAB8;
+  --slate-500: #6B7785;
+  --slate-600: #4A5568;
+  --slate-700: #3E4E61;
+  --slate-800: #253347;
+  --slate-900: #0F1B2B;
+
+  /* ── TYPOGRAPHY ───────────────────────────────────────── */
+  --font-arabic:  'Cairo', 'Noto Kufi Arabic', sans-serif;
+  --font-english: 'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-data:    'Inter', sans-serif;
+
+  /* Type scale — Arabic headings */
+  --type-ar-display:   clamp(2rem, 4vw, 3.5rem);
+  --type-ar-h1:        clamp(1.75rem, 3vw, 2.5rem);
+  --type-ar-h2:        clamp(1.375rem, 2vw, 1.875rem);
+  --type-ar-h3:        1.375rem;
+  --type-ar-h4:        1.125rem;
+  --type-ar-body-lg:   1.0625rem;
+  --type-ar-body:      1rem;
+  --type-ar-body-sm:   0.9375rem;
+  --type-ar-label:     0.875rem;
+  --type-ar-caption:   0.8125rem;
+
+  /* Type scale — English headings */
+  --type-en-display:   clamp(2rem, 4vw, 3.25rem);
+  --type-en-h1:        clamp(1.625rem, 2.8vw, 2.25rem);
+  --type-en-h2:        clamp(1.25rem, 1.8vw, 1.75rem);
+  --type-en-h3:        1.25rem;
+  --type-en-h4:        1.0625rem;
+  --type-en-body-lg:   1rem;
+  --type-en-body:      0.9375rem;
+  --type-en-body-sm:   0.875rem;
+  --type-en-label:     0.8125rem;
+  --type-en-caption:   0.75rem;
+
+  /* Line heights */
+  --lh-ar-heading: 1.45;
+  --lh-ar-body:    1.75;
+  --lh-en-heading: 1.2;
+  --lh-en-body:    1.6;
+  --lh-data:       1.3;
+
+  /* Font weights */
+  --fw-light:     300;
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
+  --fw-extrabold: 800;
+
+  /* ── SPACING SCALE ────────────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24:  96px;
+  --space-32:  128px;
+
+  /* ── RADIUS SCALE ─────────────────────────────────────── */
+  --radius-xs:  4px;
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── SHADOWS ──────────────────────────────────────────── */
+  --shadow-xs:  0 1px 2px rgba(15,27,43,0.06);
+  --shadow-sm:  0 1px 4px rgba(15,27,43,0.08), 0 1px 2px rgba(15,27,43,0.04);
+  --shadow-md:  0 4px 12px rgba(15,27,43,0.10), 0 1px 4px rgba(15,27,43,0.05);
+  --shadow-lg:  0 8px 24px rgba(15,27,43,0.12), 0 2px 8px rgba(15,27,43,0.06);
+  --shadow-xl:  0 16px 40px rgba(15,27,43,0.14), 0 4px 12px rgba(15,27,43,0.06);
+  --shadow-brand: 0 4px 16px rgba(0,178,169,0.24);
+
+  /* ── BORDERS ──────────────────────────────────────────── */
+  --border-width-default: 1px;
+  --border-width-thick:   2px;
+  --border-style: solid;
+
+  /* ── MOTION TOKENS ────────────────────────────────────── */
+  --motion-instant:   0ms;
+  --motion-fast:      120ms;
+  --motion-normal:    200ms;
+  --motion-slow:      320ms;
+  --motion-xslow:     500ms;
+  --motion-page:      400ms;
+
+  --ease-default:     cubic-bezier(0.2, 0, 0, 1);
+  --ease-in:          cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:         cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-precise:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* ── GRID & LAYOUT ────────────────────────────────────── */
+  --page-max-width:     1440px;
+  --page-content-width: 1200px;
+  --dashboard-sidebar:  248px;
+  --panel-width:        400px;
+
+  --grid-columns: 12;
+  --grid-gutter:  24px;
+  --grid-margin:  48px;
+
+  /* ── Z-INDEX SCALE ────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-drawer:  200;
+  --z-modal:   300;
+  --z-toast:   400;
+  --z-tooltip: 500;
+}
+
+/* ── DARK MODE OVERRIDES ──────────────────────────────────── */
+[data-theme="dark"] {
+  --surface-canvas:   #0A1520;
+  --surface-default:  #0F1B2B;
+  --surface-subtle:   #162233;
+  --surface-elevated: #1D2E45;
+
+  --text-primary:    #F0F4F8;
+  --text-secondary:  #C4CDD8;
+  --text-muted:      #9BAAB8;
+  --text-placeholder:#6B7785;
+
+  --border-default:  #253347;
+  --border-subtle:   #1D2E45;
+  --border-strong:   #3E4E61;
+}
+
+/* ── BASE RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body {
+  font-family: var(--font-english);
+  font-size: 15px;
+  line-height: var(--lh-en-body);
+  color: var(--text-primary);
+  background: var(--surface-canvas);
+}
+[lang="ar"], [dir="rtl"] {
+  font-family: var(--font-arabic);
+  direction: rtl;
+  text-align: right;
+}
