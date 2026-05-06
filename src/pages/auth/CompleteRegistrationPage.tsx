@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { clearPendingRegistrationDraft, loadPendingRegistrationDraft } from '@/lib/pendingRegistration'
 import { useAuth } from '@/contexts/AuthContext'
 import { isPlatformRole } from '@/config/roles'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 export default function CompleteRegistrationPage() {
     const { t } = useTranslation()
@@ -97,10 +98,12 @@ export default function CompleteRegistrationPage() {
     return (
         <div className="w-full">
             <div className="md:hidden flex flex-col items-center mb-8">
-                <img
-                    src="/images/logo-white.png"
-                    alt={t('authPages.mobileLogoAlt')}
-                    className="w-24 h-auto object-contain mb-4 drop-shadow-md"
+                <MutqanLogo
+                    variant="symbol"
+                    size="lg"
+                    theme="dark"
+                    label={t('authPages.mobileLogoAlt')}
+                    className="mb-4 drop-shadow-md"
                 />
             </div>
 

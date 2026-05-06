@@ -6,6 +6,7 @@ import { isPlatformRole } from '@/config/roles'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 export default function LoginPage() {
     const { t, i18n } = useTranslation()
@@ -70,10 +71,12 @@ export default function LoginPage() {
         <div className="w-full max-w-full min-w-0">
             {/* Mobile Logo (visible only on small screens) */}
             <div className="md:hidden flex flex-col items-center mb-6">
-                <img
-                    src="/images/logo-white.png"
-                    alt={t('authPages.mobileLogoAlt')}
-                    className="w-20 h-auto object-contain mb-4 drop-shadow-md"
+                <MutqanLogo
+                    variant="symbol"
+                    size="lg"
+                    theme="dark"
+                    label={t('authPages.mobileLogoAlt')}
+                    className="mb-4 drop-shadow-md"
                 />
             </div>
 

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
 import { isPlatformRole } from '@/config/roles'
 import { LanguageToggle } from '@/components/site/LanguageToggle'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 export default function AuthLayout() {
     const { isAuthenticated, isLoading, profile } = useAuth()
@@ -53,10 +54,12 @@ export default function AuthLayout() {
             <div className="relative z-10 flex h-full w-full min-w-0 flex-col md:flex-row">
                 <div className="hidden md:flex flex-1 flex-col justify-center px-12 lg:px-20">
                     <div className="max-w-xl space-y-8 animate-in fade-in slide-in-from-right-8 duration-700">
-                        <img
-                            src="/images/logo-white.png"
-                            alt={t('site.brand.name')}
-                            className="h-40 w-auto object-contain mb-8 drop-shadow-2xl lg:h-52"
+                        <MutqanLogo
+                            variant="vertical"
+                            size="lg"
+                            theme="dark"
+                            label={t('site.brand.name')}
+                            className="mb-8 drop-shadow-2xl [&>svg]:h-20 [&>svg]:w-20 lg:[&>svg]:h-24 lg:[&>svg]:w-24"
                         />
 
                         <div className="space-y-4">

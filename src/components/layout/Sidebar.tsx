@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 import { useTenantModules } from '@/hooks/useTenantModules'
 import { isFeatureEnabled, isModuleEnabled } from '@/config/modules'
 import { usePermission } from '@/hooks/usePermission'
@@ -82,7 +83,7 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
     return (
         <aside
             className={cn(
-                'fixed top-0 h-full w-64 bg-primary text-white z-50 transition-transform duration-300 lg:transition-all',
+                'fixed top-0 h-full w-64 bg-mutqan-primary text-white z-50 transition-transform duration-300 lg:transition-all',
                 compact ? 'lg:w-20' : 'lg:w-64',
                 mobileOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'),
                 isRTL ? 'right-0' : 'left-0'
@@ -90,14 +91,12 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
         >
             <div className="h-16 flex items-center justify-center border-b border-white/10">
                 <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-3">
-                    <img
-                        src="/images/logo-white.png"
-                        alt="Mutqan"
-                        className={cn('h-10 w-10 object-contain', compact && 'h-8 w-8')}
+                    <MutqanLogo
+                        variant={compact ? 'symbol' : 'horizontal'}
+                        size={compact ? 'sm' : 'md'}
+                        theme="dark"
+                        label={t('app.name')}
                     />
-                    {!compact && (
-                        <span className="text-xl font-bold font-cairo">{t('app.name')}</span>
-                    )}
                 </Link>
             </div>
 
@@ -111,7 +110,7 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                 'hover:bg-white/10',
-                                isActive(item.href) && 'bg-secondary text-white',
+                                isActive(item.href) && 'bg-mutqan-accent text-white',
                                 compact && 'justify-center'
                             )}
                         >
@@ -136,7 +135,7 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                 'hover:bg-white/10',
-                                isActive(item.href) && 'bg-secondary text-white',
+                                isActive(item.href) && 'bg-mutqan-accent text-white',
                                 compact && 'justify-center'
                             )}
                         >

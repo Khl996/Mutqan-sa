@@ -72,7 +72,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     }, [])
 
     return (
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        <header className="h-16 bg-mutqan-surface border-b border-mutqan-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
             {/* Left side */}
             <div className="flex items-center gap-4">
                 {/* Mobile menu button */}

@@ -51,7 +51,7 @@ export default function DashboardLayout() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="min-h-screen flex items-center justify-center bg-mutqan-bg">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
                     <p className="text-muted">{t('common.loading')}</p>
@@ -103,7 +103,7 @@ export default function DashboardLayout() {
     )
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-mutqan-bg">
             <Sidebar
                 collapsed={sidebarCollapsed}
                 mobileOpen={mobileSidebarOpen}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Mail } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 export function SiteFooter() {
     const { t } = useTranslation()
@@ -11,11 +12,13 @@ export function SiteFooter() {
                 <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr]">
                     <div>
                         <div className="mb-4 flex items-center gap-3">
-                            <img src="/images/logo.png" alt={t('site.brand.name')} className="h-9 w-auto object-contain" />
-                            <div>
-                                <div className="text-2xl font-black text-slate-950">{t('site.brand.name')}</div>
-                                <div className="text-xs font-bold text-slate-500">{t('site.brand.descriptor')}</div>
-                            </div>
+                            <MutqanLogo
+                                variant="horizontal"
+                                size="md"
+                                theme="light"
+                                label={t('site.brand.name')}
+                                subtitle={t('site.brand.descriptor')}
+                            />
                         </div>
                         <p className="max-w-sm text-sm leading-7 text-slate-600">
                             {t('site.footer.description')}

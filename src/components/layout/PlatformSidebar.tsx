@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 import {
     LayoutDashboard,
     Building2,
@@ -58,28 +59,20 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
     return (
         <aside
             className={cn(
-                'fixed top-0 h-full bg-card border-r border-border text-foreground transition-all duration-300 z-50',
+                'fixed top-0 h-full bg-mutqan-surface border-r border-mutqan-border text-foreground transition-all duration-300 z-50',
                 collapsed ? 'w-20' : 'w-64',
                 isRTL ? 'right-0' : 'left-0'
             )}
         >
-            <div className="h-16 flex items-center justify-center border-b border-border">
+            <div className="h-16 flex items-center justify-center border-b border-mutqan-border">
                 <Link to="/platform" className="flex items-center gap-3">
-                    <img
-                        src="/images/logo.png"
-                        alt="Mutqan"
-                        className={cn('h-10 w-10 object-contain', collapsed && 'h-8 w-8')}
+                    <MutqanLogo
+                        variant={collapsed ? 'symbol' : 'horizontal'}
+                        size={collapsed ? 'sm' : 'md'}
+                        theme="light"
+                        label={isRTL ? 'متقن' : 'Mutqan'}
+                        subtitle={collapsed ? undefined : (isRTL ? 'إدارة المنصة' : 'Platform Console')}
                     />
-                    {!collapsed && (
-                        <div>
-                            <span className="text-lg font-bold font-cairo text-primary block">
-                                {isRTL ? 'متقن' : 'Mutqan'}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground font-cairo block -mt-1">
-                                {isRTL ? 'إدارة المنصة' : 'Platform Console'}
-                            </span>
-                        </div>
-                    )}
                 </Link>
             </div>
 
@@ -93,7 +86,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                 'hover:bg-muted',
                                 isActive(item.href)
-                                    ? 'bg-secondary text-white shadow-md shadow-secondary/20'
+                                    ? 'bg-mutqan-accent text-white shadow-md'
                                     : 'text-muted-foreground hover:text-foreground',
                                 collapsed && 'justify-center'
                             )}
@@ -114,7 +107,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                 {settingsItems.length > 0 && (
                     <>
                         <div className="px-6 py-2">
-                            <div className="h-px bg-border" />
+                            <div className="h-px bg-mutqan-border" />
                         </div>
 
                         <div className="px-3 space-y-1">
@@ -126,7 +119,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                                         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                         'hover:bg-muted',
                                         isActive(item.href)
-                                            ? 'bg-secondary text-white shadow-md shadow-secondary/20'
+                                            ? 'bg-mutqan-accent text-white shadow-md'
                                             : 'text-muted-foreground hover:text-foreground',
                                         collapsed && 'justify-center'
                                     )}

@@ -18,6 +18,7 @@ import {
     PendingRegistrationDraft,
     savePendingRegistrationDraft,
 } from '@/lib/pendingRegistration'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 // Step Types
 type Step = 'org_info' | 'admin_info' | 'otp' | 'success'
@@ -299,7 +300,13 @@ export default function RegisterPage() {
         <div className="w-full max-w-full min-w-0">
             {/* Mobile Logo */}
             <div className="md:hidden flex flex-col items-center mb-6">
-                <img src="/images/logo-white.png" alt={t('authPages.mobileLogoAlt')} className="w-20 h-auto object-contain mb-4 drop-shadow-md" />
+                <MutqanLogo
+                    variant="symbol"
+                    size="lg"
+                    theme="dark"
+                    label={t('authPages.mobileLogoAlt')}
+                    className="mb-4 drop-shadow-md"
+                />
             </div>
 
             {/* Register Card */}

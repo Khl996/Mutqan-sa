@@ -39,7 +39,7 @@ export const generateInvoicePDF = async (invoice: BillingInvoice, tenantName: st
         // ملاحظة: قد يتطلب الأمر تكوين CORS على الخادم، ولكن GitHub Raw يعمل عادةً.
         // بدلاً من ذلك، نستخدم رابط مباشر إذا أمكن.
         const fontUrl = "https://raw.githubusercontent.com/google/fonts/main/ofl/amiri/Amiri-Regular.ttf";
-        const logoUrl = "/images/logo-white.png";
+        const logoUrl = "/images/brand/mutqan-symbol-white.png";
 
         const [fontDataUi, logoDataUi] = await Promise.all([
             fetchFileAsBase64(fontUrl),

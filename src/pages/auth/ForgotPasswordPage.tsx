@@ -6,6 +6,7 @@ import { Mail, Lock, Loader2, ArrowLeft, ArrowRight, KeyRound } from 'lucide-rea
 import { cn } from '@/lib/utils'
 import { sendPasswordResetOTP } from '@/lib/otpService'
 import { supabase } from '@/lib/supabase'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 export default function ForgotPasswordPage() {
     const { t, i18n } = useTranslation()
@@ -104,10 +105,12 @@ export default function ForgotPasswordPage() {
         <div className="w-full">
             {/* Mobile Logo */}
             <div className="md:hidden flex flex-col items-center mb-8">
-                <img
-                    src="/images/logo-white.png"
-                    alt={t('authPages.mobileLogoAlt')}
-                    className="w-24 h-auto object-contain mb-4 drop-shadow-md"
+                <MutqanLogo
+                    variant="symbol"
+                    size="lg"
+                    theme="dark"
+                    label={t('authPages.mobileLogoAlt')}
+                    className="mb-4 drop-shadow-md"
                 />
             </div>
 

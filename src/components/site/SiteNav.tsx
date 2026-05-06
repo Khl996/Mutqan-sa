@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '@/components/site/LanguageToggle'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 import { cn } from '@/lib/utils'
 
 type SiteNavProps = {
@@ -23,19 +24,14 @@ export function SiteNav({ variant = 'light' }: SiteNavProps) {
         >
             <div className="mx-auto flex h-24 max-w-7xl items-center justify-between gap-3 px-4 sm:h-28 sm:px-6 lg:px-8">
                 <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label={t('site.brand.name')}>
-                    <img
-                        src={isDark ? '/images/logo-white.png' : '/images/logo.png'}
-                        alt={t('site.brand.name')}
-                        className="h-[72px] max-w-[176px] object-contain sm:h-[88px] sm:max-w-[224px] lg:h-24 lg:max-w-[260px]"
+                    <MutqanLogo
+                        variant="horizontal"
+                        size="lg"
+                        theme={isDark ? 'dark' : 'light'}
+                        label={t('site.brand.name')}
+                        subtitle={t('site.brand.descriptor')}
+                        className="shrink-0 [&_[role=img]]:h-12 [&_[role=img]]:max-w-[190px] sm:[&_[role=img]]:h-14 sm:[&_[role=img]]:max-w-[230px]"
                     />
-                    <span className="hidden leading-tight sm:block">
-                        <span className={cn('block text-2xl font-black', isDark ? 'text-white' : 'text-slate-950')}>
-                            {t('site.brand.name')}
-                        </span>
-                        <span className={cn('mt-1 hidden text-xs font-bold lg:block', isDark ? 'text-white/52' : 'text-slate-500')}>
-                            {t('site.brand.descriptor')}
-                        </span>
-                    </span>
                 </Link>
 
                 <div

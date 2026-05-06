@@ -1,5 +1,6 @@
 
 import { Link } from 'react-router-dom'
+import { MutqanLogo } from '@/components/ui/MutqanLogo'
 
 export default function TermsOfUsePage() {
     return (
@@ -8,7 +9,12 @@ export default function TermsOfUsePage() {
                 <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Link to="/">
-                            <img src="/images/logo.png" alt="Mutqan Logo" className="h-12 w-auto object-contain" />
+                            <MutqanLogo
+                                variant="horizontal"
+                                size="md"
+                                theme="light"
+                                label="Mutqan"
+                            />
                         </Link>
                     </div>
                     <Link

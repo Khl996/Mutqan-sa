@@ -128,7 +128,7 @@ export default function PlatformLayout() {
     // Loading state
     if (accessState === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="min-h-screen flex items-center justify-center bg-mutqan-bg">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
                     <p className="text-muted-foreground font-cairo">
@@ -147,7 +147,7 @@ export default function PlatformLayout() {
     // Access denied
     if (accessState === 'denied') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="min-h-screen flex items-center justify-center bg-mutqan-bg">
                 <div className="flex flex-col items-center gap-4 text-center max-w-md p-6">
                     <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
                         <span className="text-4xl text-destructive">🚫</span>
@@ -180,7 +180,7 @@ export default function PlatformLayout() {
     )
 
     return (
-        <div className="min-h-screen bg-muted/30">
+        <div className="min-h-screen bg-mutqan-bg">
             <PlatformSidebar
                 collapsed={sidebarCollapsed}
                 onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}

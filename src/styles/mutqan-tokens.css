@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --mutqan-bg: #f5f7f9;
+  --mutqan-surface: #ffffff;
+  --mutqan-surface-soft: #eef3f5;
+  --mutqan-surface-raised: #fbfcfd;
+  --mutqan-text: #0b1320;
+  --mutqan-muted: #6b7785;
+  --mutqan-primary: #0b1320;
+  --mutqan-accent: #00b2a9;
+  --mutqan-border: #e6e9ed;
+  --mutqan-border-strong: #cfd8df;
+  --mutqan-success: #10b981;
+  --mutqan-warning: #f59e0b;
+  --mutqan-danger: #ef4444;
+  --mutqan-info: #3b82f6;
+  --mutqan-radius: 8px;
+  --mutqan-radius-lg: 14px;
+  --mutqan-shadow: 0 18px 45px rgba(11, 19, 32, 0.08);
+  --mutqan-shadow-soft: 0 10px 28px rgba(11, 19, 32, 0.06);
+  --mutqan-shadow-card: 0 1px 2px rgba(11, 19, 32, 0.05), 0 10px 24px rgba(11, 19, 32, 0.06);
+  --mutqan-font-ar: 'Cairo', 'Inter', sans-serif;
+  --mutqan-font-en: 'Inter', 'Cairo', sans-serif;
+  --mutqan-status-stable: var(--mutqan-success);
+  --mutqan-status-watch: var(--mutqan-warning);
+  --mutqan-status-risk: var(--mutqan-danger);
+  --mutqan-status-info: var(--mutqan-info);
+}
+
+.dark {
+  --mutqan-bg: #08111d;
+  --mutqan-surface: #0d1826;
+  --mutqan-surface-soft: #111f2e;
+  --mutqan-surface-raised: #132233;
+  --mutqan-text: #f7fafc;
+  --mutqan-muted: #a8b3c0;
+  --mutqan-primary: #f7fafc;
+  --mutqan-border: #243243;
+  --mutqan-border-strong: #34465a;
+  --mutqan-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  --mutqan-shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.2);
+  --mutqan-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28), 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.mutqan-badge-stable {
+  border-color: color-mix(in srgb, var(--mutqan-success) 24%, transparent);
+  background: color-mix(in srgb, var(--mutqan-success) 14%, transparent);
+  color: var(--mutqan-success);
+}
+
+.mutqan-badge-watch {
+  border-color: color-mix(in srgb, var(--mutqan-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--mutqan-warning) 15%, transparent);
+  color: #b45309;
+}
+
+.mutqan-badge-risk {
+  border-color: color-mix(in srgb, var(--mutqan-danger) 24%, transparent);
+  background: color-mix(in srgb, var(--mutqan-danger) 14%, transparent);
+  color: var(--mutqan-danger);
+}
+
+.mutqan-badge-info {
+  border-color: color-mix(in srgb, var(--mutqan-info) 24%, transparent);
+  background: color-mix(in srgb, var(--mutqan-info) 14%, transparent);
+  color: var(--mutqan-info);
+}
