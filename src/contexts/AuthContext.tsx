@@ -37,6 +37,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isMountedRef = useRef(true)
     const initializingRef = useRef(false)
 
+    const clearAuthStorage = useCallback(() => {
+        Object.keys(localStorage)
+            .filter((key) => key.startsWith('sb-'))
+            .forEach((key) => localStorage.removeItem(key))
+
+        localStorage.removeItem('currentTenantId')
+    }, [])
+
     // جلب الـ profile مباشرة باستخدام fetch لتجنب مشاكل AbortError
     const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
         try {
@@ -177,10 +185,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const signOut = async () => {
-        await supabase.auth.signOut()
-        setUser(null)
-        setSession(null)
-        setProfile(null)
+        try {
+            const { error } = await supabase.auth.signOut({ scope: 'global' })
+            if (error) {
+                console.error('Sign out error:', error.message)
+            }
+        } catch (error) {
+            console.error('Sign out error:', error)
+        } finally {
+            clearAuthStorage()
+            setUser(null)
+            setSession(null)
+            setProfile(null)
+        }
     }
 
     return (

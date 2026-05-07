@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Codex — (commit pending) [logout-session-logo-fix]
+Tags: #product #brand #ui #supabase #ops
+**هدف:** إغلاق مشكلة بقاء جلسة Supabase بعد الخروج وتثبيت مسار الشعارات الحالي بدون رجوع للملفات البيضاء القديمة.
+**أُنجز:** `signOut` صار global مع تنظيف `sb-*` و`currentTenantId` في كل الأحوال؛ وإزالة imports غير مستخدمة للشعار الأبيض القديم.
+**ملفات:** `src/contexts/AuthContext.tsx`, `src/components/ui/MutqanLogo.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ build، ✅ lint 0 errors / 219 warnings، ⏭ logout e2e يحتاج جلسة فعلية.
+**التالي:** خالد يختبر logout → فتح الصفحة الرئيسية؛ إذا بقي redirect نراجع Service Worker/cache.
+
 ## 2026-05-08 — Claude Code — d39cdb4 [logo-vector-fix]
 Tags: #product #brand #ui
 **هدف:** إصلاح الشعار الأبيض الذي كان يظهر صغيراً في كل مواقع الـ dark theme.
