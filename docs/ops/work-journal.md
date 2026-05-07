@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-07 — Claude Code — (commit pending)
+Tags: #product #ui #brand #docs
+**هدف:** إضافة محاور PRODUCT/UI/BRAND للـ snapshot، بأدلة من الكود لا انطباعات.
+**أُنجز:** تأكيد ملاحظات Codex الثلاث بالحجم الفعلي (تسريب كلمة مرور، 26 console.log، RPC مفتوحة)، اكتشاف تباين ألوان دستور/tokens، توثيق فجوة UI (3 صفحات ديمو فقط تستحق الصقل الآن من أصل 16)، وفجوة براند (مبادئ كاملة، صفر أصل خارجي). أُضيف القسم 9.أ لتخصيص مهام Claude داخل مسارات Codex، و4 أسئلة جديدة لخالد.
+**ملفات:** `docs/strategy/state-of-mutqan-2026-05.md`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ⏭ build/lint غير لازم؛ تحقق بالأدلة عبر Grep+Read على الكود الفعلي.
+**التالي:** انتظار قرارات خالد العشرة في القسم 10، ثم دمج الفرعين والبدء التنفيذي.
+
 ## 2026-05-07 — Codex — (commit pending)
 Tags: #pilot #sales #ops #docs
 **هدف:** إنتاج snapshot موحدة لحالة متقن من زاوية Pilot/Sales/Ops وربطها بهدف cash flow.

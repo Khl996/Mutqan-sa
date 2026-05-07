@@ -3,8 +3,11 @@
 **الحالة:** مسودة تنفيذية موحدة
 **التاريخ:** 2026-05-07
 **الفرع:** `codex/pilot-sales-ops-snapshot`
-**مساهمة هذه النسخة:** Codex — `PILOT / SALES / OPS`
-**بانتظار:** Claude Code لمحاور `PRODUCT / UI / BRAND`، وخالد لمحاور المالية وهدف المبيعات النهائي.
+**مساهمة هذه النسخة:**
+- Codex — `PILOT / SALES / OPS` (الفرع: `codex/pilot-sales-ops-snapshot`)
+- Claude Code — `PRODUCT / UI / BRAND` (الفرع: `claude/product-ui-brand-snapshot`)
+
+**بانتظار:** خالد لمحاور المالية وهدف المبيعات النهائي.
 
 ---
 
@@ -34,6 +37,93 @@
 - تقرير `docs/ops/platform-critical-review-2026-05-02.md` ذكر مخاطر حول `broadcast_notification` وتحويل تحميل صفحات المنصة؛ هذه يجب التحقق منها مباشرة قبل اعتماد Go لأي ديمو منصة أو Pilot.
 
 **قرار مؤقت:** لا نوقف البيع بسبب هذه النقاط، لكن لا نعرض صفحات المنصة الإدارية أو إنشاء منشأة أمام عميل قبل فحصها. الديمو يجب أن يبقى داخل مسار تشغيل العميل، لا لوحة إدارة المنصة.
+
+### 2.أ تعميق Claude — الجاهزية المنتجية (تحقق بالأدلة)
+
+تحققت من ملاحظات Codex مباشرة على الكود. النتائج بالحجم الفعلي:
+
+**مؤكَّد ✅ — تسريب كلمة مرور المدير في الكونسول**
+- `src/hooks/useTenants.ts:198` يطبع `input` كاملاً، وكائن `input` يحوي `admin_password` (يُفكَّك في السطر 200).
+- **الأثر:** أي شخص فتح DevTools خلال demo إنشاء منشأة سيرى كلمة المرور.
+- **الإصلاح:** سطر واحد — إزالة الـ console.log أو طبع الحقول الآمنة فقط. وقت الإصلاح < 5 دقائق.
+
+**مؤكَّد ✅ — انتشار console.log في مسار المنصة والمصادقة**
+- 26 استدعاء `console.log/info/debug` (غير error) عبر 8 ملفات.
+- التوزيع: `AuthContext.tsx`(8), `PlatformLayout.tsx`(5), `useTenants.ts`(4), `WorkOrderDetailsPage.tsx`(3), وأخرى.
+- **الأثر:** تشويش بصري في DevTools أمام أي عميل، وانطباع غير احترافي. ليس خطر أمني بحد ذاته (إلا في `useTenants` أعلاه).
+- **الإصلاح:** إما إزالة جماعية أو ربطها بـ flag `import.meta.env.DEV`. وقت الإصلاح ≈ 30 دقيقة.
+
+**مؤكَّد ✅ — مخاطر عالية في `broadcast_notification` RPC**
+- الدالة معرَّفة في `supabase/migrations/060_broadcast_notification_func.sql` و `*_v2.sql`.
+- مفتوحة لـ `anon` و `authenticated` على القاعدة المرتبطة (وفق `platform-critical-review-2026-05-02.md`).
+- استدعاؤها الواحد في الواجهة: `src/pages/platform/AnnouncementsPage.tsx:65`.
+- **الأثر:** أي حامل للـ API key (ولو مستخدم عادي) يستطيع إرسال إشعارات وإيميلات جماعية للنظام بأكمله.
+- **الإصلاح:** يحتاج migration جديد لتقييد الصلاحيات (ملف حساس — قرار خالد). وقت الإصلاح ≈ 1-2 ساعة + اختبار.
+
+**ملاحظة جديدة من Claude — تباين ألوان الهوية بين الدستور والكود**
+- `docs/CONSTITUTION.md`: Primary `#2E3A45` (كحلي)، Secondary `#3AAFA9` (تركوازي).
+- `src/styles/mutqan-tokens.css` (من commit `ff14453`): Primary `#0b1320` (أسود تقريباً)، Accent `#00b2a9`.
+- **الأثر:** مرجعان متناقضان للهوية. لا أحد يستطيع الإجابة على "ما لون متقن الأساسي؟" بدون شك.
+- **القرار المطلوب من خالد:** أيهما الصحيح؟ الدستور أم الـ tokens؟ ثم يُحدَّث الآخر.
+
+**ملاحظة جديدة من Claude — بقايا غير مرتبطة في الجذر**
+- ملفات `changes.txt`, `changes2.txt`, `changes3.txt`, `build_error.log`, `local-migrations.txt`, `remote-ledger-sql.txt`, `remote-migration-list*.txt`, `stage1-verification-logs/` متراكمة في الجذر.
+- **الأثر:** لا أمني، لكنها تظهر للعملاء لو رأوا الـ repo، وتربك أي مطور جديد. يستحق تنظيفة لاحقاً (ليس عاجلاً).
+
+### 2.ب الجاهزية البصرية للواجهات (UI Coverage)
+
+commit `ff14453` طبّق نظام البراند، لكن **على القشرة الخارجية فقط**.
+
+**مشمول بالبراند ✅** (16 ملف):
+- Layout shells: `AuthLayout`, `DashboardLayout`, `PlatformLayout`, `Header`, `PlatformHeader`, `Sidebar`, `PlatformSidebar`.
+- Marketing pages: `SiteFooter`, `SiteNav`, `PrivacyPolicyPage`, `TermsOfUsePage`.
+- Auth pages: `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `CompleteRegistrationPage`.
+- UI primitives: `button`, `card`, `input`, `badge`, `MutqanLogo`.
+- Tokens: `mutqan-tokens.css`, `tailwind.config.ts`.
+
+**غير مشمول ❌** (16 directory من صفحات المنتج الفعلية):
+- `pages/dashboard`, `pages/work-orders`, `pages/assets`, `pages/facilities`, `pages/maintenance`, `pages/inventory`, `pages/teams`, `pages/work-teams`, `pages/reports`, `pages/settings`, `pages/admin`, `pages/profile`, `pages/payment`, `pages/subscriptions`, معظم `pages/platform`, `pages/public`.
+
+**الانعكاس على الديمو:**
+العميل يدخل واجهة auth أنيقة → ثم لوحة عمل بمظهر pre-brand. الفجوة البصرية بين الانطباع الأول والاستخدام الحقيقي قد تُضعف ثقة عميل المنشأة.
+
+**القرار المقترح:** قبل أول demo حقيقي، صقل بصري لـ **3 صفحات فقط** هي قلب سيناريو الديمو حسب `demo-story-script.md`:
+1. `pages/dashboard` (نقطة الدخول).
+2. `pages/work-orders` (تفاصيل + قائمة) — هذي العمود الفقري للقصة.
+3. `pages/assets` (شجرة + تفاصيل) — يربط البلاغ بالأصل.
+
+ما عدا هذه الثلاث: نؤجل الصقل لما بعد أول صفقة. لا داعي لصقل صفحات لا يدخلها العميل في الـ demo.
+
+### 2.ج جاهزية البراند للأصول الخارجية
+
+**ما هو موجود ✅:**
+- `docs/brand/brand-principles.md` — مبادئ الموقف والصوت.
+- `docs/brand/product-ui-principles.md` — مبادئ UI المنتج.
+- `docs/brand/visual-system-principles.md` — المبادئ البصرية.
+- `docs/brand/motion-principles.md` — مبادئ الحركة.
+- `docs/brand/asset-template-standards.md` — معايير الأصول.
+- شعارات SVG و PNG في `src/assets/brand/` و `public/images/brand/`.
+- لقطات شاشة قديمة (`audit-*.png`) في `screenshots/`.
+
+**ما هو مفقود ❌:**
+- صفر PDF، صفر Canva، صفر Figma، صفر deck — لا يوجد أصل خارجي ملموس.
+- لا قالب CRM، لا email signature موحدة، لا screenshots حديثة بعد ff14453.
+- لا صفحة واحدة جاهزة للإرسال للعميل المحتمل.
+
+**الفجوة الحقيقية:**
+لدينا "نظرية البراند" الكاملة، لكن **لا توجد قطعة واحدة قابلة للإرسال**. هذا يطابق تماماً فجوة Codex الثالثة (External Sales Asset). البراند ليس متأخراً نظرياً، هو متأخر تنفيذياً.
+
+**القرار المقترح:**
+- ركّز على One-pager PDF واحد + 3 screenshots حديثة من السيناريو، خلال 10 أيام (مطابق لمسار Codex 3).
+- أجّل أي توسع براندي آخر (موشن، deck طويل، نظام أيقونات) لما بعد أول صفقة.
+
+**قرار Claude النهائي على المنتج/UI/البراند:**
+الجاهزية المنتجية ليست العقبة. العقبة الفعلية هي:
+1. **3 إصلاحات أمنية صغيرة** قبل أي demo (password log, console noise, broadcast RPC).
+2. **3 صفحات فقط بصقل بصري** قبل أي demo.
+3. **One-pager PDF** قبل إرسال أول 10 رسائل.
+
+كل هذا قابل للإنجاز خلال نفس نافذة الـ 10-14 يوم التي وضعها Codex لمساريه. لا نحتاج تأجيل البيع لأجل المنتج.
 
 ---
 
@@ -185,16 +275,42 @@
 - تجهيز Screenshot Story Frames من المنتج.
 - توحيد CTA: اجتماع اكتشاف -> ديمو -> عرض Pilot مدفوع.
 
+### 9.أ تخصيص Claude داخل المسارات
+
+استناداً للقسم 2.أ/2.ب/2.ج، مهام Claude الملموسة الموزعة على مسارات Codex:
+
+**ضمن المسار 2 (Controlled Pilot Readiness):**
+- إصلاح `useTenants.ts:198` — حذف طبع كلمة المرور (5 دقائق، أمني).
+- تنظيف console.log في 8 ملفات أو ربطها بـ DEV flag (30 دقيقة، انطباع).
+- صقل بصري لـ 3 صفحات الديمو فقط: `dashboard`, `work-orders`, `assets` (1-2 يوم).
+- إصلاح `broadcast_notification` يحتاج إذن خالد لأنه يلمس `supabase/migrations/*` (ملف حساس).
+
+**ضمن المسار 3 (External Sales Asset):**
+- تجهيز One-pager PDF من نسخة عرض Pilot الموجودة.
+- التقاط 3 screenshots جديدة بعد صقل صفحات الديمو.
+
+**خارج المسارات الثلاث (يؤجَّل):**
+- صقل باقي 13 directory من الصفحات.
+- توحيد ألوان الدستور مع tokens (يحتاج قرار خالد أولاً).
+- تنظيف الملفات المتراكمة في الجذر.
+
 ---
 
 ## 10. قرارات خالد المطلوبة
 
+**من Codex (تجارية/مالية):**
 1. ما هدف الإيراد خلال 90 يوما: cash collected أم signed value؟
 2. هل نعتمد 15,000 ريال كحد أدنى قياسي لأول Pilot، أم نسمح بعرض إطلاق 12,000 ريال فقط بشروط؟
 3. هل CRM الآن Notion أم HubSpot؟
 4. هل القطاع الأول النهائي هو شركات إدارة المرافق والمجمعات؟
 5. هل نبدأ إرسال أول 10 رسائل هذا الأسبوع؟
 6. ما التكلفة الشهرية الحالية والـ runway التقريبي؟
+
+**من Claude (منتج/براند):**
+7. أيهما الصحيح: ألوان الدستور (`#2E3A45` / `#3AAFA9`) أم tokens (`#0b1320` / `#00b2a9`)؟ ثم نوحّد المرجع الآخر.
+8. هل تأذن بإصلاح `useTenants.ts:198` (تسريب كلمة المرور) فوراً، أم ننتظر اعتماد snapshot؟
+9. هل تأذن بـ migration جديد لتقييد صلاحيات `broadcast_notification` (يلمس ملف حساس)؟
+10. هل توافق على تأجيل صقل 13 صفحة لما بعد أول صفقة، والاكتفاء بـ 3 صفحات الديمو فقط؟
 
 ---
 
