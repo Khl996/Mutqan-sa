@@ -8,6 +8,14 @@
 
 ## 2026-05-08 — Codex — (commit pending)
 Tags: #sales #pilot #ops #docs
+**هدف:** تحويل بيانات HubSpot الفعلية إلى نواة CRM صالحة لأول Pilot دون لمس الكود أو التصميم.
+**أُنجز:** قراءة HubSpot، إنشاء 4 Companies حقيقية، ربطها بـ 4 Contacts، وإنشاء 4 Tasks لإرسال أول رسالة Pilot بتاريخ 2026-05-10.
+**ملفات:** `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ تحقق HubSpot بعد الإنشاء؛ ⏭ لا build/lint لأن العمل CRM + توثيق فقط.
+**التالي:** إرسال أول 4 رسائل، ثم إنشاء Deal فقط بعد الإرسال أو ظهور اهتمام حقيقي.
+
+## 2026-05-08 — Codex — (commit pending)
+Tags: #sales #pilot #ops #docs
 **هدف:** تجهيز HubSpot Sales Setup وأول 10 حسابات ورسائل Pilot ضمن مسار Sales/Pilot فقط.
 **أُنجز:** إنشاء ملف HubSpot pipeline/properties، جدول أول 10 حسابات، رسائل مخصصة، متابعة 3 أيام، ومسار رسالة→اكتشاف→ديمو→عرض→تحصيل 50%.
 **ملفات:** `docs/sales/hubspot-first-10-sales-motion-ar.md`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
