@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tokens - Mutqan v2</title>
+    <link rel="stylesheet" href="./mutqan-brand-v2.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <nav class="nav" aria-label="Mutqan brand reference navigation">
+          <a class="brand-lockup" href="./index.html">
+            <span class="flowmark" aria-hidden="true"><span class="flow-row"></span><span class="flow-row"></span><span class="flow-row"></span></span>
+            <span class="brand-name"><strong>Mutqan v2</strong><span>Visual source</span></span>
+          </a>
+          <div class="nav-links">
+            <a href="./index.html">Overview</a>
+            <a href="./visual-identity.html">Visual Identity</a>
+            <a href="./logo-system.html">Logo System</a>
+            <a href="./tokens.html" aria-current="page">Tokens</a>
+            <a href="./ui-kit.html">UI Kit</a>
+            <a href="./pdf-social-templates.html">PDF &amp; Social</a>
+            <a href="./signature-assets.html">Signature Assets</a>
+            <a href="./motion-system.html">Motion</a>
+            <a href="./handoff.html">Handoff</a>
+          </div>
+        </nav>
+      </header>
+
+      <main class="page">
+        <section class="hero">
+          <div class="hero-panel">
+            <p class="eyebrow">Tokens</p>
+            <h1>Operational color roles, not decoration.</h1>
+            <p class="intro">
+              The v2 palette starts from the approved visual direction and maps each color to a practical role
+              across Product UI, PDF, Social, Motion, charts, and status badges.
+            </p>
+          </div>
+          <div class="mock-dashboard">
+            <div class="mock-topline"><span class="badge info">Token Preview</span><span class="meta">v2.1</span></div>
+            <div class="mock-panel dark"><h2>Weekly Brief</h2><p class="muted">Deep navy panel with restrained accent signal.</p></div>
+            <div class="grid two">
+              <div class="metric-card"><strong>76</strong><span>Asset Health</span></div>
+              <div class="metric-card"><strong>AHU-03</strong><span>Active asset</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Core Palette</p>
+          <div class="grid five">
+            <div class="swatch"><div class="swatch-color" style="background:#0B1320;"></div><div class="swatch-body"><strong>Deep Navy</strong><code>#0B1320</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:#00B2A9;"></div><div class="swatch-body"><strong>Turquoise</strong><code>#00B2A9</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:#6B7785;"></div><div class="swatch-body"><strong>Slate Gray</strong><code>#6B7785</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:#E6E9ED;"></div><div class="swatch-body"><strong>Soft Gray</strong><code>#E6E9ED</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:#F5F7F9;"></div><div class="swatch-body"><strong>Light Neutral</strong><code>#F5F7F9</code></div></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">CSS Token Map</p>
+          <div class="table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Value</th>
+                  <th>Role</th>
+                  <th>Use Cases</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>--mutqan-bg</code></td><td>#F5F7F9</td><td>Page background</td><td>Product UI, PDF, Social</td></tr>
+                <tr><td><code>--mutqan-surface</code></td><td>#FFFFFF</td><td>Cards and panels</td><td>UI Kit, PDF blocks</td></tr>
+                <tr><td><code>--mutqan-text</code></td><td>#0B1320</td><td>Primary text</td><td>Headings, tables, labels</td></tr>
+                <tr><td><code>--mutqan-muted</code></td><td>#6B7785</td><td>Secondary text</td><td>Metadata, captions, notes</td></tr>
+                <tr><td><code>--mutqan-primary</code></td><td>#0B1320</td><td>Primary action and deep surfaces</td><td>Navigation, dark covers, modal headers</td></tr>
+                <tr><td><code>--mutqan-accent</code></td><td>#00B2A9</td><td>Signal and connection</td><td>Flow lines, active states, motion path</td></tr>
+                <tr><td><code>--mutqan-border</code></td><td>#E6E9ED</td><td>Separation</td><td>Tables, cards, input borders</td></tr>
+                <tr><td><code>--mutqan-success</code></td><td>#10B981</td><td>Stable state</td><td>Status badges, charts</td></tr>
+                <tr><td><code>--mutqan-warning</code></td><td>#F59E0B</td><td>Watch state</td><td>Badges, charts, report notices</td></tr>
+                <tr><td><code>--mutqan-danger</code></td><td>#EF4444</td><td>Risk state</td><td>Critical badges and alerts</td></tr>
+                <tr><td><code>--mutqan-info</code></td><td>#3B82F6</td><td>Information state</td><td>Insights and chart accents</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Usage Samples</p>
+          <div class="grid three">
+            <div class="card">
+              <h3>Product UI</h3>
+              <div class="stat"><strong>76</strong><span>Asset Health</span></div>
+              <div class="button-row" style="margin-top:14px;">
+                <span class="badge stable">Stable</span>
+                <span class="badge watch">Watch</span>
+                <span class="badge risk">Risk</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>PDF</h3>
+              <div class="template-sheet" style="min-height:180px;">
+                <div class="template-band"></div>
+                <div class="placeholder-line medium"></div>
+                <div class="placeholder-line short"></div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Motion</h3>
+              <div class="motion-frame" data-step="01">
+                <div class="motion-line long"></div>
+                <div class="motion-node"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" dir="rtl" lang="ar">
+          <p class="eyebrow">قواعد الاستخدام</p>
+          <div class="grid three">
+            <div class="card compact"><h3>التركواز إشارة</h3><p class="muted">لا يتحول إلى خلفية عامة إلا في مساحات صغيرة.</p></div>
+            <div class="card compact"><h3>الأحمر محدود</h3><p class="muted">يستخدم فقط للخطر الحقيقي أو الحالة الحرجة.</p></div>
+            <div class="card compact"><h3>الرمادي للهدوء</h3><p class="muted">يدعم القراءة ولا ينافس النص الأساسي.</p></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
