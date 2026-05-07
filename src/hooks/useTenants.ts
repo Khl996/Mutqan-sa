@@ -195,7 +195,7 @@ export function useCreateTenant() {
 
     return useMutation({
         mutationFn: async (input: CreateTenantInput) => {
-            console.log('Creating tenant via provision_tenant RPC...', input)
+            console.log('Creating tenant via provision_tenant RPC...')
 
             const { admin_name, admin_email, admin_password, ...tenantFields } = input
 
