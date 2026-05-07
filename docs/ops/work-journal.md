@@ -6,7 +6,7 @@
 
 ---
 
-## 2026-05-08 — Claude Code — (commit pending) [demo-polish]
+## 2026-05-08 — Claude Code — 0577083 [demo-polish]
 Tags: #product #brand #ui
 **هدف:** صقل Brand v2 على صفحات الديمو — قرار خالد #10.
 **أُنجز:** تحديث `src/index.css` متغيرات shadcn من Brand v1 إلى v2 HSL (تأثير عالمي)؛ إصلاح hardcoded `text-blue-500` و `text-indigo-500` في AssetsPage.tsx:421-422.
