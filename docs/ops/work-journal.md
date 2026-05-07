@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Codex — (commit pending)
+Tags: #sales #pilot #ops #docs
+**هدف:** تجهيز HubSpot Sales Setup وأول 10 حسابات ورسائل Pilot ضمن مسار Sales/Pilot فقط.
+**أُنجز:** إنشاء ملف HubSpot pipeline/properties، جدول أول 10 حسابات، رسائل مخصصة، متابعة 3 أيام، ومسار رسالة→اكتشاف→ديمو→عرض→تحصيل 50%.
+**ملفات:** `docs/sales/hubspot-first-10-sales-motion-ar.md`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ⏭ لا build/lint لأن التغيير توثيقي فقط؛ تم الالتزام بعدم لمس الكود أو migrations أو التصميم.
+**التالي:** إدخال أسماء الأشخاص وقنوات التواصل، ثم تنفيذ الدفعة الأولى في HubSpot.
+
 ## 2026-05-07 — Codex — (commit pending)
 Tags: #sales #pilot #ops #docs
 **هدف:** تثبيت قرارات خالد التجارية 1-6 والعودة لنطاق Codex دون التداخل مع عمل Claude الأمني.
