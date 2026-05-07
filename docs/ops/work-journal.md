@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Claude Code — 62fe284 [brand-v2-full-sweep]
+Tags: #product #brand #ui
+**هدف:** إكمال قرار #10 — صقل Brand v2 على كل صفحات المنتج (لا تأجيل).
+**أُنجز:** دمج كل فروع demo-polish/security-fixes في main؛ استبدال hardcoded Tailwind colors بـ semantic tokens في 19 ملفاً؛ `src/index.css` محدَّث عالمياً.
+**ملفات:** `src/index.css` + 19 صفحة في `src/pages/`.
+**التحقق:** ⏭ build لم يُشغَّل — ينتظر خالد.
+**التالي:** خالد يشغّل build ويُبلّغ بأي errors؛ دمج الفروع المعلّقة (snapshot, brand-v2-docs).
+
 ## 2026-05-08 — Claude Code — 0577083 [demo-polish]
 Tags: #product #brand #ui
 **هدف:** صقل Brand v2 على صفحات الديمو — قرار خالد #10.
