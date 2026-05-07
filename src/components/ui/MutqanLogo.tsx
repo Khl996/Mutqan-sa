@@ -83,8 +83,9 @@ export function MutqanLogo({
     const textColor = theme === 'dark' ? 'text-white' : 'text-[var(--mutqan-primary)]'
     const subtitleColor = theme === 'dark' ? 'text-white/70' : 'text-[var(--mutqan-muted)]'
     const canUseOfficialLockup = !vertical && !symbolOnly
-    const officialLockup = theme === 'dark' ? logoWhite : monochrome ? logoBlack : logoColor
-    const officialSymbol = theme === 'dark' ? logoSymbolWhite : logoSymbol
+    const officialLockup = monochrome ? logoBlack : logoColor
+    const officialSymbol = logoSymbol
+    const darkInvertClass = theme === 'dark' ? '[&>svg]:brightness-0 [&>svg]:invert' : ''
 
     if (symbolOnly) {
         return (
@@ -96,7 +97,7 @@ export function MutqanLogo({
                 <InlineSvgLogo
                     svg={officialSymbol}
                     label={resolvedLabel}
-                    className={symbolSizeClass[size]}
+                    className={cn(symbolSizeClass[size], darkInvertClass)}
                 />
             </span>
         )
@@ -108,7 +109,7 @@ export function MutqanLogo({
                 <InlineSvgLogo
                     svg={officialLockup}
                     label={resolvedLabel}
-                    className={lockupSizeClass[size]}
+                    className={cn(lockupSizeClass[size], darkInvertClass)}
                 />
                 {subtitle && (
                     <span className={cn('block font-cairo font-semibold leading-tight', subtitleSizeClass[size], subtitleColor)}>
@@ -131,7 +132,7 @@ export function MutqanLogo({
             <InlineSvgLogo
                 svg={officialSymbol}
                 label={resolvedLabel}
-                className={symbolSizeClass[size]}
+                className={cn(symbolSizeClass[size], darkInvertClass)}
             />
             <span className={cn('min-w-0', vertical && 'flex flex-col items-center')}>
                 <span className={cn('block font-cairo font-extrabold leading-none', wordmarkSizeClass[size], textColor)}>
