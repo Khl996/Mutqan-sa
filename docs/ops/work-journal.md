@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Claude Code — d39cdb4 [logo-vector-fix]
+Tags: #product #brand #ui
+**هدف:** إصلاح الشعار الأبيض الذي كان يظهر صغيراً في كل مواقع الـ dark theme.
+**أُنجز:** اكتشاف أن `mutqan-logo-white.svg` PNG مرسطر بمساحة بيضاء (نسبة 1.59:1) — استبداله باستخدام vector `mutqan-logo-color.svg` (4.23:1) مع Tailwind `brightness-0 invert` للـ dark. ثلاث commits: 6aa4be0 → e34222c → d39cdb4 (إرجاع الأحجام الأصلية لأن الـ vector ما يحتاج تعويض whitespace).
+**ملفات:** `src/components/ui/MutqanLogo.tsx`.
+**التحقق:** ✅ `npm run build` نجح. ⏭ تأكيد بصري معلّق على خالد.
+**التالي:** خالد يؤكد بصرياً + Codex يلتقط bug logout → mutqan-sa.com يرجع لـ /platform (موثّق في ai-handoff.md).
+
 ## 2026-05-08 — Claude Code — 62fe284 [brand-v2-full-sweep]
 Tags: #product #brand #ui
 **هدف:** إكمال قرار #10 — صقل Brand v2 على كل صفحات المنتج (لا تأجيل).
