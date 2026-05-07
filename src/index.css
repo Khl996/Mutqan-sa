@@ -4,38 +4,38 @@
 
 @layer base {
   :root {
-    /* Mutqan Brand Colors */
-    --color-primary: #2E3A45;
-    --color-secondary: #3AAFA9;
-    --color-background: #E9EEF1;
-    --color-text-muted: #6C7A86;
-    
+    /* Mutqan Brand Colors — v2 (#0b1320 / #00b2a9) */
+    --color-primary: #0b1320;
+    --color-secondary: #00b2a9;
+    --color-background: #f5f7f9;
+    --color-text-muted: #6b7785;
+
     /* Status Colors */
     --color-success: #10B981;
     --color-warning: #F59E0B;
     --color-error: #EF4444;
     --color-info: #3B82F6;
-    
-    /* shadcn/ui variables */
-    --background: 210 20% 94%;
-    --foreground: 210 20% 20%;
+
+    /* shadcn/ui variables — Brand v2 */
+    --background: 208 24% 97%;
+    --foreground: 217 49% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 210 20% 20%;
+    --card-foreground: 217 49% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 20% 20%;
-    --primary: 204 20% 23%;
+    --popover-foreground: 217 49% 8%;
+    --primary: 217 49% 8%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 178 48% 45%;
+    --secondary: 177 100% 35%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 210 15% 47%;
-    --muted-foreground: 210 15% 35%;
-    --accent: 178 48% 45%;
+    --muted: 212 11% 47%;
+    --muted-foreground: 212 11% 35%;
+    --accent: 177 100% 35%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 15% 85%;
-    --input: 210 15% 85%;
-    --ring: 178 48% 45%;
+    --border: 214 16% 92%;
+    --input: 214 16% 92%;
+    --ring: 177 100% 35%;
     --radius: 0.5rem;
   }
 

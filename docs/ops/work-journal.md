@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Claude Code — (commit pending) [demo-polish]
+Tags: #product #brand #ui
+**هدف:** صقل Brand v2 على صفحات الديمو — قرار خالد #10.
+**أُنجز:** تحديث `src/index.css` متغيرات shadcn من Brand v1 إلى v2 HSL (تأثير عالمي)؛ إصلاح hardcoded `text-blue-500` و `text-indigo-500` في AssetsPage.tsx:421-422.
+**ملفات:** `src/index.css`، `src/pages/assets/AssetsPage.tsx`.
+**التحقق:** ⏭ build لم يُشغَّل بعد.
+**التالي:** خالد يراجع ويدمج الفرع؛ Claude يكمل صقل platform pages؛ تقييم إزالة console.log noise.
+
 ## 2026-05-07 — Claude Code — (commit pending) [security-fixes]
 Tags: #security #product #brand
 **هدف:** تنفيذ قرارات خالد 7+8+9 الفورية — Brand v2، إصلاح تسريب كلمة مرور، تقييد broadcast_notification.

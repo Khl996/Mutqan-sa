@@ -418,8 +418,8 @@ function TreeNode({
 
     let Icon = Box
     let colorClass = 'text-primary'
-    if (node.type === 'building') { Icon = Building2; colorClass = 'text-blue-500' }
-    else if (node.type === 'floor') { Icon = Layers; colorClass = 'text-indigo-500' }
+    if (node.type === 'building') { Icon = Building2; colorClass = 'text-info' }
+    else if (node.type === 'floor') { Icon = Layers; colorClass = 'text-primary' }
     else if (node.type === 'asset') {
         const status = node.data?.status || 'operational'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
