@@ -92,14 +92,14 @@ function PlanCard({
             </div>
 
             {billingCycle === 'yearly' && (
-                <div className="mb-3 text-xs text-emerald-600 font-bold font-cairo">
+                <div className="mb-3 text-xs text-success font-bold font-cairo">
                     {t('tenant.subscription.yearly_save')} · {formatSAR(plan.price_yearly)} {t('tenant.subscription.per_year_suffix')}
                 </div>
             )}
 
             <div className="space-y-1.5">
                 {limits.map(({ label, val }) => (
-                    <div key={label} className="flex items-center gap-2 text-sm text-gray-600">
+                    <div key={label} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <CheckCircle2 className="w-3.5 h-3.5 text-secondary shrink-0" />
                         <span className="font-cairo">
                             {val === -1
@@ -286,28 +286,28 @@ export default function TenantSubscriptionPage() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <div className="flex items-center gap-3 flex-wrap mb-1">
-                            <h1 className="text-xl font-bold text-gray-900 font-cairo">
+                            <h1 className="text-xl font-bold text-foreground font-cairo">
                                 {isRTL ? (plan?.name_ar || plan?.name) : plan?.name}
                             </h1>
                             <span className={cn(
                                 'px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide',
-                                status === 'active'   ? 'bg-green-100 text-green-700' :
-                                status === 'trial'    ? 'bg-blue-100 text-blue-700' :
-                                status === 'expired'  ? 'bg-orange-100 text-orange-700' :
-                                status === 'cancelled'? 'bg-gray-100 text-gray-600' :
-                                                       'bg-yellow-100 text-yellow-700'
+                                status === 'active'   ? 'bg-success/10 text-success' :
+                                status === 'trial'    ? 'bg-info/10 text-info' :
+                                status === 'expired'  ? 'bg-warning/10 text-warning' :
+                                status === 'cancelled'? 'bg-muted/10 text-muted-foreground' :
+                                                       'bg-warning/10 text-warning'
                             )}>
                                 {t(`tenant.status.${status}`)}
                             </span>
                         </div>
                         {isActive && !isReadOnly && (
-                            <p className="text-sm text-gray-500 font-cairo flex items-center gap-1.5">
+                            <p className="text-sm text-muted-foreground font-cairo flex items-center gap-1.5">
                                 <RefreshCcw className="w-3.5 h-3.5" />
                                 {t('tenant.subscription.renewal_manual')}
                             </p>
                         )}
                         {isReadOnly && (
-                            <p className="text-sm text-amber-600 font-cairo mt-1">
+                            <p className="text-sm text-warning font-cairo mt-1">
                                 {t('tenant.subscription.expired_locked_msg')}
                             </p>
                         )}
@@ -315,19 +315,19 @@ export default function TenantSubscriptionPage() {
 
                     {/* Dates panel */}
                     {!isReadOnly && endDate && (
-                        <div className="flex items-stretch bg-gray-50 rounded-xl border overflow-hidden shrink-0 divide-x divide-gray-200 rtl:divide-x-reverse">
+                        <div className="flex items-stretch bg-muted/5 rounded-xl border overflow-hidden shrink-0 divide-x divide-border rtl:divide-x-reverse">
                             {subscription.current_period_start && (
                                 <div className="text-center px-4 py-3">
-                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1 font-cairo">
+                                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1 font-cairo">
                                         {t('tenant.subscription.start_date')}
                                     </p>
-                                    <p className="font-mono font-bold text-sm text-gray-700">
+                                    <p className="font-mono font-bold text-sm text-foreground">
                                         {fmtDate(subscription.current_period_start, i18n.language)}
                                     </p>
                                 </div>
                             )}
                             <div className="text-center px-4 py-3">
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1 font-cairo">
+                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1 font-cairo">
                                     {t('tenant.subscription.end_date')}
                                 </p>
                                 <p className="font-mono font-bold text-sm text-secondary">
@@ -335,10 +335,10 @@ export default function TenantSubscriptionPage() {
                                 </p>
                             </div>
                             <div className="text-center px-4 py-3">
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1 font-cairo">
+                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1 font-cairo">
                                     {t('tenant.subscription.days_left')}
                                 </p>
-                                <p className={cn('font-mono font-bold text-lg', days <= 7 ? 'text-red-500' : 'text-gray-900')}>
+                                <p className={cn('font-mono font-bold text-lg', days <= 7 ? 'text-destructive' : 'text-foreground')}>
                                     {days}
                                 </p>
                             </div>
@@ -351,17 +351,17 @@ export default function TenantSubscriptionPage() {
                     <div className="mt-5">
                         <div className="flex justify-between text-xs mb-1.5 font-cairo font-medium">
                             <span>{t('tenant.subscription.trial_period')}</span>
-                            <span className={cn(days <= 3 ? 'text-red-600 font-bold' : 'text-gray-500')}>
+                            <span className={cn(days <= 3 ? 'text-destructive font-bold' : 'text-muted-foreground')}>
                                 {t('tenant.subscription.days_remaining').replace('{{count}}', String(days))}
                             </span>
                         </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-muted/20 rounded-full overflow-hidden">
                             <div
-                                className={cn('h-full transition-all duration-500 rounded-full', trialProgress > 80 ? 'bg-red-400' : 'bg-blue-500')}
+                                className={cn('h-full transition-all duration-500 rounded-full', trialProgress > 80 ? 'bg-destructive' : 'bg-secondary')}
                                 style={{ width: `${trialProgress}%` }}
                             />
                         </div>
-                        <p className="text-xs text-gray-400 mt-2 font-cairo">
+                        <p className="text-xs text-muted-foreground mt-2 font-cairo">
                             {t('tenant.subscription.trial_note')}
                         </p>
                     </div>
@@ -405,7 +405,7 @@ export default function TenantSubscriptionPage() {
                             )}
                         >
                             {t('tenant.subscription.yearly')}
-                            <span className="text-xs text-emerald-600 font-bold">{t('tenant.subscription.yearly_save')}</span>
+                            <span className="text-xs text-success font-bold">{t('tenant.subscription.yearly_save')}</span>
                         </button>
                     </div>
 
@@ -485,13 +485,13 @@ export default function TenantSubscriptionPage() {
                                         <div className="flex items-center gap-3">
                                             <span className={cn(
                                                 'text-xs px-2 py-0.5 rounded-full font-bold font-cairo',
-                                                inv.status === 'paid' ? 'bg-green-100 text-green-700' :
-                                                inv.status === 'void' ? 'bg-red-100 text-red-600' :
-                                                'bg-gray-100 text-gray-500'
+                                                inv.status === 'paid' ? 'bg-success/10 text-success' :
+                                                inv.status === 'void' ? 'bg-destructive/10 text-destructive' :
+                                                'bg-muted/10 text-muted-foreground'
                                             )}>
                                                 {inv.status}
                                             </span>
-                                            <span className="font-bold text-gray-800 font-cairo text-sm">
+                                            <span className="font-bold text-foreground font-cairo text-sm">
                                                 {formatSAR(inv.total)}
                                             </span>
                                         </div>

@@ -329,7 +329,7 @@ export default function AnnouncementsPage() {
                     </div>
 
                     {/* Info Box */}
-                    <div className="bg-blue-50 text-blue-800 p-4 rounded-xl flex items-start gap-3 text-sm font-cairo">
+                    <div className="bg-info/10 text-info p-4 rounded-xl flex items-start gap-3 text-sm font-cairo">
                         <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
                         <div>
                             <p className="font-bold mb-1">{isRTL ? 'ملاحظة هامة:' : 'Important Note:'}</p>

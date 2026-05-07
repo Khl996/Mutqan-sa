@@ -62,13 +62,13 @@ export default function AssetLogsPage() {
     }
 
     const StatusIcon = ({ status }: { status: string | null }) => {
-        if (!status) return <div className="w-2 h-2 rounded-full bg-gray-400" />
+        if (!status) return <div className="w-2 h-2 rounded-full bg-muted-foreground" />
         switch (status) {
             case 'operational': return <CheckCircle2 className="w-4 h-4 text-success" />
             case 'out_of_service': return <XCircle className="w-4 h-4 text-destructive" />
             case 'under_maintenance': return <Wrench className="w-4 h-4 text-warning" />
             case 'retired': return <Ban className="w-4 h-4 text-muted-foreground" />
-            default: return <div className="w-2 h-2 rounded-full bg-gray-400" />
+            default: return <div className="w-2 h-2 rounded-full bg-muted-foreground" />
         }
     }
 

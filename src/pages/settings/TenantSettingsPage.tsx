@@ -230,11 +230,11 @@ export default function TenantSettingsPage() {
                                     />
                                 ))}
                                 {categorySettings.length === 0 && (
-                                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                                        <p className="font-bold font-cairo text-blue-700">
+                                    <div className="rounded-xl border border-info/20 bg-info/10 p-4">
+                                        <p className="font-bold font-cairo text-info">
                                             {isRTL ? 'الإطلاق المبكر للصيانة الوقائية يدوي فقط' : 'Preventive maintenance is manual-only in soft launch'}
                                         </p>
-                                        <p className="mt-1 text-sm text-blue-700/80 font-cairo">
+                                        <p className="mt-1 text-sm text-info/80 font-cairo">
                                             {isRTL
                                                 ? 'في هذه النسخة: الخطط اليدوية، المهام اليدوية، وإنشاء أمر عمل اختياري من المهمة فقط. التكرار، التوليد التلقائي، والتأجيل غير متاحة بعد.'
                                                 : 'This release supports manual plans, manual tasks, and optional work order creation from a task only. Recurrence, auto-generation, and postpone flows are not available yet.'}

@@ -7,12 +7,12 @@ import {
 } from 'lucide-react'
 
 const reportTypes = [
-    { id: 'revenue', name: { ar: 'تقرير الإيرادات', en: 'Revenue Report' }, icon: DollarSign, color: 'bg-green-500/10 text-green-500' },
-    { id: 'tenants', name: { ar: 'تقرير المنشآت', en: 'Tenants Report' }, icon: Building2, color: 'bg-blue-500/10 text-blue-500' },
-    { id: 'subscriptions', name: { ar: 'تقرير الاشتراكات', en: 'Subscriptions Report' }, icon: TrendingUp, color: 'bg-purple-500/10 text-purple-500' },
-    { id: 'users', name: { ar: 'تقرير المستخدمين', en: 'Users Report' }, icon: Users, color: 'bg-amber-500/10 text-amber-500' },
-    { id: 'activity', name: { ar: 'تقرير النشاط', en: 'Activity Report' }, icon: Activity, color: 'bg-slate-500/10 text-slate-500' },
-    { id: 'performance', name: { ar: 'تقرير الأداء', en: 'Performance Report' }, icon: BarChart3, color: 'bg-rose-500/10 text-rose-500' },
+    { id: 'revenue', name: { ar: 'تقرير الإيرادات', en: 'Revenue Report' }, icon: DollarSign, color: 'bg-success/10 text-success' },
+    { id: 'tenants', name: { ar: 'تقرير المنشآت', en: 'Tenants Report' }, icon: Building2, color: 'bg-info/10 text-info' },
+    { id: 'subscriptions', name: { ar: 'تقرير الاشتراكات', en: 'Subscriptions Report' }, icon: TrendingUp, color: 'bg-secondary/10 text-secondary' },
+    { id: 'users', name: { ar: 'تقرير المستخدمين', en: 'Users Report' }, icon: Users, color: 'bg-warning/10 text-warning' },
+    { id: 'activity', name: { ar: 'تقرير النشاط', en: 'Activity Report' }, icon: Activity, color: 'bg-muted/20 text-muted-foreground' },
+    { id: 'performance', name: { ar: 'تقرير الأداء', en: 'Performance Report' }, icon: BarChart3, color: 'bg-destructive/10 text-destructive' },
 ]
 
 const recentReports = [

@@ -1237,7 +1237,7 @@ function DiscountsSection({ isRTL }: { isRTL: boolean }) {
                                     <div className="flex items-center gap-2">
                                         <p className="font-bold text-sm font-cairo">{isRTL ? p.name_ar || p.name : p.name}</p>
                                         {isExpired && (
-                                            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-cairo">
+                                            <span className="text-xs bg-warning/10 text-warning px-2 py-0.5 rounded font-cairo">
                                                 {isRTL ? 'منتهي' : 'Expired'}
                                             </span>
                                         )}
@@ -1322,10 +1322,10 @@ function TaxSettingsSection({ isRTL }: { isRTL: boolean }) {
     return (
         <div className="max-w-lg space-y-6">
             <div>
-                <h2 className="text-base font-bold text-gray-900 font-cairo">
+                <h2 className="text-base font-bold text-foreground font-cairo">
                     {t('billing.settings.tax_title')}
                 </h2>
-                <p className="text-sm text-gray-500 font-cairo mt-1">
+                <p className="text-sm text-muted-foreground font-cairo mt-1">
                     {t('billing.settings.tax_warning')}
                 </p>
             </div>
@@ -1333,14 +1333,14 @@ function TaxSettingsSection({ isRTL }: { isRTL: boolean }) {
             <div className="bg-white rounded-xl border p-5 space-y-5">
                 {/* Enable toggle */}
                 <div className="flex items-center justify-between">
-                    <label className="font-cairo font-medium text-sm text-gray-800">
+                    <label className="font-cairo font-medium text-sm text-foreground">
                         {t('billing.settings.tax_enabled')}
                     </label>
                     <button
                         onClick={() => setEnabled(v => !v)}
                         className={cn(
                             'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                            enabled ? 'bg-secondary' : 'bg-gray-200'
+                            enabled ? 'bg-secondary' : 'bg-muted/40'
                         )}
                     >
                         <span
@@ -1355,7 +1355,7 @@ function TaxSettingsSection({ isRTL }: { isRTL: boolean }) {
                 {/* Rate input — only shown when enabled */}
                 {enabled && (
                     <div className="space-y-1">
-                        <label className="block font-cairo text-sm font-medium text-gray-700">
+                        <label className="block font-cairo text-sm font-medium text-foreground">
                             {t('billing.settings.tax_rate')}
                         </label>
                         <div className="flex items-center gap-2">
@@ -1368,8 +1368,8 @@ function TaxSettingsSection({ isRTL }: { isRTL: boolean }) {
                                 onChange={e => setRateInput(e.target.value)}
                                 className="w-28 py-2 px-3 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-secondary/30 outline-none"
                             />
-                            <span className="text-gray-500 font-cairo text-sm">%</span>
-                            <span className="text-gray-400 font-cairo text-xs ms-2">
+                            <span className="text-muted-foreground font-cairo text-sm">%</span>
+                            <span className="text-muted-foreground font-cairo text-xs ms-2">
                                 = {((parseFloat(rateInput) || 0) / 100).toFixed(4)}
                             </span>
                         </div>
@@ -1378,7 +1378,7 @@ function TaxSettingsSection({ isRTL }: { isRTL: boolean }) {
 
                 {/* Disabled note */}
                 {!enabled && (
-                    <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-cairo">
+                    <p className="text-sm text-warning bg-warning/10 border border-warning/20 rounded-lg px-3 py-2 font-cairo">
                         {t('billing.settings.tax_disabled_note')}
                     </p>
                 )}

@@ -180,13 +180,13 @@ function QuoteDetailPanel({
                                 </thead>
                                 <tbody className="divide-y">
                                     {quote.line_items.map((item, i) => (
-                                        <tr key={i} className={cn(item.type === 'discount' && 'bg-green-50')}>
+                                        <tr key={i} className={cn(item.type === 'discount' && 'bg-success/5')}>
                                             <td className="px-3 py-2.5 font-cairo text-xs">
                                                 {isRTL ? item.name_ar || item.name : item.name}
                                             </td>
                                             <td className={cn(
                                                 'px-3 py-2.5 text-end font-mono text-xs font-bold',
-                                                item.subtotal < 0 ? 'text-green-600' : ''
+                                                item.subtotal < 0 ? 'text-success' : ''
                                             )}>
                                                 {formatSAR(item.subtotal)}
                                             </td>
@@ -205,7 +205,7 @@ function QuoteDetailPanel({
                         <span>{formatSAR(quote.subtotal)}</span>
                     </div>
                     {quote.discount_amount > 0 && (
-                        <div className="flex justify-between text-green-600">
+                        <div className="flex justify-between text-success">
                             <span>{t('billing.pricing.discount_amount')}</span>
                             <span>-{formatSAR(quote.discount_amount)}</span>
                         </div>
@@ -237,7 +237,7 @@ function QuoteDetailPanel({
                         <button
                             onClick={handleApprove}
                             disabled={approve.isPending}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-cairo font-bold transition-colors disabled:opacity-50"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg text-sm font-cairo font-bold transition-colors disabled:opacity-50"
                         >
                             {approve.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                             {t('billing.quote.approve_btn')}
@@ -524,7 +524,7 @@ function CreateQuoteForm({ isRTL, onClose }: { isRTL: boolean; onClose: () => vo
                             </div>
                         )}
                         {calcResult.discount_amount > 0 && (
-                            <div className="flex justify-between text-green-600">
+                            <div className="flex justify-between text-success">
                                 <span>{t('billing.pricing.discount_amount')}</span>
                                 <span className="font-mono">-{formatSAR(calcResult.discount_amount)}</span>
                             </div>
@@ -690,7 +690,7 @@ function QuotesTab({ isRTL }: { isRTL: boolean }) {
                                         </div>
                                     </div>
                                     {q.valid_until && new Date(q.valid_until) < new Date() && q.status === 'draft' && (
-                                        <div className="mt-2 flex items-center gap-1.5 text-xs text-orange-600 font-cairo">
+                                        <div className="mt-2 flex items-center gap-1.5 text-xs text-warning font-cairo">
                                             <AlertCircle className="w-3.5 h-3.5" />
                                             {t('billing.quote.expired_message')}
                                         </div>
@@ -1056,7 +1056,7 @@ function DiscountsTab({ isRTL }: { isRTL: boolean }) {
                                     <div className="flex items-center gap-2">
                                         <p className="font-bold text-sm font-cairo">{isRTL ? p.name_ar || p.name : p.name}</p>
                                         {isExpired && (
-                                            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-cairo">
+                                            <span className="text-xs bg-warning/10 text-warning px-2 py-0.5 rounded font-cairo">
                                                 {t('billing.discount.expired_badge')}
                                             </span>
                                         )}

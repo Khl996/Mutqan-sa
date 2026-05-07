@@ -232,7 +232,7 @@ export default function MaintenancePlanDetailsPage() {
         return (
             <Card>
                 <CardContent className="py-12 text-center">
-                    <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-amber-600" />
+                    <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-warning" />
                     <p className="font-cairo text-muted-foreground">{t('pm.module_disabled')}</p>
                 </CardContent>
             </Card>

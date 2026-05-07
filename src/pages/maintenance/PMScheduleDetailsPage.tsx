@@ -101,7 +101,7 @@ export default function PMScheduleDetailsPage() {
                             <div className="mb-2 flex flex-wrap gap-2">
                                 <Badge className={cn('border', statusClass(schedule.status))}>{statusLabel(schedule.status, copy)}</Badge>
                                 <ModeBadge mode={schedule.generation_mode} copy={copy} />
-                                <Badge className={cn('border', eligible ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/20' : 'bg-slate-500/10 text-slate-700 border-slate-500/20')}>
+                                <Badge className={cn('border', eligible ? 'bg-success/15 text-success border-success/20' : 'bg-muted/10 text-muted-foreground border-muted/20')}>
                                     {eligible ? copy.dueNow : copy.notDueYet}
                                 </Badge>
                             </div>
