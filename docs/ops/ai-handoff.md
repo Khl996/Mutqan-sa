@@ -6,13 +6,13 @@
 **التاريخ:** 2026-05-07
 **الوكيل:** Codex
 **الفرع:** codex/pilot-sales-ops-snapshot
-**آخر commit:** (commit pending) — إضافة مسودة حالة متقن مايو 2026 من زاوية Pilot/Sales/Ops
+**آخر commit:** (commit pending) — تثبيت قرارات خالد التجارية 1-6 في snapshot مايو
 
 ## Current Active Areas
-- **Primary:** PILOT
-- Secondary: SALES, OPS, DOCS
+- **Primary:** SALES
+- Secondary: PILOT, OPS, DOCS
 
-Tags: #pilot #sales #ops #docs
+Tags: #sales #pilot #ops #docs
 
 ## السياق الاستراتيجي
 - North Star → `docs/strategy/mutqan-company-os.md`
@@ -22,46 +22,46 @@ Tags: #pilot #sales #ops #docs
 - Operating model → `docs/ops/ai-executive-operating-model.md`
 
 ## ما أُنجز في هذه الجلسة
-- إنشاء مسودة `docs/strategy/state-of-mutqan-2026-05.md`.
-- تلخيص حالة متقن من زاوية `PILOT / SALES / OPS`.
-- ربط الرؤية بـ cash flow من خلال هدف 90 يوم مقترح للنقاش.
-- تحديد 3 فجوات كبرى: الحركة التجارية، ثقة Pilot، أصل بيع خارجي نهائي.
-- تحديد 3 مسارات تنفيذية: Sales Motion، Controlled Pilot Readiness، External Sales Asset.
-- التحقق من بعض مخاطر التشغيل القديمة من الملفات الحالية قبل تضمينها في snapshot.
+- استلام قرارات خالد النهائية للبنود 1-6.
+- تثبيت هدف الـ 90 يوم كـ **cash collected**.
+- تثبيت 15,000 ريال كحد أدنى قياسي لأول Pilot، مع عرض إطلاق 12,000 ريال بشروط.
+- تثبيت HubSpot كـ CRM.
+- تثبيت القطاع الأول: شركات إدارة المرافق والمجمعات.
+- تثبيت بدء إرسال أول 10 رسائل هذا الأسبوع.
+- توثيق تأجيل التكلفة الشهرية والـ runway مؤقتا حتى توثيق المدفوعات.
+- إيقاف العمل على البنود 8-9 الأمنية لأن Claude يعمل عليها حاليا.
 
 ## ملفات لُمست
-- `docs/strategy/state-of-mutqan-2026-05.md` — ملف جديد للـ snapshot التنفيذية.
+- `docs/strategy/state-of-mutqan-2026-05.md` — تحديث قرارات خالد 1-6.
 - `docs/ops/ai-handoff.md` — استبدال كامل حسب نظام الاستمرارية.
 - `docs/ops/work-journal.md` — إضافة دخول جديد أعلى السجل.
 
 ## ملفات حساسة لم تُلمس
-- `supabase/migrations/*` — لم تُعدّل، تم البحث فيها قراءة فقط للتحقق من مخاطر قديمة.
+- `supabase/migrations/*` — لم تُعدّل في هذا commit؛ تم إيقاف migration الذي بدأته قبل إكماله حتى لا نتداخل مع Claude.
 - `docs/CONSTITUTION.md` — لم يُعدّل.
-- `src/**` — لم يُعدّل، تم البحث فيه قراءة فقط للتحقق من مخاطر Pilot.
+- `src/**` — لم يُعدّل في هذا commit؛ إصلاح `useTenants.ts` عند Claude حسب توجيه خالد.
 
 ## التحقق
 - ⏭ build — لم تُلمس ملفات كود.
 - ⏭ lint — لم تُلمس ملفات كود.
-- ✅ قراءة نظام الاستمرارية و`git status` و`git log --oneline -5` في بداية الجلسة.
-- ✅ تحقق قراءة من وثائق Pilot/Sales/Ops والملفات المرتبطة بالمخاطر قبل كتابة snapshot.
+- ✅ حصر التغيير في وثائق snapshot/handoff/journal.
+- ✅ تم الرجوع عن مسار migration/useTenants غير المكتمل حتى لا يتداخل مع Claude.
 
 ## الحالة الحالية
-يوجد الآن ملف snapshot أولي يربط جاهزية متقن التجارية والتشغيلية بهدف cash flow خلال 90 يوم، لكنه لا يزال ينتظر مساهمة Claude في `PRODUCT / UI / BRAND` وقرار خالد في المالية وهدف المبيعات النهائي. الفرع الحالي يحتوي فقط على تغيير توثيقي جديد ولم يلمس الكود أو قاعدة البيانات.
+قرارات خالد التجارية 1-6 أصبحت مثبتة داخل snapshot مايو، وأصبح مسار Codex الحالي محصورا في sales/pilot/ops: cash collected، HubSpot، أول 10 رسائل، ونطاق Pilot المدفوع. البنود الأمنية والـ UI/Brand خارج نطاق هذا الفرع الآن لأن Claude يعمل عليها بالتوازي.
 
 ## أفضل خطوة تالية
-1. Claude يضيف أو يرسل مساهمته لمحاور `PRODUCT / UI / BRAND`.
-2. خالد يحدد هدف الإيراد خلال 90 يوم ويختار CRM وقاعدة السعر الدنيا.
-3. بعد اعتماد snapshot، نبدأ أول مسار تنفيذي: إرسال أول 10 رسائل أو إغلاق Go/No-Go للديمو.
+1. Codex يجهز خطة تنفيذ أول 10 رسائل على HubSpot بدون لمس الأمن أو UI.
+2. Claude يكمل التسريب و`broadcast_notification` وصفحات الديمو/Brand v2.
+3. بعد دمج مساهمة Claude، نوحد snapshot ونحدد أول دفعة إرسال.
 
 ## أسئلة مفتوحة لخالد
-- هل هدف الـ 90 يوم يكون cash collected أم signed value؟
-- هل نعتمد 15,000 ريال كحد أدنى قياسي لأول Pilot؟
-- هل CRM الآن Notion أم HubSpot؟
-- هل نبدأ إرسال أول 10 رسائل هذا الأسبوع؟
-- ما التكلفة الشهرية والـ runway التقريبي؟
+- ما شروط عرض الإطلاق 12,000 ريال بالضبط: نطاق أضيق، مرجع تجاري، سرعة دفع، أم كلها؟
+- هل تريد Codex يجهز حقول/مراحل HubSpot المقترحة لأول 10 حسابات؟
+- هل أول 10 رسائل تُرسل عبر البريد أم LinkedIn/واتساب شخصي حسب توفر جهة التواصل؟
 
 ## تحذيرات للوكيل التالي
 - لا تعدّل دخولات قديمة في `work-journal.md`; ألحق فقط.
+- لا تعمل على `useTenants.ts` أو migration `broadcast_notification` من هذا الفرع؛ Claude يمسكها الآن.
 - `docs/CONSTITUTION.md` و`supabase/migrations/*` ملفات حساسة.
-- لا تعتمد تقرير `platform-critical-review-2026-05-02.md` وحده؛ تحقق من الواقع قبل تحويل أي ملاحظة إلى مهمة.
 - working tree يحتوي ملفات غير مرتبطة كثيرة من قبل هذه الجلسة؛ لا تلمسها إلا بإذن خالد.

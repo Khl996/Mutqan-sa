@@ -7,6 +7,14 @@
 ---
 
 ## 2026-05-07 — Codex — (commit pending)
+Tags: #sales #pilot #ops #docs
+**هدف:** تثبيت قرارات خالد التجارية 1-6 والعودة لنطاق Codex دون التداخل مع عمل Claude الأمني.
+**أُنجز:** تحديث snapshot بهدف cash collected، HubSpot، حد Pilot الأدنى 15,000 ريال، القطاع الأول، إرسال أول 10 رسائل هذا الأسبوع، وتأجيل runway.
+**ملفات:** `docs/strategy/state-of-mutqan-2026-05.md`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ⏭ لا build/lint لأن التغيير توثيقي فقط؛ تم حصر النطاق والرجوع عن مسار useTenants/migration غير المكتمل.
+**التالي:** تجهيز خطة تنفيذ أول 10 رسائل في HubSpot بعد اعتماد شروط عرض 12,000 وقنوات التواصل.
+
+## 2026-05-07 — Codex — (commit pending)
 Tags: #pilot #sales #ops #docs
 **هدف:** إنتاج snapshot موحدة لحالة متقن من زاوية Pilot/Sales/Ops وربطها بهدف cash flow.
 **أُنجز:** إنشاء `state-of-mutqan-2026-05.md`، تلخيص الجاهزية التجارية والتشغيلية، تحديد 3 فجوات كبرى و3 مسارات تنفيذية، وتوثيق أسئلة خالد المالية.
