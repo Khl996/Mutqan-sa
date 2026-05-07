@@ -20,9 +20,9 @@ interface MutqanLogoProps {
 }
 
 const lockupSizeClass: Record<MutqanLogoSize, string> = {
-    sm: 'h-7 max-w-28',
-    md: 'h-9 max-w-36',
-    lg: 'h-12 max-w-48',
+    sm: 'h-10 max-w-40',
+    md: 'h-16 max-w-56',
+    lg: 'h-24 max-w-80',
 }
 
 const symbolSizeClass: Record<MutqanLogoSize, string> = {
