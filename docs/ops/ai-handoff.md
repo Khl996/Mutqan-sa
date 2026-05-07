@@ -4,60 +4,64 @@
 > يُستبدل بالكامل في نهاية كل جلسة. لا تُلحق فيه — استبدله.
 
 **التاريخ:** 2026-05-07
-**الوكيل:** Claude Code
-**الفرع:** claude/laughing-golick-57c8f3
-**آخر commit:** ff14453 — Apply Mutqan brand system to product surfaces
+**الوكيل:** Codex
+**الفرع:** codex/pilot-sales-ops-snapshot
+**آخر commit:** (commit pending) — إضافة مسودة حالة متقن مايو 2026 من زاوية Pilot/Sales/Ops
 
 ## Current Active Areas
-- **Primary:** OPS
-- Secondary: DOCS
+- **Primary:** PILOT
+- Secondary: SALES, OPS, DOCS
 
-Tags: #ops #docs
+Tags: #pilot #sales #ops #docs
 
-## السياق الاستراتيجي (روابط، لا تكرّر)
+## السياق الاستراتيجي
 - North Star → `docs/strategy/mutqan-company-os.md`
 - Sprint الحالي → `docs/strategy/pilot-v1-scope.md`
 - قرارات مقفلة → `docs/CONSTITUTION.md`
-- Operating model → `docs/ops/ai-executive-operating-model.md`
-- Department charters → `docs/ops/department-agent-charters.md`
 - Brand foundation → `docs/brand/`
+- Operating model → `docs/ops/ai-executive-operating-model.md`
 
 ## ما أُنجز في هذه الجلسة
-- تأسيس نظام استمرارية العمل بين الوكلاء (v1.5).
-- إنشاء `docs/ops/ai-handoff.md` (هذا الملف).
-- إنشاء `docs/ops/work-journal.md` كسجل تاريخي append-only.
-- إضافة قسم في `docs/CONSTITUTION.md` يثبّت النظام كقاعدة ملزمة.
-- توحيد مفردات Tags و Active Areas.
+- إنشاء مسودة `docs/strategy/state-of-mutqan-2026-05.md`.
+- تلخيص حالة متقن من زاوية `PILOT / SALES / OPS`.
+- ربط الرؤية بـ cash flow من خلال هدف 90 يوم مقترح للنقاش.
+- تحديد 3 فجوات كبرى: الحركة التجارية، ثقة Pilot، أصل بيع خارجي نهائي.
+- تحديد 3 مسارات تنفيذية: Sales Motion، Controlled Pilot Readiness، External Sales Asset.
+- التحقق من بعض مخاطر التشغيل القديمة من الملفات الحالية قبل تضمينها في snapshot.
 
 ## ملفات لُمست
-- `docs/ops/ai-handoff.md` — جديد، قالب التسليم النشط.
-- `docs/ops/work-journal.md` — جديد، سجل الجلسات.
-- `docs/CONSTITUTION.md` — إضافة قسم "نظام استمرارية الوكلاء".
+- `docs/strategy/state-of-mutqan-2026-05.md` — ملف جديد للـ snapshot التنفيذية.
+- `docs/ops/ai-handoff.md` — استبدال كامل حسب نظام الاستمرارية.
+- `docs/ops/work-journal.md` — إضافة دخول جديد أعلى السجل.
 
 ## ملفات حساسة لم تُلمس
-- `supabase/migrations/*` — لم نقترب من قاعدة البيانات.
-- `src/**` — لا تعديل كود في هذه الجلسة.
-- `package.json` و قفل التبعيات — لا تغيير.
+- `supabase/migrations/*` — لم تُعدّل، تم البحث فيها قراءة فقط للتحقق من مخاطر قديمة.
+- `docs/CONSTITUTION.md` — لم يُعدّل.
+- `src/**` — لم يُعدّل، تم البحث فيه قراءة فقط للتحقق من مخاطر Pilot.
 
 ## التحقق
-- ⏭ build — مهمة توثيق فقط، لا حاجة لبناء.
+- ⏭ build — لم تُلمس ملفات كود.
 - ⏭ lint — لم تُلمس ملفات كود.
-- ✅ المراجعة البشرية من خالد قبل الـ commit.
+- ✅ قراءة نظام الاستمرارية و`git status` و`git log --oneline -5` في بداية الجلسة.
+- ✅ تحقق قراءة من وثائق Pilot/Sales/Ops والملفات المرتبطة بالمخاطر قبل كتابة snapshot.
 
 ## الحالة الحالية
-نظام التسليم بين الوكلاء أصبح فعّالاً ابتداءً من هذا الـ commit. أي وكيل يدخل الآن (Codex أو Claude) يجب يقرأ هذا الملف أولاً، ثم يستبدله قبل ما يخرج. لا توجد أي مهام تنفيذية معلقة في الكود من هذه الجلسة.
+يوجد الآن ملف snapshot أولي يربط جاهزية متقن التجارية والتشغيلية بهدف cash flow خلال 90 يوم، لكنه لا يزال ينتظر مساهمة Claude في `PRODUCT / UI / BRAND` وقرار خالد في المالية وهدف المبيعات النهائي. الفرع الحالي يحتوي فقط على تغيير توثيقي جديد ولم يلمس الكود أو قاعدة البيانات.
 
 ## أفضل خطوة تالية
-1. خالد يرسل برومبت الإحاطة لـ Codex لتفعيل الالتزام بالنظام.
-2. أول جلسة Codex بعد ذلك تختبر الدورة الكاملة (قراءة → عمل → استبدال handoff → إلحاق journal).
-3. اختيار أول مسار تنفيذي حقيقي بعد الاختبار (مرشحات: PILOT readiness, BRAND polish remaining surfaces, أو SALES collateral).
+1. Claude يضيف أو يرسل مساهمته لمحاور `PRODUCT / UI / BRAND`.
+2. خالد يحدد هدف الإيراد خلال 90 يوم ويختار CRM وقاعدة السعر الدنيا.
+3. بعد اعتماد snapshot، نبدأ أول مسار تنفيذي: إرسال أول 10 رسائل أو إغلاق Go/No-Go للديمو.
 
 ## أسئلة مفتوحة لخالد
-- هل المسار التالي بعد تثبيت النظام هو PILOT أم BRAND أم شي آخر؟
-- هل نحتاج Hook في `.claude/settings.json` يذكّر بتحديث الـ handoff عند نهاية الجلسة، أم نتركه انضباط يدوي حالياً؟
+- هل هدف الـ 90 يوم يكون cash collected أم signed value؟
+- هل نعتمد 15,000 ريال كحد أدنى قياسي لأول Pilot؟
+- هل CRM الآن Notion أم HubSpot؟
+- هل نبدأ إرسال أول 10 رسائل هذا الأسبوع؟
+- ما التكلفة الشهرية والـ runway التقريبي؟
 
 ## تحذيرات للوكيل التالي
-- **لا تعدّل دخولات قديمة في `work-journal.md`**. ألحق فقط.
-- **استبدل `ai-handoff.md` بالكامل**، لا تُلحق فيه.
-- قبل أي توصية مبنية على محتوى هذا الملف: تحقق من الواقع (افتح الملف، شغّل `git status`). الملاحظات تتقادم.
-- إذا احتجت Tag جديد غير المفردات الموحّدة في `CONSTITUTION.md` — أضفه هناك أولاً قبل استخدامه.
+- لا تعدّل دخولات قديمة في `work-journal.md`; ألحق فقط.
+- `docs/CONSTITUTION.md` و`supabase/migrations/*` ملفات حساسة.
+- لا تعتمد تقرير `platform-critical-review-2026-05-02.md` وحده؛ تحقق من الواقع قبل تحويل أي ملاحظة إلى مهمة.
+- working tree يحتوي ملفات غير مرتبطة كثيرة من قبل هذه الجلسة؛ لا تلمسها إلا بإذن خالد.
