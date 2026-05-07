@@ -96,3 +96,39 @@
 - **Database:** PostgreSQL (Supabase)
 - **Auth:** Supabase Auth
 - **PWA:** قابل للتثبيت على الأجهزة
+
+---
+
+## 🤝 نظام استمرارية الوكلاء | AI Continuity System (v1.5)
+
+> قاعدة ملزمة لكل وكيل (Codex، Claude Code، أو خالد) يعمل على هذا المستودع.
+
+### مصدر الحقيقة التشغيلية
+- `docs/ops/ai-handoff.md` — آخر تسليم نشط. **يُستبدل بالكامل** كل جلسة.
+- `docs/ops/work-journal.md` — السجل التاريخي. **Append-only** — لا يُعدّل بأثر رجعي.
+
+### الانضباط الإلزامي
+1. **بداية كل جلسة:** اقرأ `ai-handoff.md` كاملاً، ثم آخر 3 إدخالات في `work-journal.md`، ثم شغّل `git status` و `git log --oneline -5`.
+2. **قبل أي توصية مبنية على الـ handoff:** تحقق من الواقع. الملاحظات تتقادم.
+3. **قبل commit:** استبدل `ai-handoff.md` بالحالة الجديدة.
+4. **بعد commit:** ألحق فقرة في `work-journal.md` تذكر الـ hash.
+5. لا commits صامتة. كل commit يقابله سطر في الـ journal.
+
+### Current Active Areas (المسموحة)
+`BRAND` · `PRODUCT` · `UI` · `BACKEND` · `SUPABASE` · `SALES` · `PILOT` · `DOCS` · `OPS` · `SECURITY`
+
+كل handoff يصرّح بـ **Primary** واحد و Secondary اختياري.
+
+### مفردات Tags (الموحّدة)
+`#brand` · `#product` · `#ui` · `#backend` · `#supabase` · `#sales` · `#pilot` · `#docs` · `#ops` · `#security`
+
+أي tag جديد يُضاف هنا أولاً قبل استخدامه.
+
+### ملفات حساسة (لا تُلمس بدون إذن خالد)
+- `supabase/migrations/*` — قاعدة البيانات الإنتاجية.
+- `docs/CONSTITUTION.md` — هذا الملف نفسه.
+- أي ملف مذكور صراحة في قسم "ملفات حساسة" في `ai-handoff.md`.
+
+### مكافحة الملاحظات القديمة
+- كل handoff يحمل آخر `commit hash`. إذا الكود تطور والـ hash قديم → الملاحظة تاريخية، تحقّق قبل التصرف.
+- الواقع أصدق من الـ handoff. عند التعارض، حدّث الـ handoff فوراً.
