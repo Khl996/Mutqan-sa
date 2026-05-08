@@ -26,11 +26,10 @@ export function SiteNav({ variant = 'light' }: SiteNavProps) {
                 <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label={t('site.brand.name')}>
                     <MutqanLogo
                         variant="horizontal"
-                        size="lg"
+                        size="md"
                         theme={isDark ? 'dark' : 'light'}
                         label={t('site.brand.name')}
-                        subtitle={t('site.brand.descriptor')}
-                        className="shrink-0 [&_[role=img]]:h-12 [&_[role=img]]:max-w-[190px] sm:[&_[role=img]]:h-14 sm:[&_[role=img]]:max-w-[230px]"
+                        className="shrink-0"
                     />
                 </Link>
 

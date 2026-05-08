@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Codex — (commit pending) [logo-usage-system]
+Tags: #brand #ui #product #ops
+**هدف:** ضبط استخدام نسخ شعار متقن حسب السياق والحجم.
+**أُنجز:** مركزت اختيار اللون داخل `MutqanLogo`: الملون للفواتح، الأبيض عبر vector للداكن، الأسود للرسمي، والرمز للمساحات الضيقة؛ وخففت هيدر الموقع.
+**ملفات:** `src/components/ui/MutqanLogo.tsx`, `src/components/site/SiteNav.tsx`, `src/components/layout/AuthLayout.tsx`, `src/pages/site/PrivacyPolicyPage.tsx`, `src/pages/site/TermsOfUsePage.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ build، ✅ lint 0 errors / 219 warnings، ⏭ screenshot آلي لم يكتمل محليًا.
+**التالي:** خالد يراجع الهيدر والـ sidebar بصريًا ثم يدمج الفرع.
+
 ## 2026-05-08 — Codex — (commit pending) [logout-session-logo-fix]
 Tags: #product #brand #ui #supabase #ops
 **هدف:** إغلاق مشكلة بقاء جلسة Supabase بعد الخروج وتثبيت مسار الشعارات الحالي بدون رجوع للملفات البيضاء القديمة.

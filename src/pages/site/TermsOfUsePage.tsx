@@ -10,10 +10,10 @@ export default function TermsOfUsePage() {
                     <div className="flex items-center gap-2">
                         <Link to="/">
                             <MutqanLogo
-                                variant="horizontal"
+                                variant="monochrome"
                                 size="md"
                                 theme="light"
-                                label="Mutqan"
+                                label="متقن"
                             />
                         </Link>
                     </div>

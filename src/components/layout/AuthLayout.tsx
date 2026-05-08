@@ -59,7 +59,7 @@ export default function AuthLayout() {
                             size="lg"
                             theme="dark"
                             label={t('site.brand.name')}
-                            className="mb-8 drop-shadow-2xl [&>svg]:h-20 [&>svg]:w-20 lg:[&>svg]:h-24 lg:[&>svg]:w-24"
+                            className="mb-8 drop-shadow-2xl"
                         />
 
                         <div className="space-y-4">

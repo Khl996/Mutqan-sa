@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import logoBlack from '@/assets/brand/mutqan-logo-black.svg?raw'
 import logoColor from '@/assets/brand/mutqan-logo-color.svg?raw'
-import logoSymbol from '@/assets/brand/mutqan-symbol.svg?raw'
+import logoSymbolRaw from '@/assets/brand/mutqan-symbol.svg?raw'
 
 type MutqanLogoVariant = 'horizontal' | 'vertical' | 'symbol' | 'monochrome'
 type MutqanLogoSize = 'sm' | 'md' | 'lg'
@@ -18,15 +18,15 @@ interface MutqanLogoProps {
 }
 
 const lockupSizeClass: Record<MutqanLogoSize, string> = {
-    sm: 'h-7 max-w-28',
-    md: 'h-9 max-w-36',
-    lg: 'h-12 max-w-48',
+    sm: 'h-6 max-w-[112px]',
+    md: 'h-8 max-w-[150px]',
+    lg: 'h-10 max-w-[190px]',
 }
 
 const symbolSizeClass: Record<MutqanLogoSize, string> = {
-    sm: 'h-8 w-12',
-    md: 'h-10 w-14',
-    lg: 'h-12 w-16',
+    sm: 'h-8 w-8',
+    md: 'h-10 w-10',
+    lg: 'h-14 w-14',
 }
 
 const wordmarkSizeClass: Record<MutqanLogoSize, string> = {
@@ -40,6 +40,12 @@ const subtitleSizeClass: Record<MutqanLogoSize, string> = {
     md: 'text-[10px]',
     lg: 'text-xs',
 }
+
+// The supplied symbol SVG has a wide export viewBox; crop to the visible mark for square UI slots.
+const logoSymbol = logoSymbolRaw.replace(
+    'viewBox="0 0 1045.03 455.32"',
+    'viewBox="977.88 0.66 66.56 64.61"'
+)
 
 function InlineSvgLogo({
     svg,
@@ -81,23 +87,17 @@ export function MutqanLogo({
     const textColor = theme === 'dark' ? 'text-white' : 'text-[var(--mutqan-primary)]'
     const subtitleColor = theme === 'dark' ? 'text-white/70' : 'text-[var(--mutqan-muted)]'
     const canUseOfficialLockup = !vertical && !symbolOnly
-    const officialLockup = monochrome ? logoBlack : logoColor
+    const officialLockup = theme === 'dark' || monochrome ? logoBlack : logoColor
     const officialSymbol = logoSymbol
     const darkInvertClass = theme === 'dark' ? '[&>svg]:brightness-0 [&>svg]:invert' : ''
 
     if (symbolOnly) {
         return (
-            <span
-                className={cn('inline-flex items-center justify-center', className)}
-                role="img"
-                aria-label={resolvedLabel}
-            >
-                <InlineSvgLogo
-                    svg={officialSymbol}
-                    label={resolvedLabel}
-                    className={cn(symbolSizeClass[size], darkInvertClass)}
-                />
-            </span>
+            <InlineSvgLogo
+                svg={officialSymbol}
+                label={resolvedLabel}
+                className={cn(symbolSizeClass[size], darkInvertClass, className)}
+            />
         )
     }
 
