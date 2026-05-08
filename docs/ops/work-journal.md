@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Codex — 7c8e379 [logout-session-logo-fix/backfill]
+Tags: #product #brand #ui #supabase #ops
+**هدف:** سد فجوة توثيق إصلاح تسجيل الخروج الذي بقي إدخاله الأصلي على `commit pending`.
+**أُنجز:** تم ربط إصلاح تنظيف جلسة Supabase بالـ commit الفعلي `7c8e379`؛ الإصلاح يجعل `signOut` global وينظف مفاتيح `sb-*` و`currentTenantId` حتى لا يرجع المستخدم إلى `/platform` بعد الخروج.
+**ملفات:** `src/contexts/AuthContext.tsx`, `src/components/ui/MutqanLogo.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ build، ✅ lint 0 errors / 219 warnings، ✅ خالد أكد أن مشكلة الخروج نجحت.
+**التالي:** اعتماد الإدخال كتصحيح تاريخي وعدم تعديل إدخال `commit pending` القديم.
+
 ## 2026-05-08 — Codex — e4aa657 [logo-usage-system]
 Tags: #brand #ui #product #ops
 **هدف:** تثبيت توثيق ضبط استخدام الشعار بعد صدور الـ commit الفعلي.
