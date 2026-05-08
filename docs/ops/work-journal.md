@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-08 — Codex — e4aa657 [logo-usage-system]
+Tags: #brand #ui #product #ops
+**هدف:** تثبيت توثيق ضبط استخدام الشعار بعد صدور الـ commit الفعلي.
+**أُنجز:** تم ربط عمل شعار متقن بالـ commit `e4aa657` الذي يضبط استخدام الملون/الأبيض/الأسود/الرمز حسب السياق والحجم، مع توثيق أن الإدخال السابق كان قبل التثبيت.
+**ملفات:** `src/components/ui/MutqanLogo.tsx`, `src/components/site/SiteNav.tsx`, `src/components/layout/AuthLayout.tsx`, `src/pages/site/PrivacyPolicyPage.tsx`, `src/pages/site/TermsOfUsePage.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ build، ✅ lint 0 errors / 219 warnings، ✅ push إلى `origin/codex/logo-usage-system`.
+**التالي:** مراجعة بصرية للهيدر والـ sidebar ثم دمج الفرع.
+
 ## 2026-05-08 — Codex — (commit pending) [logo-usage-system]
 Tags: #brand #ui #product #ops
 **هدف:** ضبط استخدام نسخ شعار متقن حسب السياق والحجم.
