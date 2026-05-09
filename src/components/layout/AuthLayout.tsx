@@ -41,8 +41,8 @@ export default function AuthLayout() {
 
     return (
         <div
-            className="min-h-screen w-full relative overflow-x-hidden overflow-y-auto flex flex-row bg-[#071113]"
-            style={{ backgroundImage: 'linear-gradient(135deg, #071113 0%, #0d2225 55%, #11181d 100%)' }}
+            className="min-h-screen w-full relative overflow-x-hidden overflow-y-auto flex flex-row bg-[#0b1320]"
+            style={{ backgroundImage: 'linear-gradient(135deg, #0b1320 0%, #111f2e 55%, #132233 100%)' }}
             dir={isRTL ? 'rtl' : 'ltr'}
         >
             <div className="absolute inset-0 z-0 select-none opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />

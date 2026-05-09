@@ -63,7 +63,6 @@ export default function WorkOrderDetailsPage() {
     useEffect(() => {
         if (!id) return
 
-        console.log('Setting up real-time subscription for work order:', id)
         const channel = supabase
             .channel(`work-order-${id}`)
             .on(
@@ -75,7 +74,7 @@ export default function WorkOrderDetailsPage() {
                     filter: `id=eq.${id}`
                 },
                 (payload) => {
-                    console.log('Real-time update received:', payload)
+                    void payload
                     toast.info(isRTL ? 'تم تحديث حالة أمر العمل' : 'Work Order updated')
                     refetchWO()
                 }
@@ -89,7 +88,6 @@ export default function WorkOrderDetailsPage() {
                     filter: `work_order_id=eq.${id}`
                 },
                 () => {
-                    console.log('New log entry received')
                     refetchLogs()
                 }
             )

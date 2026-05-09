@@ -24,7 +24,7 @@ export function LanguageToggle({ variant = 'light', compact = false }: LanguageT
                 compact ? 'h-9 px-2 text-xs' : 'h-10 px-3 text-sm',
                 variant === 'dark'
                     ? 'border-white/10 bg-white/[0.06] text-white/78 hover:bg-white/[0.1] hover:text-white'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-[#3AAFA9]/40 hover:text-[#2E8F8A]'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-[#00b2a9]/40 hover:text-[var(--mutqan-accent)]'
             )}
             dir="ltr"
         >

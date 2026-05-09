@@ -177,7 +177,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const signOut = async () => {
-        await supabase.auth.signOut()
+        // Sign out from all tabs/sessions — prevents post-logout platform redirect bug
+        await supabase.auth.signOut({ scope: 'global' })
+        // Clear any stale Supabase auth tokens from localStorage
+        Object.keys(localStorage)
+            .filter((key) => key.startsWith('sb-'))
+            .forEach((key) => localStorage.removeItem(key))
         setUser(null)
         setSession(null)
         setProfile(null)

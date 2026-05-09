@@ -124,7 +124,7 @@ export default function ForgotPasswordPage() {
                             : t('authPages.forgot.resetTitle')
                         }
                     </h2>
-                    <p className="text-[#6C7A86] font-cairo text-base">
+                    <p className="text-[#6b7785] font-cairo text-base">
                         {step === 1
                             ? t('authPages.forgot.description')
                             : t('authPages.forgot.resetDescription')
@@ -146,15 +146,15 @@ export default function ForgotPasswordPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@company.com"
                                     className={cn(
-                                        'w-full h-12 bg-white border border-[#E9EEF1] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
-                                        'focus:border-[#3AAFA9] focus:ring-4 focus:ring-[#3AAFA9]/10 outline-none',
+                                        'w-full h-12 bg-white border border-[#e6e9ed] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
+                                        'focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none',
                                         isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'
                                     )}
                                     dir="ltr"
                                     required
                                 />
                                 <Mail className={cn(
-                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#3AAFA9] transition-colors',
+                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#00b2a9] transition-colors',
                                     isRTL ? 'right-4' : 'left-4'
                                 )} />
                             </div>
@@ -164,8 +164,8 @@ export default function ForgotPasswordPage() {
                             type="submit"
                             disabled={isLoading}
                             className={cn(
-                                'w-full h-12 rounded-xl font-bold text-white font-cairo text-base shadow-lg shadow-[#3AAFA9]/20',
-                                'bg-[#3AAFA9] hover:bg-[#2B8C87] transition-all duration-200',
+                                'w-full h-12 rounded-xl font-bold text-white font-cairo text-base shadow-lg shadow-[#00b2a9]/20',
+                                'bg-[#00b2a9] hover:bg-[#00968f] transition-all duration-200',
                                 'flex items-center justify-center gap-2',
                                 'disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.99]'
                             )}
@@ -197,8 +197,8 @@ export default function ForgotPasswordPage() {
                                     onChange={(e) => setOtp(e.target.value)}
                                     placeholder="123456"
                                     className={cn(
-                                        'w-full h-12 bg-white border border-[#E9EEF1] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
-                                        'focus:border-[#3AAFA9] focus:ring-4 focus:ring-[#3AAFA9]/10 outline-none',
+                                        'w-full h-12 bg-white border border-[#e6e9ed] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
+                                        'focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none',
                                         isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4',
                                         'text-center text-lg tracking-widest'
                                     )}
@@ -206,7 +206,7 @@ export default function ForgotPasswordPage() {
                                     required
                                 />
                                 <KeyRound className={cn(
-                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#3AAFA9] transition-colors',
+                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#00b2a9] transition-colors',
                                     isRTL ? 'right-4' : 'left-4'
                                 )} />
                             </div>
@@ -224,15 +224,15 @@ export default function ForgotPasswordPage() {
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     placeholder="••••••••"
                                     className={cn(
-                                        'w-full h-12 bg-white border border-[#E9EEF1] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
-                                        'focus:border-[#3AAFA9] focus:ring-4 focus:ring-[#3AAFA9]/10 outline-none',
+                                        'w-full h-12 bg-white border border-[#e6e9ed] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
+                                        'focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none',
                                         isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'
                                     )}
                                     dir="ltr"
                                     required
                                 />
                                 <Lock className={cn(
-                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#3AAFA9] transition-colors',
+                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#00b2a9] transition-colors',
                                     isRTL ? 'right-4' : 'left-4'
                                 )} />
                             </div>
@@ -250,15 +250,15 @@ export default function ForgotPasswordPage() {
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     placeholder="••••••••"
                                     className={cn(
-                                        'w-full h-12 bg-white border border-[#E9EEF1] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
-                                        'focus:border-[#3AAFA9] focus:ring-4 focus:ring-[#3AAFA9]/10 outline-none',
+                                        'w-full h-12 bg-white border border-[#e6e9ed] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
+                                        'focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none',
                                         isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'
                                     )}
                                     dir="ltr"
                                     required
                                 />
                                 <Lock className={cn(
-                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#3AAFA9] transition-colors',
+                                    'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#00b2a9] transition-colors',
                                     isRTL ? 'right-4' : 'left-4'
                                 )} />
                             </div>
@@ -268,8 +268,8 @@ export default function ForgotPasswordPage() {
                             type="submit"
                             disabled={isLoading}
                             className={cn(
-                                'w-full h-12 rounded-xl font-bold text-white font-cairo text-base shadow-lg shadow-[#3AAFA9]/20',
-                                'bg-[#3AAFA9] hover:bg-[#2B8C87] transition-all duration-200',
+                                'w-full h-12 rounded-xl font-bold text-white font-cairo text-base shadow-lg shadow-[#00b2a9]/20',
+                                'bg-[#00b2a9] hover:bg-[#00968f] transition-all duration-200',
                                 'flex items-center justify-center gap-2',
                                 'disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.99]'
                             )}
@@ -287,10 +287,10 @@ export default function ForgotPasswordPage() {
                 )}
 
                 {/* Back Link */}
-                <div className="mt-8 text-center pt-6 border-t border-[#E9EEF1]">
+                <div className="mt-8 text-center pt-6 border-t border-[#e6e9ed]">
                     <button
                         onClick={() => step === 2 ? setStep(1) : navigate('/login')}
-                        className="text-sm font-medium text-[#6C7A86] hover:text-[#3AAFA9] transition-colors font-cairo flex items-center justify-center gap-2 mx-auto"
+                        className="text-sm font-medium text-[#6b7785] hover:text-[#00b2a9] transition-colors font-cairo flex items-center justify-center gap-2 mx-auto"
                     >
                         {isRTL ? (
                             <>
