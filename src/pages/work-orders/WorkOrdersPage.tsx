@@ -279,16 +279,15 @@ export default function WorkOrdersPage() {
 
             {/* Work Orders List */}
             {filteredWorkOrders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <ClipboardList className="w-16 h-16 text-muted/50 mb-4" />
-                    <h3 className="text-lg font-bold text-primary font-cairo mb-2">
-                        {isRTL ? 'لا توجد بلاغات' : 'No work orders found'}
+                <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                    <ClipboardList className="mb-4 h-16 w-16 text-muted-foreground/50" />
+                    <h3 className="mb-2 max-w-md font-cairo text-lg font-bold text-primary">
+                        {isRTL ? 'لا توجد أوامر عمل بعد' : 'No work orders yet'}
                     </h3>
-                    <p className="text-muted font-cairo">
+                    <p className="max-w-xl font-cairo text-sm leading-7 text-muted-foreground">
                         {isRTL
-                            ? 'قم بإنشاء بلاغ جديد للبدء'
-                            : 'Create a new work order to get started'
-                        }
+                            ? 'أوامر العمل هي بداية تحويل البلاغات اليومية إلى سجل موثق: من المشكلة، إلى الفني، إلى الإثبات، ثم القرار.'
+                            : 'Work orders turn daily requests into a documented operational record: from issue, to technician, to proof of work, then decision.'}
                     </p>
                 </div>
             ) : (

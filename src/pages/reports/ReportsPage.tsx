@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageHeader } from '@/components/ui/page-header'
+import { OperationalDecisionBrief } from '@/components/reports/OperationalDecisionBrief'
 import { ReportsDecisionBrief } from '@/components/reports/ReportsDecisionBrief'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
@@ -171,6 +172,15 @@ export default function ReportsPage() {
                         {isRTL ? 'تصدير الملخص' : 'Export Summary'}
                     </Button>
                 ) : null}
+            />
+
+            <OperationalDecisionBrief
+                metrics={metrics}
+                workOrderReport={workOrderReport}
+                inventoryReport={inventoryReport}
+                pmCompliance={pmCompliance}
+                locale={locale}
+                isRTL={isRTL}
             />
 
             <ReportsDecisionBrief
