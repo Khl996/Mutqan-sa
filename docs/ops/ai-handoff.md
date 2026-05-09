@@ -6,30 +6,30 @@
 **التاريخ:** 2026-05-09
 **الوكيل:** Codex
 **الفرع:** codex/pilot-sales-ops-snapshot
-**آخر commit:** (commit pending) — Brand reference docs commit
+**آخر commit:** (commit pending) — Client-facing pilot offer draft
 
 ## Current Active Areas
-- **Primary:** BRAND
-- Secondary: DOCS, UI
+- **Primary:** SALES
+- Secondary: PILOT, DOCS
 
-Tags: #brand #docs #ui
+Tags: #sales #pilot #docs
 
 ## السياق الاستراتيجي
 - North Star → `docs/strategy/mutqan-company-os.md`
 - Sprint الحالي → `docs/strategy/pilot-v1-scope.md`
 - قرارات مقفلة → `docs/CONSTITUTION.md`
 - Brand foundation → `docs/brand/`
-- Brand v2 reference → `docs/brand/v2/`
 - Operating model → `docs/ops/ai-executive-operating-model.md`
 
 ## ما أُنجز في هذه الجلسة
-- تنفيذ commit أول لحزمة صقل Brand v2 على الصفحات العامة وصفحات الدخول: `acc0733`.
-- تجهيز مرجع الهوية داخل `docs/brand` كحزمة توثيق قابلة للاستخدام من Codex والمصممين وFigma/Canva لاحقًا.
-- إدخال مرجع Brand v2 المرئي داخل `docs/brand/v2` كمرجع HTML/CSS ثابت للهوية، التوكنز، UI Kit، القوالب، الموشن، والهاندوف.
-- التأكد من عدم وجود مؤشرات ترميز عربي مكسور في عينات ملفات `docs/brand` وملف عرض Pilot العميل.
+- تنفيذ commit صقل Brand/UI: `acc0733`.
+- تنفيذ commit مرجع الهوية Brand v2: `6fa79fd`.
+- فحص ملف عرض Pilot الموجه للعميل والتأكد أن إشارات AI / IoT / BMS / WhatsApp / 24/7 واردة كاستثناءات خارج النطاق، لا كوعود حالية.
+- تجهيز ملف Pilot client-facing وREADME الخاص بحزمة Pilot للدخول في commit مستقل.
 
 ## ملفات لُمست
-- `docs/brand/**` — إضافة حزمة إرشادات الهوية ومرجع Brand v2.
+- `docs/sales/pilot-package/README-ar.md` — إضافة ملف العرض الجديد إلى فهرس الحزمة.
+- `docs/sales/pilot-package/11-client-facing-pilot-offer-ar.md` — مسودة عرض عميل مختصرة قابلة للتنقيح قبل الإرسال بعد الديمو.
 - `docs/ops/ai-handoff.md` — استبدال كامل بآخر حالة نشطة.
 - `docs/ops/work-journal.md` — إضافة دخول جديد للجلسة.
 
@@ -37,28 +37,27 @@ Tags: #brand #docs #ui
 - `supabase/migrations/*` — لم تُلمس.
 - `docs/CONSTITUTION.md` — لم يُعدل.
 - `src/hooks/useTenants.ts` — لم يُلمس في هذه الجلسة؛ ظهوره في `git status` سابق/خارج هذا النطاق.
-- `docs/sales/pilot-package/README-ar.md` و`11-client-facing-pilot-offer-ar.md` — لم تُدرج في commit الهوية؛ تحتاج commit مبيعات منفصل.
-- `Mutqan-Visual-Identity-v2.zip` — لم يُدرج في Git افتراضيًا لأن المصدر موجود داخل `docs/brand/v2`.
+- `Mutqan-Visual-Identity-v2.zip` — لم يُدرج في Git.
+- ملفات ops القديمة غير المتتبعة بتاريخ 2026-05-03 — لم تُدرج في هذا commit.
 
 ## التحقق
-- ✅ commit `acc0733` موجود لحزمة Brand/UI.
-- ✅ فحص عينات ترميز `docs/brand` وPilot draft: لا توجد مؤشرات mojibake أو replacement characters.
-- ✅ لا توجد ملفات staged غير مقصودة قبل commit الحالي.
-- ⏭ build/lint غير معادين لهذا commit لأنه توثيق فقط؛ آخر تحقق للكود كان ناجحًا قبل commit `acc0733`.
+- ✅ فحص مفردات الوعود العالية داخل ملف Pilot: AI / IoT / BMS / WhatsApp / 24/7 واردة كاستثناءات أو حدود نطاق.
+- ✅ فحص عينات ترميز عربية سابقًا: لا توجد مؤشرات mojibake أو replacement characters.
+- ⏭ build/lint غير معادين لهذا commit لأنه توثيق مبيعات فقط؛ آخر تحقق للكود كان ناجحًا قبل commit `acc0733`.
 
 ## الحالة الحالية
-مرجع الهوية أصبح جاهزًا للدخول إلى Git كحزمة مستقلة، بينما صقل تطبيق Brand v2 على المنتج محفوظ في commit منفصل سابقًا. لا تزال هناك ملفات غير مرتبطة خارج هذا المسار: ملف Pilot client-facing، ملفات ops قديمة غير متتبعة، ملف ZIP، وظهور `useTenants.ts` بدون diff فعلي واضح.
+حزم اليوم الأساسية أصبحت جاهزة للتثبيت في Git بثلاثة مسارات منفصلة: صقل Brand/UI، مرجع Brand v2، ومسودة عرض Pilot الموجهة للعميل. المتبقي خارج Git الآن هو ملف ZIP، بعض ملفات ops القديمة غير المتتبعة، وظهور `src/hooks/useTenants.ts` كملف معدل دون diff فعلي واضح.
 
 ## أفضل خطوة تالية
-1. إنشاء commit مستقل لحزمة `docs/brand`.
-2. بعدها مراجعة ملف Pilot client-facing وتحديد هل يدخل commit sales منفصل.
-3. إبقاء ملف ZIP خارج Git ما لم يطلب خالد حفظه كأرشيف.
+1. إنشاء commit مستقل لملف Pilot client-facing.
+2. بعد ذلك مراجعة الحالة النهائية للـ working tree.
+3. تقرير لخالد بالـ commits الثلاثة وما بقي خارجها.
 
 ## أسئلة مفتوحة لخالد
-- هل تريد إدخال ملف `Mutqan-Visual-Identity-v2.zip` في Git أم نتركه خارج المستودع؟
-- هل نراجع ملف Pilot client-facing الآن قبل commit منفصل؟
+- هل تريد إدخال ملف ZIP في Git أم تركه خارج المستودع؟
+- هل تريد مراجعة ملفات ops القديمة غير المتتبعة الآن أم لاحقًا؟
 
 ## تحذيرات للوكيل التالي
-- لا تخلط ملفات Brand docs مع ملفات Sales/Pilot في نفس commit.
-- لا تلمس `useTenants.ts` أو migrations من هذا المسار.
-- terminal output العربي قد يظهر mojibake، لكن فحص Node أكد سلامة عينات الملفات.
+- لا تدمج `useTenants.ts` في أي commit من هذا المسار.
+- لا تدخل ملف ZIP في Git بدون قرار واضح من خالد.
+- ملف Pilot client-facing مسودة عميل، لكنه لا يزال يحتاج مراجعة بشرية قبل الإرسال الرسمي.

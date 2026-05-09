@@ -35,6 +35,7 @@
 8. `08-change-request-policy-ar.md` - سياسة طلبات التغيير.
 9. `09-weekly-pilot-report-template-ar.md` - قالب تقرير أسبوعي.
 10. `10-end-of-pilot-report-template-ar.md` - قالب تقرير نهاية التجربة.
+11. `11-client-facing-pilot-offer-ar.md` - نسخة عميل مختصرة قابلة للتنقيح قبل الإرسال بعد الديمو.
 
 ## ملاحظة مهمة
 

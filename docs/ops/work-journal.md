@@ -7,6 +7,14 @@
 ---
 
 ## 2026-05-09 — Codex — (commit pending)
+Tags: #sales #pilot #docs
+**هدف:** إدخال مسودة عرض Pilot الموجهة للعميل كحزمة مبيعات مستقلة قابلة للتنقيح بعد الديمو.
+**أُنجز:** فحص الوعود العالية داخل العرض، والتأكد أن AI/IoT/BMS/WhatsApp/24/7 مذكورة كاستثناءات خارج النطاق لا كقدرات حالية.
+**ملفات:** `docs/sales/pilot-package/11-client-facing-pilot-offer-ar.md`, `docs/sales/pilot-package/README-ar.md`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ No Broken Promise scan للمفردات الحساسة؛ ⏭ لا build/lint لأن التغيير توثيق مبيعات فقط.
+**التالي:** مراجعة بشرية للعرض قبل إرساله رسميًا لأي عميل.
+
+## 2026-05-09 — Codex — (commit pending)
 Tags: #brand #docs #ui
 **هدف:** إدخال مرجع هوية متقن وBrand v2 إلى المستودع كحزمة توثيق مستقلة بعد commit صقل الواجهة.
 **أُنجز:** تجهيز `docs/brand/**` للإضافة، شامل Brand Guidelines markdown pack ومرجع `docs/brand/v2` المرئي HTML/CSS، مع إبقاء الـ ZIP وملفات Sales خارج هذا commit.
