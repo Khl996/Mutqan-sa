@@ -8,6 +8,14 @@
 
 ## 2026-05-09 — Codex — (commit pending)
 Tags: #ui #brand #docs
+**هدف:** تصحيح tenant/dashboard sidebar تحديدًا بعد توضيح أنه ليس `PlatformSidebar`.
+**أُنجز:** تثبيت الخلفية على `#0B1320`، وضبط inactive إلى `text-white/80`، وactive إلى `bg-[#00B2A9] text-white`، والحدود إلى `border-white/10`.
+**ملفات:** `src/components/layout/Sidebar.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ build؛ ✅ lint بلا أخطاء؛ ✅ ربط `/dashboard` و`/assets` و`/work-orders` عبر `DashboardLayout`; ✅ لا tokens خلفية متغيرة داخل `Sidebar`.
+**التالي:** دفع الفرع ومراجعة النشر بصريًا على tenant demo.
+
+## 2026-05-09 — Codex — (commit pending)
+Tags: #ui #brand #docs
 **هدف:** تثبيت ألوان tenant sidebar في الوضع الداكن بعد ظهور الخلفية فاتحة مع شعار ونصوص بيضاء.
 **أُنجز:** إضافة خلفية inline فحمية و`!bg-[#0b1320]`، وتعديل ألوان عناصر التنقل إلى white/72 مع active تركواز Brand v2.
 **ملفات:** `src/components/layout/Sidebar.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.

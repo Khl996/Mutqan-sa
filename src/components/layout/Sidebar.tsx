@@ -82,16 +82,16 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
 
     return (
         <aside
-            style={{ backgroundColor: '#0b1320', color: '#ffffff' }}
+            style={{ backgroundColor: '#0B1320', color: '#ffffff' }}
             className={cn(
-                'fixed top-0 h-full w-64 !bg-[#0b1320] !text-white z-50 transition-transform duration-300 lg:transition-all',
-                'dark:!bg-[#0b1320] dark:!text-white',
+                'fixed top-0 h-full w-64 !bg-[#0B1320] !text-white z-50 transition-transform duration-300 lg:transition-all',
+                'dark:!bg-[#0B1320] dark:!text-white',
                 compact ? 'lg:w-20' : 'lg:w-64',
                 mobileOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'),
-                isRTL ? 'right-0' : 'left-0'
+                isRTL ? 'right-0 border-l border-white/10' : 'left-0 border-r border-white/10'
             )}
         >
-            <div className="h-16 flex items-center justify-center border-b border-white/10 bg-[#0b1320]">
+            <div className="h-16 flex items-center justify-center border-b border-white/10 bg-[#0B1320]">
                 <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-3">
                     <MutqanLogo
                         variant={compact ? 'symbol' : 'horizontal'}
@@ -111,8 +111,8 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
                             onClick={onNavigate}
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                                'text-white/72 hover:bg-white/10 hover:text-white',
-                                isActive(item.href) && 'bg-[#00b2a9] text-white shadow-[0_10px_22px_rgba(0,178,169,0.18)]',
+                                'text-white/80 hover:bg-white/10 hover:text-white',
+                                isActive(item.href) && 'bg-[#00B2A9] text-white shadow-[0_10px_22px_rgba(0,178,169,0.18)]',
                                 compact && 'justify-center'
                             )}
                         >
@@ -136,8 +136,8 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
                             onClick={onNavigate}
                             className={cn(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                                'text-white/72 hover:bg-white/10 hover:text-white',
-                                isActive(item.href) && 'bg-[#00b2a9] text-white shadow-[0_10px_22px_rgba(0,178,169,0.18)]',
+                                'text-white/80 hover:bg-white/10 hover:text-white',
+                                isActive(item.href) && 'bg-[#00B2A9] text-white shadow-[0_10px_22px_rgba(0,178,169,0.18)]',
                                 compact && 'justify-center'
                             )}
                         >
