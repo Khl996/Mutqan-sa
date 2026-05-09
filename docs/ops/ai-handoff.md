@@ -6,7 +6,7 @@
 **التاريخ:** 2026-05-09
 **الوكيل:** Codex
 **الفرع:** codex/pilot-sales-ops-snapshot
-**آخر commit:** (commit pending) — Dark mode sidebar contrast fix
+**آخر commit:** (commit pending) — Tenant sidebar dark contrast hardening
 
 ## Current Active Areas
 - **Primary:** UI
@@ -23,15 +23,13 @@ Tags: #ui #brand #docs
 - Operating model → `docs/ops/ai-executive-operating-model.md`
 
 ## ما أُنجز في هذه الجلسة
-- إصلاح مشكلة السايدبار في الوضع الداكن عندما يظهر السطح أبيض مع نصوص وشعار أبيض.
-- تثبيت `PlatformSidebar` على خلفية Brand v2 الفحمية `#0b1320` في الوضعين الفاتح والداكن.
-- جعل شعار `PlatformSidebar` يستخدم النسخة البيضاء دائمًا لأنه فوق سطح داكن ثابت.
-- تحديث ألوان عناصر التنقل، الأيقونات، الفواصل، زر الخروج، وزر التصغير داخل `PlatformSidebar` لتعمل فوق الخلفية الداكنة.
-- إضافة تثبيت صريح للون `Sidebar` العادي في الوضع الداكن حتى لا يتأثر بمتغيرات الثيم.
+- تأكيد أن المشكلة الحالية في tenant sidebar داخل `src/components/layout/Sidebar.tsx` وليست `PlatformSidebar`.
+- تثبيت خلفية tenant sidebar على لون Brand v2 الفحمي `#0b1320` عبر `!bg-[#0b1320]` وinline background لحمايته من أي override في الثيم.
+- توضيح ألوان عناصر التنقل داخل tenant sidebar: inactive باللون الأبيض الشفاف، hover أبيض أوضح، active تركواز `#00b2a9`.
+- تثبيت لون رأس السايدبار والشعار والنصوص فوق السطح الداكن حتى لا تظهر خلفية فاتحة مع نصوص بيضاء في dark mode.
 
 ## ملفات لُمست
-- `src/components/layout/PlatformSidebar.tsx` — تثبيت السطح الداكن وتباين النصوص والشعار في الوضع الداكن.
-- `src/components/layout/Sidebar.tsx` — تثبيت صريح للون السايدبار في الدارك.
+- `src/components/layout/Sidebar.tsx` — إصلاح tenant sidebar في الوضع الداكن وفق Brand v2.
 - `docs/ops/ai-handoff.md` — استبدال كامل بآخر حالة نشطة.
 - `docs/ops/work-journal.md` — إضافة دخول جديد للجلسة.
 
@@ -45,19 +43,19 @@ Tags: #ui #brand #docs
 ## التحقق
 - ✅ `npm run build` — نجح.
 - ✅ `npm run lint` — نجح بلا أخطاء؛ توجد 219 تحذيرًا قديمًا.
-- ✅ فحص سريع: لم تعد `PlatformSidebar` تعتمد على `bg-mutqan-surface` أو `text-foreground` أو `text-muted-foreground` للسطح/النصوص الأساسية.
 
 ## الحالة الحالية
-السايدبار داخل مسار المنصة والسايدبار العادي أصبحا مثبتين على لون فحمي ثابت في الوضع الداكن، مع نصوص وشعار وفواصل مناسبة لهذا السطح. الفرع يحتوي الآن على commits غير مرفوعة بعد، وسيتم دفعها بعد commit هذا الإصلاح.
+tenant sidebar أصبح مثبتًا على سطح فحمي واضح في الوضع الداكن، مع نصوص وأيقونات وشعار قابلة للقراءة ومتسقة مع Brand v2. الفرع يحتوي الآن على تعديل جاهز للـ commit والرفع، مع بقاء ملفات غير مرتبطة خارج نطاق هذا الإصلاح.
 
 ## أفضل خطوة تالية
-1. إنشاء commit لإصلاح السايدبار.
+1. إنشاء commit لإصلاح tenant sidebar.
 2. دفع الفرع إلى remote.
-3. مراجعة بصرية سريعة في المتصفح بعد التحديث إذا بقيت أي ملاحظة عينية.
+3. مراجعة المتصفح بعد النشر للتأكد أن السايدبار لم يعد يظهر كسطح فاتح في dark mode.
 
 ## أسئلة مفتوحة لخالد
-- لا توجد أسئلة تمنع الدفع.
+- لا توجد أسئلة تمنع الرفع.
 
 ## تحذيرات للوكيل التالي
-- لا تخلط هذا الإصلاح مع `useTenants.ts` أو ملفات ops القديمة غير المتتبعة.
+- لا تخلط هذا الإصلاح مع `PlatformSidebar`; المشكلة التي عولجت هنا في tenant sidebar فقط.
+- لا تدرج `src/hooks/useTenants.ts` أو ملفات ops غير المتتبعة أو ZIP الهوية ضمن هذا commit.
 - تحذيرات lint الحالية قديمة وليست نتيجة هذا التعديل.

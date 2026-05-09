@@ -8,6 +8,14 @@
 
 ## 2026-05-09 — Codex — (commit pending)
 Tags: #ui #brand #docs
+**هدف:** تثبيت ألوان tenant sidebar في الوضع الداكن بعد ظهور الخلفية فاتحة مع شعار ونصوص بيضاء.
+**أُنجز:** إضافة خلفية inline فحمية و`!bg-[#0b1320]`، وتعديل ألوان عناصر التنقل إلى white/72 مع active تركواز Brand v2.
+**ملفات:** `src/components/layout/Sidebar.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ `npm run build`; ✅ `npm run lint` بلا أخطاء (219 تحذيرًا قديمًا).
+**التالي:** دفع الفرع ثم مراجعة المتصفح بعد وصول النشر.
+
+## 2026-05-09 — Codex — (commit pending)
+Tags: #ui #brand #docs
 **هدف:** إصلاح تباين السايدبار في الوضع الداكن ومنع تحوله إلى سطح فاتح مع نصوص وشعار أبيض.
 **أُنجز:** تثبيت `PlatformSidebar` و`Sidebar` على خلفية Brand v2 فحمية، واستخدام شعار أبيض دائمًا فوق السطح الداكن، وتحديث ألوان عناصر التنقل والفواصل.
 **ملفات:** `src/components/layout/PlatformSidebar.tsx`, `src/components/layout/Sidebar.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
