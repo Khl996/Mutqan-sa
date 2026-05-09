@@ -6,13 +6,13 @@
 **التاريخ:** 2026-05-09
 **الوكيل:** Codex
 **الفرع:** codex/pilot-sales-ops-snapshot
-**آخر commit:** (commit pending) — Brand v2 public/app surfaces polish
+**آخر commit:** (commit pending) — Brand reference docs commit
 
 ## Current Active Areas
 - **Primary:** BRAND
-- Secondary: UI, DOCS
+- Secondary: DOCS, UI
 
-Tags: #brand #ui #docs
+Tags: #brand #docs #ui
 
 ## السياق الاستراتيجي
 - North Star → `docs/strategy/mutqan-company-os.md`
@@ -23,30 +23,13 @@ Tags: #brand #ui #docs
 - Operating model → `docs/ops/ai-executive-operating-model.md`
 
 ## ما أُنجز في هذه الجلسة
-- تحسين تطبيق Brand v2 على صفحة الهبوط والصفحات العامة التابعة لها.
-- تخفيف زحمة صفحة الهبوط عبر تقليل كثافة hero، workflow، ومعاينة المنتج، مع الحفاظ على القصة التجارية الأساسية.
-- توحيد ألوان الصفحات العامة وصفحات الدخول مع مرجع Brand v2: الفحمي `#0b1320`، التركواز `#00b2a9`، والخلفيات/الحدود من متغيرات `--mutqan-*`.
-- إصلاح اختيار الشعار حسب الوضع الفاتح/الداكن في `SiteNav` و`SiteFooter` و`PlatformSidebar`.
-- تثبيت خلفية `Sidebar` الأساسية على فحمي Brand v2 حتى لا تنقلب بشكل خاطئ في الوضع الداكن.
-- إعادة legal pages إلى chrome موحد باستخدام `SiteNav` و`SiteFooter` بدل تكرار شكل مستقل.
-- تحديث صفحات الدخول والتسجيل واستعادة كلمة المرور لتستخدم ألوان Brand v2 بدل الألوان القديمة.
+- تنفيذ commit أول لحزمة صقل Brand v2 على الصفحات العامة وصفحات الدخول: `acc0733`.
+- تجهيز مرجع الهوية داخل `docs/brand` كحزمة توثيق قابلة للاستخدام من Codex والمصممين وFigma/Canva لاحقًا.
+- إدخال مرجع Brand v2 المرئي داخل `docs/brand/v2` كمرجع HTML/CSS ثابت للهوية، التوكنز، UI Kit، القوالب، الموشن، والهاندوف.
+- التأكد من عدم وجود مؤشرات ترميز عربي مكسور في عينات ملفات `docs/brand` وملف عرض Pilot العميل.
 
 ## ملفات لُمست
-- `src/pages/LandingPage.tsx` — صقل صفحة الهبوط وتقليل الزحمة وتطبيق Brand v2.
-- `src/pages/site/AboutPage.tsx` — توحيد hero والألوان مع Brand v2.
-- `src/pages/site/ContactPage.tsx` — توحيد الخلفيات والأزرار والحقول مع Brand v2.
-- `src/pages/site/PrivacyPolicyPage.tsx` — استخدام chrome موحد وسطح Brand v2.
-- `src/pages/site/TermsOfUsePage.tsx` — استخدام chrome موحد وسطح Brand v2.
-- `src/pages/auth/LoginPage.tsx` — تحديث ألوان Brand v2.
-- `src/pages/auth/ForgotPasswordPage.tsx` — تحديث ألوان Brand v2.
-- `src/pages/auth/RegisterPage.tsx` — تحديث ألوان Brand v2.
-- `src/pages/auth/CompleteRegistrationPage.tsx` — تحديث ألوان Brand v2.
-- `src/components/site/SiteNav.tsx` — اختيار شعار مناسب للوضع الداكن/الفاتح وتخفيف الحجم.
-- `src/components/site/SiteFooter.tsx` — اختيار شعار مناسب للوضع الداكن/الفاتح وتحديث ألوان Brand v2.
-- `src/components/site/LanguageToggle.tsx` — تحديث accent واستعادة النص العربي الصحيح.
-- `src/components/layout/PlatformSidebar.tsx` — تمرير theme مناسب لشعار متقن.
-- `src/components/layout/Sidebar.tsx` — تثبيت لون الشريط الجانبي على فحمي Brand v2.
-- `src/components/layout/AuthLayout.tsx` — تحديث خلفية صفحات المصادقة.
+- `docs/brand/**` — إضافة حزمة إرشادات الهوية ومرجع Brand v2.
 - `docs/ops/ai-handoff.md` — استبدال كامل بآخر حالة نشطة.
 - `docs/ops/work-journal.md` — إضافة دخول جديد للجلسة.
 
@@ -54,30 +37,28 @@ Tags: #brand #ui #docs
 - `supabase/migrations/*` — لم تُلمس.
 - `docs/CONSTITUTION.md` — لم يُعدل.
 - `src/hooks/useTenants.ts` — لم يُلمس في هذه الجلسة؛ ظهوره في `git status` سابق/خارج هذا النطاق.
-- `docs/sales/pilot-package/README-ar.md` — لم يُلمس في هذه الجلسة؛ تغييره سابق/خارج هذا النطاق.
-- ملفات `docs/brand/*` غير المتعقبة — لم تُلمس في هذه الجلسة.
+- `docs/sales/pilot-package/README-ar.md` و`11-client-facing-pilot-offer-ar.md` — لم تُدرج في commit الهوية؛ تحتاج commit مبيعات منفصل.
+- `Mutqan-Visual-Identity-v2.zip` — لم يُدرج في Git افتراضيًا لأن المصدر موجود داخل `docs/brand/v2`.
 
 ## التحقق
-- ✅ `npm run build` — نجح.
-- ✅ `npm run lint` — نجح بلا أخطاء؛ توجد تحذيرات قديمة غير مرتبطة بهذا العمل.
-- ✅ فحص عدم وجود `flowmark` داخل `src` — لا يظهر في المنتج.
-- ✅ فحص بقايا الألوان القديمة في الأسطح التي لُمست — لا توجد بقايا في النطاق المستهدف.
-- ✅ فحص سريع للنصوص العربية الحساسة بعد التعديل — لا توجد مؤشرات mojibake في الملفات التي لُمست.
+- ✅ commit `acc0733` موجود لحزمة Brand/UI.
+- ✅ فحص عينات ترميز `docs/brand` وPilot draft: لا توجد مؤشرات mojibake أو replacement characters.
+- ✅ لا توجد ملفات staged غير مقصودة قبل commit الحالي.
+- ⏭ build/lint غير معادين لهذا commit لأنه توثيق فقط؛ آخر تحقق للكود كان ناجحًا قبل commit `acc0733`.
 
 ## الحالة الحالية
-تطبيق Brand v2 أصبح أوضح على صفحة الهبوط والصفحات العامة وصفحات الدخول، والشعار الآن يختار النسخة المناسبة في الأسطح الرئيسية عند تغيّر الوضع الفاتح أو الداكن. ما زال يلزم إجراء مراجعة بصرية نهائية في المتصفح قبل النشر، خصوصًا على أحجام شاشة مختلفة، لأن هذا العمل صقل بصري واسع نسبيًا ولم يتم التقاط screenshots نهائية داخل الجلسة.
+مرجع الهوية أصبح جاهزًا للدخول إلى Git كحزمة مستقلة، بينما صقل تطبيق Brand v2 على المنتج محفوظ في commit منفصل سابقًا. لا تزال هناك ملفات غير مرتبطة خارج هذا المسار: ملف Pilot client-facing، ملفات ops قديمة غير متتبعة، ملف ZIP، وظهور `useTenants.ts` بدون diff فعلي واضح.
 
 ## أفضل خطوة تالية
-1. فتح صفحة الهبوط والصفحات التابعة في المتصفح ومراجعة الوضع الفاتح/الداكن بصريًا.
-2. بعد الموافقة البصرية، فصل تغييرات Brand/UI عن الملفات غير المرتبطة قبل أي commit أو PR.
-3. استكمال صقل باقي صفحات المنتج بعد صفحات الديمو الثلاث حسب قرار خالد.
+1. إنشاء commit مستقل لحزمة `docs/brand`.
+2. بعدها مراجعة ملف Pilot client-facing وتحديد هل يدخل commit sales منفصل.
+3. إبقاء ملف ZIP خارج Git ما لم يطلب خالد حفظه كأرشيف.
 
 ## أسئلة مفتوحة لخالد
-- هل تريد اعتماد هذه الحزمة كـ commit مستقل للـ Brand/UI بعد المراجعة البصرية؟
-- هل نبدأ بعدها مباشرة بمراجعة صفحات الديمو الثلاث داخل التطبيق أم نكمل أولًا الصفحات العامة؟
+- هل تريد إدخال ملف `Mutqan-Visual-Identity-v2.zip` في Git أم نتركه خارج المستودع؟
+- هل نراجع ملف Pilot client-facing الآن قبل commit منفصل؟
 
 ## تحذيرات للوكيل التالي
-- لا تخلط هذا المسار مع شغل Claude الأمني أو `useTenants.ts`.
-- لا تلمس `supabase/migrations/*` أو `docs/CONSTITUTION.md` بدون إذن خالد.
-- working tree يحتوي تغييرات غير مرتبطة كانت موجودة قبل هذه الجلسة؛ راجع `git status` قبل أي staging.
-- لا تعتمد على terminal output العربي وحده، لأنه قد يظهر mojibake بسبب ترميز PowerShell؛ افحص الملف نفسه أو diff عند الحاجة.
+- لا تخلط ملفات Brand docs مع ملفات Sales/Pilot في نفس commit.
+- لا تلمس `useTenants.ts` أو migrations من هذا المسار.
+- terminal output العربي قد يظهر mojibake، لكن فحص Node أكد سلامة عينات الملفات.

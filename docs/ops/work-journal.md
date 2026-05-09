@@ -7,6 +7,14 @@
 ---
 
 ## 2026-05-09 — Codex — (commit pending)
+Tags: #brand #docs #ui
+**هدف:** إدخال مرجع هوية متقن وBrand v2 إلى المستودع كحزمة توثيق مستقلة بعد commit صقل الواجهة.
+**أُنجز:** تجهيز `docs/brand/**` للإضافة، شامل Brand Guidelines markdown pack ومرجع `docs/brand/v2` المرئي HTML/CSS، مع إبقاء الـ ZIP وملفات Sales خارج هذا commit.
+**ملفات:** `docs/brand/**`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ فحص عينات ترميز عربية بلا mojibake؛ ⏭ لا build/lint لأن التغيير توثيق فقط.
+**التالي:** مراجعة ملف Pilot client-facing ثم commit منفصل لمسار Sales/Pilot عند الموافقة.
+
+## 2026-05-09 — Codex — (commit pending)
 Tags: #brand #ui #docs
 **هدف:** صقل تطبيق Brand v2 على صفحة الهبوط والصفحات العامة/الدخول ومعالجة تبديل الشعار في الوضع الداكن.
 **أُنجز:** توحيد الألوان مع Brand v2، تخفيف زحمة الهبوط ومعاينة المنتج، تفعيل شعار مناسب للفاتح/الداكن في SiteNav/SiteFooter/PlatformSidebar، وتوحيد legal pages مع SiteNav/SiteFooter.

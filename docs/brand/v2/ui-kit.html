@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UI Kit - Mutqan v2</title>
+    <link rel="stylesheet" href="./mutqan-brand-v2.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <nav class="nav" aria-label="Mutqan brand reference navigation">
+          <a class="brand-lockup" href="./index.html">
+            <span class="flowmark" aria-hidden="true"><span class="flow-row"></span><span class="flow-row"></span><span class="flow-row"></span></span>
+            <span class="brand-name"><strong>Mutqan v2</strong><span>Visual source</span></span>
+          </a>
+          <div class="nav-links">
+            <a href="./index.html">Overview</a>
+            <a href="./visual-identity.html">Visual Identity</a>
+            <a href="./logo-system.html">Logo System</a>
+            <a href="./tokens.html">Tokens</a>
+            <a href="./ui-kit.html" aria-current="page">UI Kit</a>
+            <a href="./pdf-social-templates.html">PDF &amp; Social</a>
+            <a href="./signature-assets.html">Signature Assets</a>
+            <a href="./motion-system.html">Motion</a>
+            <a href="./handoff.html">Handoff</a>
+          </div>
+        </nav>
+      </header>
+
+      <main class="page">
+        <section class="hero">
+          <div class="hero-panel">
+            <p class="eyebrow">UI Kit</p>
+            <h1>Components for operational reading.</h1>
+            <p class="intro">
+              The UI kit defines compact, repeatable patterns for product screens and documents:
+              actions, forms, status, timelines, report surfaces, and operational memory components.
+            </p>
+          </div>
+          <div class="mock-dashboard">
+            <div class="mock-topline">
+              <span class="badge info">UI Preview</span>
+              <span class="meta">North Wing</span>
+            </div>
+            <div class="grid">
+              <div class="button-row">
+                <span class="btn primary">Review Work Order</span>
+                <span class="btn ghost">Open Timeline</span>
+                <span class="btn accent">Add Evidence</span>
+              </div>
+              <div class="field">
+                <label>Asset Code</label>
+                <div class="input focus">AHU-03</div>
+              </div>
+              <div class="mock-panel dark"><h2>Work Order 1024</h2><p class="muted">Pending Review · Evidence Added</p></div>
+              <div class="button-row">
+                <span class="badge stable">Stable</span>
+                <span class="badge watch">Watch</span>
+                <span class="badge info">Info</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Core UI Components</p>
+          <div class="grid three">
+            <div class="component-card">
+              <h3>Buttons</h3>
+              <div class="button-row"><span class="btn primary">Review</span><span class="btn ghost">Cancel</span><span class="btn accent">Add Evidence</span><span class="btn disabled">Disabled</span></div>
+              <p class="muted">Use for explicit commands only. States: default, hover, disabled, loading.</p>
+            </div>
+            <div class="component-card">
+              <h3>Inputs</h3>
+              <div class="field"><label>Location</label><div class="input">North Wing</div></div>
+              <p class="muted">Use clear labels. States: default, focus, error, disabled.</p>
+            </div>
+            <div class="component-card">
+              <h3>Cards</h3>
+              <div class="card compact"><div class="card-header"><div><strong>AHU-03</strong><p class="muted">North Wing · Mechanical Room</p></div><span class="badge watch">Watch</span></div><div class="action-area"><span class="meta">Recent: Evidence Added</span></div></div>
+              <p class="muted">Use cards for individual repeated items, not nested page sections.</p>
+            </div>
+            <div class="component-card">
+              <h3>Badges</h3>
+              <div class="button-row"><span class="badge stable">Stable</span><span class="badge watch">Watch</span><span class="badge risk">Risk</span></div>
+              <p class="muted">Badges must reflect a real state, never decoration.</p>
+            </div>
+            <div class="component-card">
+              <h3>Tables</h3>
+              <div class="table">
+                <table><thead><tr><th>Code</th><th>Item</th><th>Status</th></tr></thead><tbody><tr><td>WO-1024</td><td>AHU-03 Review</td><td><span class="badge info">Info</span></td></tr></tbody></table>
+              </div>
+              <p class="muted">Tables are for scanning, comparison, and repeat work.</p>
+            </div>
+            <div class="component-card">
+              <h3>Tabs</h3>
+              <div class="tabs"><span class="tab active">Overview</span><span class="tab">Timeline</span><span class="tab">Files</span></div>
+              <p class="muted">Use tabs for same-context views, not navigation jumps.</p>
+            </div>
+            <div class="component-card">
+              <h3>Modal</h3>
+              <div class="card compact"><strong>Review evidence</strong><p class="muted">Confirm the latest photo and notes before closing the review.</p><div class="button-row"><span class="btn primary">Save</span><span class="btn ghost">Close</span></div></div>
+              <p class="muted">Modals should be narrow, task-focused, and easy to close.</p>
+            </div>
+            <div class="component-card">
+              <h3>Stat Cards</h3>
+              <div class="grid two"><div class="metric-card"><strong>76</strong><span>Asset Health</span></div><div class="metric-card"><strong>4</strong><span>Open Items</span></div></div>
+              <p class="muted">Use with direct labels and no decorative numbers.</p>
+            </div>
+            <div class="component-card">
+              <h3>Empty States</h3>
+              <div class="card compact" style="text-align:center;"><span class="flowmark" style="margin:auto;" aria-hidden="true"><span class="flow-row"></span><span class="flow-row"></span><span class="flow-row"></span></span><p class="muted" style="margin-top:14px;">No evidence has been added for AHU-03 yet.</p></div>
+              <p class="muted">Explain what is missing and what the next operational object is.</p>
+            </div>
+            <div class="component-card">
+              <h3>Report Cards</h3>
+              <div class="brief-card"><strong>Weekly Brief</strong><ul class="brief-list"><li>Location Pressure increased in North Wing</li><li>Review AHU-03 evidence</li></ul></div>
+              <p class="muted">Reports should end in a clear management action.</p>
+            </div>
+            <div class="component-card">
+              <h3>Timeline</h3>
+              <div class="timeline">
+                <div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-body"><strong>Work Order 1024</strong><p class="muted">08:30</p></div></div>
+                <div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-body"><strong>Evidence Added</strong><p class="muted">10:15</p></div></div>
+              </div>
+              <p class="muted">Timeline is the core memory pattern.</p>
+            </div>
+            <div class="component-card">
+              <h3>Insight Card</h3>
+              <div class="card compact"><span class="badge info">Insight</span><h3>Pending Review</h3><p class="muted">AHU-03 has new evidence and needs supervisor confirmation.</p></div>
+              <p class="muted">Use for one focused finding, not long analysis.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">Mutqan-Specific Components</p>
+          <div class="grid two">
+            <div class="component-card">
+              <h3>Visual Operating Graph</h3>
+              <div class="visual-graph">
+                <div class="graph-line"></div><div class="graph-line accent"></div>
+                <div class="graph-node node-a"><strong>WO-1024</strong><span>Event</span></div>
+                <div class="graph-node node-b"><strong>North Wing</strong><span>Location</span></div>
+                <div class="graph-node node-c"><strong>AHU-03</strong><span>Asset</span></div>
+                <div class="graph-node node-d"><strong>Evidence</strong><span>Proof</span></div>
+                <div class="graph-node node-e"><strong>Review</strong><span>Decision</span></div>
+              </div>
+              <p class="muted">Use to show relationships, flow, and operational memory layers.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Asset Passport</h3>
+              <div class="passport">
+                <div class="passport-top">
+                  <div><strong>AHU-03</strong><p class="muted">AHU-03 · North Wing</p></div>
+                  <div class="qr"></div>
+                </div>
+                <div class="grid three"><div class="stat"><strong>76</strong><span>Health</span></div><div class="stat"><strong>High</strong><span>Criticality</span></div><div class="stat"><strong>12h</strong><span>Last update</span></div></div>
+                <div class="pressure-bar"><span></span></div>
+                <div class="asset-events"><div class="event-row"><span>Evidence Added</span><span>10:15</span></div><div class="event-row"><span>Pending Review</span><span>Open</span></div></div>
+              </div>
+              <p class="muted">Use for asset identity, location, health, and recent memory.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Work Order Story</h3>
+              <div class="timeline">
+                <div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-body"><strong>Work Order 1024</strong><p class="muted">AHU-03 noise reported</p></div></div>
+                <div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-body"><strong>Assigned</strong><p class="muted">Maintenance Team</p></div></div>
+                <div class="timeline-item"><span class="timeline-dot"></span><div class="timeline-body"><strong>Evidence Added</strong><p class="muted">Photo and notes attached</p></div></div>
+              </div>
+              <p class="muted">Use to turn a record into a readable operational sequence.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Decision Brief</h3>
+              <div class="brief-card">
+                <p class="eyebrow">Decision Brief</p>
+                <h3>Weekly Brief</h3>
+                <ul class="brief-list"><li>Location Pressure increased in North Wing</li><li>Evidence Added for AHU-03</li><li>Review before end of shift</li></ul>
+              </div>
+              <p class="muted">Use for report output that needs clear action, evidence, and priority.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Proof of Work Card</h3>
+              <div class="proof-grid">
+                <div class="proof-photo">Before Photo</div>
+                <div class="proof-photo">After Photo</div>
+              </div>
+              <div class="card compact" style="margin-top:10px;"><strong>Evidence Added</strong><p class="muted">Photo pair and completion notes attached to Work Order 1024.</p></div>
+              <p class="muted">Use when the work record must show before, after, owner, and verification.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Facility Pulse</h3>
+              <div class="pulse"><strong>North Wing</strong><p class="muted">Stable activity with one review signal</p><span class="pulse-dot"></span></div>
+              <p class="muted">Use as a quiet state indicator for facility-wide activity.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Location Pressure</h3>
+              <div class="card compact">
+                <strong>North Wing</strong>
+                <p class="muted">Location Pressure · Moderate</p>
+                <div class="pressure-bar"><span></span></div>
+              </div>
+              <p class="muted">Use to show accumulated workload or attention in a location.</p>
+            </div>
+
+            <div class="component-card">
+              <h3>Health Ring</h3>
+              <div class="button-row">
+                <span class="health-ring"><span>76</span></span>
+                <div><strong>Asset Health 76</strong><p class="muted">AHU-03 remains operational with review pending.</p></div>
+              </div>
+              <p class="muted">Use for asset health summaries where one numeric signal is useful.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
