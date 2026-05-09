@@ -84,6 +84,7 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
         <aside
             className={cn(
                 'fixed top-0 h-full w-64 bg-[#0b1320] text-white z-50 transition-transform duration-300 lg:transition-all',
+                'dark:bg-[#0b1320] dark:text-white',
                 compact ? 'lg:w-20' : 'lg:w-64',
                 mobileOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'),
                 isRTL ? 'right-0' : 'left-0'

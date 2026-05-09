@@ -7,6 +7,14 @@
 ---
 
 ## 2026-05-09 — Codex — (commit pending)
+Tags: #ui #brand #docs
+**هدف:** إصلاح تباين السايدبار في الوضع الداكن ومنع تحوله إلى سطح فاتح مع نصوص وشعار أبيض.
+**أُنجز:** تثبيت `PlatformSidebar` و`Sidebar` على خلفية Brand v2 فحمية، واستخدام شعار أبيض دائمًا فوق السطح الداكن، وتحديث ألوان عناصر التنقل والفواصل.
+**ملفات:** `src/components/layout/PlatformSidebar.tsx`, `src/components/layout/Sidebar.tsx`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ `npm run build`; ✅ `npm run lint` بلا أخطاء (219 تحذيرًا قديمًا).
+**التالي:** دفع الفرع ومراجعة بصرية سريعة في المتصفح عند الحاجة.
+
+## 2026-05-09 — Codex — (commit pending)
 Tags: #sales #pilot #docs
 **هدف:** إدخال مسودة عرض Pilot الموجهة للعميل كحزمة مبيعات مستقلة قابلة للتنقيح بعد الديمو.
 **أُنجز:** فحص الوعود العالية داخل العرض، والتأكد أن AI/IoT/BMS/WhatsApp/24/7 مذكورة كاستثناءات خارج النطاق لا كقدرات حالية.

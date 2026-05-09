@@ -18,7 +18,6 @@ import {
     FileText,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
 import { usePermission } from '@/hooks/usePermission'
 import { Permission } from '@/config/permissions'
 
@@ -31,10 +30,8 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
     const { i18n } = useTranslation()
     const location = useLocation()
     const { signOut } = useAuth()
-    const { resolvedTheme } = useTheme()
     const { can } = usePermission()
     const isRTL = i18n.language === 'ar'
-    const logoTheme = resolvedTheme === 'dark' ? 'dark' : 'light'
 
     type NavItem = { icon: React.ElementType; label: string; href: string; permission: Permission }
 
@@ -62,17 +59,18 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
     return (
         <aside
             className={cn(
-                'fixed top-0 h-full bg-mutqan-surface border-r border-mutqan-border text-foreground transition-all duration-300 z-50',
+                'fixed top-0 h-full bg-[#0b1320] text-white border-r border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.18)] transition-all duration-300 z-50',
+                'dark:bg-[#0b1320] dark:text-white',
                 collapsed ? 'w-20' : 'w-64',
                 isRTL ? 'right-0' : 'left-0'
             )}
         >
-            <div className="h-16 flex items-center justify-center border-b border-mutqan-border">
+            <div className="h-16 flex items-center justify-center border-b border-white/10">
                 <Link to="/platform" className="flex items-center gap-3">
                     <MutqanLogo
                         variant={collapsed ? 'symbol' : 'horizontal'}
                         size={collapsed ? 'sm' : 'md'}
-                        theme={logoTheme}
+                        theme="dark"
                         label={isRTL ? 'متقن' : 'Mutqan'}
                         subtitle={collapsed ? undefined : (isRTL ? 'إدارة المنصة' : 'Platform Console')}
                     />
@@ -86,18 +84,18 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                             key={item.href}
                             to={item.href}
                             className={cn(
-                                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                                'hover:bg-muted',
+                                'group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+                                'hover:bg-white/10',
                                 isActive(item.href)
-                                    ? 'bg-mutqan-accent text-white shadow-md'
-                                    : 'text-muted-foreground hover:text-foreground',
+                                    ? 'bg-[#00b2a9] text-white shadow-[0_10px_22px_rgba(0,178,169,0.18)]'
+                                    : 'text-white/72 hover:text-white',
                                 collapsed && 'justify-center'
                             )}
                         >
                             <item.icon
                                 className={cn(
                                     'w-5 h-5 flex-shrink-0',
-                                    isActive(item.href) ? 'text-white' : 'text-muted-foreground'
+                                    isActive(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white/90'
                                 )}
                             />
                             {!collapsed && (
@@ -110,7 +108,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                 {settingsItems.length > 0 && (
                     <>
                         <div className="px-6 py-2">
-                            <div className="h-px bg-mutqan-border" />
+                            <div className="h-px bg-white/10" />
                         </div>
 
                         <div className="px-3 space-y-1">
@@ -119,18 +117,18 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                                     key={item.href}
                                     to={item.href}
                                     className={cn(
-                                        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                                        'hover:bg-muted',
+                                        'group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+                                        'hover:bg-white/10',
                                         isActive(item.href)
-                                            ? 'bg-mutqan-accent text-white shadow-md'
-                                            : 'text-muted-foreground hover:text-foreground',
+                                            ? 'bg-[#00b2a9] text-white shadow-[0_10px_22px_rgba(0,178,169,0.18)]'
+                                            : 'text-white/72 hover:text-white',
                                         collapsed && 'justify-center'
                                     )}
                                 >
                                     <item.icon
                                         className={cn(
                                             'w-5 h-5 flex-shrink-0',
-                                            isActive(item.href) ? 'text-white' : 'text-muted-foreground'
+                                            isActive(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white/90'
                                         )}
                                     />
                                     {!collapsed && (
@@ -147,7 +145,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                         onClick={signOut}
                         className={cn(
                             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                            'hover:bg-destructive/10 text-destructive',
+                            'text-red-300 hover:bg-red-500/10 hover:text-red-200',
                             collapsed && 'justify-center'
                         )}
                     >
@@ -165,7 +163,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                         onClick={onToggle}
                         className={cn(
                             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg',
-                            'hover:bg-muted transition-all duration-200 text-muted-foreground',
+                            'text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200',
                             collapsed && 'justify-center'
                         )}
                     >
