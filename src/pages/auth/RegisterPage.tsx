@@ -317,7 +317,7 @@ export default function RegisterPage() {
                     <h2 className="text-2xl font-bold text-[#1A202C] font-cairo mb-2">
                         {t('authPages.register.title')}
                     </h2>
-                    <p className="text-[#6C7A86] font-cairo text-sm">
+                    <p className="text-[#6b7785] font-cairo text-sm">
                         {currentStep === 'org_info' && t('authPages.register.steps.orgInfo')}
                         {currentStep === 'admin_info' && t('authPages.register.steps.adminInfo')}
                         {currentStep === 'otp' && t('authPages.register.steps.otp')}
@@ -351,7 +351,7 @@ export default function RegisterPage() {
                                     name="orgNameAr"
                                     value={formData.orgNameAr}
                                     onChange={handleInputChange}
-                                    className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                    className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     placeholder={t('authPages.register.fields.orgNamePlaceholder')}
                                 />
                             </div>
@@ -363,7 +363,7 @@ export default function RegisterPage() {
                                     name="orgNameEn"
                                     value={formData.orgNameEn}
                                     onChange={handleInputChange}
-                                    className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all text-left"
+                                    className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all text-left"
                                     placeholder={t('authPages.register.fields.orgEnglishNamePlaceholder')}
                                     dir="ltr"
                                 />
@@ -377,7 +377,7 @@ export default function RegisterPage() {
                                         name="orgCountry"
                                         value={formData.orgCountry}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -387,7 +387,7 @@ export default function RegisterPage() {
                                         name="orgCity"
                                         value={formData.orgCity}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -399,7 +399,7 @@ export default function RegisterPage() {
                                     name="orgAddress"
                                     value={formData.orgAddress}
                                     onChange={handleInputChange}
-                                    className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                    className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     placeholder={t('authPages.register.fields.streetAddressPlaceholder')}
                                 />
                             </div>
@@ -412,7 +412,7 @@ export default function RegisterPage() {
                                         name="orgPostalCode"
                                         value={formData.orgPostalCode}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -422,7 +422,7 @@ export default function RegisterPage() {
                                         name="orgPhone"
                                         value={formData.orgPhone}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all text-left"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all text-left"
                                         placeholder="9665..."
                                         dir="ltr"
                                     />
@@ -436,7 +436,7 @@ export default function RegisterPage() {
                                     name="orgWebsite"
                                     value={formData.orgWebsite}
                                     onChange={handleInputChange}
-                                    className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all text-left"
+                                    className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all text-left"
                                     dir="ltr"
                                     placeholder="https://..."
                                 />
@@ -450,7 +450,7 @@ export default function RegisterPage() {
                                         name="crNumber"
                                         value={formData.crNumber}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -460,7 +460,7 @@ export default function RegisterPage() {
                                         name="taxNumber"
                                         value={formData.taxNumber}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -484,7 +484,7 @@ export default function RegisterPage() {
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -494,7 +494,7 @@ export default function RegisterPage() {
                                         name="lastName"
                                         value={formData.lastName}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     />
                                 </div>
                             </div>
@@ -508,7 +508,7 @@ export default function RegisterPage() {
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 pl-10 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all text-left"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 pl-10 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all text-left"
                                         placeholder="9665..."
                                         dir="ltr"
                                     />
@@ -524,7 +524,7 @@ export default function RegisterPage() {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 pl-10 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 pl-10 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                         dir="ltr"
                                     />
                                 </div>
@@ -539,7 +539,7 @@ export default function RegisterPage() {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                        className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                         dir="ltr"
                                     />
                                     <button
@@ -559,7 +559,7 @@ export default function RegisterPage() {
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleInputChange}
-                                    className="w-full h-11 bg-white border border-[#E9EEF1] rounded-xl px-4 text-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                                    className="w-full h-11 bg-white border border-[#e6e9ed] rounded-xl px-4 text-sm focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none transition-all"
                                     dir="ltr"
                                 />
                             </div>
@@ -635,7 +635,7 @@ export default function RegisterPage() {
 
                 {/* Footer Actions */}
                 {currentStep !== 'success' && (
-                    <div className="mt-8 pt-6 border-t border-[#E9EEF1] flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+                    <div className="mt-8 pt-6 border-t border-[#e6e9ed] flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
                         {currentStep === 'org_info' ? (
                             <Link to="/login" className="text-center text-sm text-secondary font-bold hover:underline sm:text-start">
                                 {t('authPages.register.hasAccount')}
@@ -656,7 +656,7 @@ export default function RegisterPage() {
                             disabled={isLoading}
                             className={cn(
                                 "flex-1 h-12 rounded-xl font-bold text-white font-cairo text-sm shadow-lg shadow-secondary/20 flex items-center justify-center gap-2",
-                                "bg-secondary hover:bg-[#2B8C87] transition-all",
+                                "bg-[#00b2a9] hover:bg-[#00968f] transition-all",
                                 "disabled:opacity-70 disabled:cursor-not-allowed"
                             )}
                         >

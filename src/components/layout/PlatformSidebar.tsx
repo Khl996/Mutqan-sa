@@ -18,6 +18,7 @@ import {
     FileText,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { usePermission } from '@/hooks/usePermission'
 import { Permission } from '@/config/permissions'
 
@@ -30,8 +31,10 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
     const { i18n } = useTranslation()
     const location = useLocation()
     const { signOut } = useAuth()
+    const { resolvedTheme } = useTheme()
     const { can } = usePermission()
     const isRTL = i18n.language === 'ar'
+    const logoTheme = resolvedTheme === 'dark' ? 'dark' : 'light'
 
     type NavItem = { icon: React.ElementType; label: string; href: string; permission: Permission }
 
@@ -69,7 +72,7 @@ export default function PlatformSidebar({ collapsed, onToggle }: PlatformSidebar
                     <MutqanLogo
                         variant={collapsed ? 'symbol' : 'horizontal'}
                         size={collapsed ? 'sm' : 'md'}
-                        theme="light"
+                        theme={logoTheme}
                         label={isRTL ? 'متقن' : 'Mutqan'}
                         subtitle={collapsed ? undefined : (isRTL ? 'إدارة المنصة' : 'Platform Console')}
                     />

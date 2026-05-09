@@ -37,16 +37,16 @@ export default function AboutPage() {
 
             <main>
                 <section
-                    className="relative overflow-hidden bg-[#071113] px-4 pb-16 pt-36 text-white sm:px-6 sm:pt-44 lg:px-8"
+                    className="relative overflow-hidden bg-[#0b1320] px-4 pb-16 pt-36 text-white sm:px-6 sm:pt-44 lg:px-8"
                     style={{
                         backgroundImage:
-                            'linear-gradient(180deg, rgba(118,213,208,0.08) 0%, transparent 42%), linear-gradient(115deg, transparent 0%, rgba(58,175,169,0.12) 44%, transparent 66%), linear-gradient(135deg, #071113 0%, #0d2225 55%, #11181d 100%)',
+                            'linear-gradient(180deg, rgba(118,213,208,0.08) 0%, transparent 42%), linear-gradient(115deg, transparent 0%, rgba(0,178,169,0.12) 44%, transparent 66%), linear-gradient(135deg, #0b1320 0%, #111f2e 55%, #132233 100%)',
                     }}
                 >
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-transparent via-[#76D5D0] to-transparent opacity-75" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-transparent via-[#7be4df] to-transparent opacity-75" />
                     <div className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
                     <div className="relative mx-auto max-w-4xl text-center">
-                        <p className="text-sm font-bold text-[#76D5D0]">{t('aboutPage.heroEyebrow')}</p>
+                        <p className="text-sm font-bold text-[#7be4df]">{t('aboutPage.heroEyebrow')}</p>
                         <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">
                             {t('aboutPage.heroTitle')}
                         </h1>
@@ -59,7 +59,7 @@ export default function AboutPage() {
                 <section className="px-4 py-16 sm:px-6 lg:px-8">
                     <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
                         <div>
-                            <p className="text-sm font-black text-[#2E8F8A]">{t('aboutPage.storyEyebrow')}</p>
+                            <p className="text-sm font-black text-[var(--mutqan-accent)]">{t('aboutPage.storyEyebrow')}</p>
                             <h2 className="mt-3 text-3xl font-black leading-tight text-slate-950">
                                 {t('aboutPage.storyTitle')}
                             </h2>
@@ -71,7 +71,7 @@ export default function AboutPage() {
                             </p>
                             <Link
                                 to="/contact"
-                                className="mt-7 inline-flex items-center gap-2 rounded-lg bg-[#2E3A45] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#3a4a57]"
+                                className="mt-7 inline-flex items-center gap-2 rounded-lg bg-[#0b1320] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#172235]"
                             >
                                 {t('aboutPage.cta')}
                                 <CtaArrow className="h-4 w-4" />
@@ -83,7 +83,7 @@ export default function AboutPage() {
                                 const Icon = principleIcons[index]
                                 return (
                                     <div key={title} className="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-                                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#3AAFA9]/10 text-[#2E8F8A]">
+                                        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#00b2a9]/10 text-[var(--mutqan-accent)]">
                                             <Icon className="h-5 w-5" />
                                         </div>
                                         <h3 className="text-xl font-black text-slate-950">{title}</h3>
@@ -99,7 +99,7 @@ export default function AboutPage() {
                     <div className="mx-auto max-w-7xl">
                         <div className="grid gap-8 lg:grid-cols-[1fr_1.3fr] lg:items-center">
                             <div>
-                                <p className="text-sm font-black text-[#2E8F8A]">{t('aboutPage.visionEyebrow')}</p>
+                                <p className="text-sm font-black text-[var(--mutqan-accent)]">{t('aboutPage.visionEyebrow')}</p>
                                 <h2 className="mt-3 text-3xl font-black leading-tight text-slate-950">
                                     {t('aboutPage.visionTitle')}
                                 </h2>
@@ -112,7 +112,7 @@ export default function AboutPage() {
                                     const Icon = sectorIcons[index]
                                     return (
                                         <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-center">
-                                            <Icon className="mx-auto mb-4 h-7 w-7 text-[#2E8F8A]" />
+                                            <Icon className="mx-auto mb-4 h-7 w-7 text-[var(--mutqan-accent)]" />
                                             <h3 className="font-black text-slate-950">{label}</h3>
                                         </div>
                                     )
@@ -123,7 +123,7 @@ export default function AboutPage() {
                         <div className="mt-10 grid gap-3 md:grid-cols-3">
                             {proofPoints.map((item) => (
                                 <div key={item} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
-                                    <CheckCircle2 className="h-4 w-4 text-[#2E8F8A]" />
+                                    <CheckCircle2 className="h-4 w-4 text-[var(--mutqan-accent)]" />
                                     {item}
                                 </div>
                             ))}

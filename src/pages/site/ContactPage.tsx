@@ -111,21 +111,21 @@ export default function ContactPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#f7f3ea] font-cairo text-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-[var(--mutqan-bg)] font-cairo text-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
             <SiteNav variant="dark" />
 
             <main>
                 <section
-                    className="relative overflow-hidden bg-[#071113] px-4 pb-10 pt-28 text-white sm:px-6 sm:pb-12 sm:pt-32 lg:px-8"
+                    className="relative overflow-hidden bg-[#0b1320] px-4 pb-10 pt-28 text-white sm:px-6 sm:pb-12 sm:pt-32 lg:px-8"
                     style={{
                         backgroundImage:
-                            'linear-gradient(180deg, rgba(118,213,208,0.08) 0%, transparent 42%), linear-gradient(115deg, transparent 0%, rgba(58,175,169,0.12) 44%, transparent 66%), linear-gradient(135deg, #071113 0%, #0d2225 55%, #11181d 100%)',
+                            'linear-gradient(180deg, rgba(118,213,208,0.08) 0%, transparent 42%), linear-gradient(115deg, transparent 0%, rgba(0,178,169,0.12) 44%, transparent 66%), linear-gradient(135deg, #0b1320 0%, #111f2e 55%, #132233 100%)',
                     }}
                 >
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-transparent via-[#76D5D0] to-transparent opacity-75" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-transparent via-[#7be4df] to-transparent opacity-75" />
                     <div className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:44px_44px]" />
                     <div className="relative mx-auto max-w-3xl text-center">
-                        <p className="text-sm font-bold text-[#76D5D0]">{t('contactPage.heroEyebrow')}</p>
+                        <p className="text-sm font-bold text-[#7be4df]">{t('contactPage.heroEyebrow')}</p>
                         <h1 className="mt-3 text-balance text-3xl font-black leading-[1.24] sm:text-5xl">
                             {t('contactPage.heroTitle')}
                         </h1>
@@ -147,7 +147,7 @@ export default function ContactPage() {
                                         {t('contactPage.form.body')}
                                     </p>
                                 </div>
-                                <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#3AAFA9]/25 bg-[#3AAFA9]/10 px-3 py-2 text-xs font-black text-[#2E8F8A]">
+                                <span className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#00b2a9]/25 bg-[#00b2a9]/10 px-3 py-2 text-xs font-black text-[var(--mutqan-accent)]">
                                     <ShieldCheck className="h-4 w-4" />
                                     {t('contactPage.form.requiredNote')}
                                 </span>
@@ -160,9 +160,9 @@ export default function ContactPage() {
                             )}
 
                             {submitState === 'prepared' && (
-                                <div className="mt-5 rounded-lg border border-[#3AAFA9]/25 bg-[#3AAFA9]/10 p-4" role="status">
-                                    <h3 className="flex items-center gap-2 text-sm font-black text-[#172027]">
-                                        <Mail className="h-4 w-4 text-[#2E8F8A]" />
+                                <div className="mt-5 rounded-lg border border-[#00b2a9]/25 bg-[#00b2a9]/10 p-4" role="status">
+                                    <h3 className="flex items-center gap-2 text-sm font-black text-[#0b1320]">
+                                        <Mail className="h-4 w-4 text-[var(--mutqan-accent)]" />
                                         {t('contactPage.form.mailtoPreparedTitle')}
                                     </h3>
                                     <p className="mt-2 text-sm leading-7 text-slate-700">
@@ -170,7 +170,7 @@ export default function ContactPage() {
                                     </p>
                                     <a
                                         href={lastMailtoHref}
-                                        className="mt-3 inline-flex items-center gap-2 text-sm font-black text-[#2E8F8A] underline-offset-4 hover:underline"
+                                        className="mt-3 inline-flex items-center gap-2 text-sm font-black text-[var(--mutqan-accent)] underline-offset-4 hover:underline"
                                     >
                                         {t('contactPage.form.mailtoFallbackCta')}
                                         <CtaArrow className="h-4 w-4" />
@@ -250,7 +250,7 @@ export default function ContactPage() {
                             <fieldset className="mt-6">
                                 <legend className="text-sm font-black text-slate-900">
                                     {labels.improvements}
-                                    <span className="mx-1 text-[#2E8F8A]">*</span>
+                                    <span className="mx-1 text-[var(--mutqan-accent)]">*</span>
                                 </legend>
                                 <p className="mt-1 text-xs font-semibold text-slate-500">{t('contactPage.form.improvementsHint')}</p>
                                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -262,15 +262,15 @@ export default function ContactPage() {
                                                 className={cn(
                                                     'flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-bold transition-colors',
                                                     checked
-                                                        ? 'border-[#3AAFA9]/50 bg-[#3AAFA9]/10 text-[#172027]'
-                                                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-[#3AAFA9]/35'
+                                                        ? 'border-[#00b2a9]/50 bg-[#00b2a9]/10 text-[#0b1320]'
+                                                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-[#00b2a9]/35'
                                                 )}
                                             >
                                                 <input
                                                     type="checkbox"
                                                     checked={checked}
                                                     onChange={(event) => handleImprovementChange(option, event.target.checked)}
-                                                    className="h-4 w-4 rounded border-slate-300 text-[#2E8F8A] focus:ring-[#3AAFA9]"
+                                                    className="h-4 w-4 rounded border-slate-300 text-[var(--mutqan-accent)] focus:ring-[#00b2a9]"
                                                 />
                                                 <span>{option}</span>
                                             </label>
@@ -310,7 +310,7 @@ export default function ContactPage() {
                                             placeholder={t('contactPage.form.placeholders.message')}
                                             onChange={(event) => updateField('message', event.target.value)}
                                             rows={4}
-                                            className="min-h-[112px] w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-7 text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-[#3AAFA9] focus:ring-2 focus:ring-[#3AAFA9]/20"
+                                            className="min-h-[112px] w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-7 text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-[#00b2a9] focus:ring-2 focus:ring-[#00b2a9]/20"
                                         />
                                     </FieldShell>
                                 </div>
@@ -323,14 +323,14 @@ export default function ContactPage() {
                             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <button
                                     type="submit"
-                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2E8F8A] px-6 text-sm font-black text-white shadow-[0_18px_44px_-30px_rgba(46,143,138,0.95)] transition-colors hover:bg-[#267d78] sm:w-auto"
+                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[var(--mutqan-accent)] px-6 text-sm font-black text-white shadow-[0_18px_44px_-30px_rgba(0,178,169,0.95)] transition-colors hover:bg-[#00968f] sm:w-auto"
                                 >
                                     <Mail className="h-4 w-4" />
                                     {t('contactPage.form.submit')}
                                 </button>
                                 <a
                                     href={directEmailHref}
-                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 text-sm font-black text-slate-700 transition-colors hover:border-[#3AAFA9]/45 hover:text-[#2E8F8A] sm:w-auto"
+                                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 text-sm font-black text-slate-700 transition-colors hover:border-[#00b2a9]/45 hover:text-[var(--mutqan-accent)] sm:w-auto"
                                     dir="ltr"
                                 >
                                     {CONTACT_EMAIL}
@@ -342,7 +342,7 @@ export default function ContactPage() {
                         <aside className="lg:sticky lg:top-28">
                             <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
                                 <div className="flex items-center gap-3">
-                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#3AAFA9]/10 text-[#2E8F8A]">
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#00b2a9]/10 text-[var(--mutqan-accent)]">
                                         <Mail className="h-5 w-5" />
                                     </span>
                                     <h2 className="text-xl font-black text-slate-950">{t('contactPage.directTitle')}</h2>
@@ -352,7 +352,7 @@ export default function ContactPage() {
                                 </p>
                                 <a
                                     href={directEmailHref}
-                                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 transition-colors hover:border-[#3AAFA9]/40 hover:text-[#2E8F8A]"
+                                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-black text-slate-700 transition-colors hover:border-[#00b2a9]/40 hover:text-[var(--mutqan-accent)]"
                                     dir="ltr"
                                 >
                                     <Mail className="h-4 w-4" />
@@ -405,7 +405,7 @@ function FieldShell({
         <div>
             <label htmlFor={id} className="mb-2 block text-sm font-black text-slate-900">
                 {label}
-                {required && <span className="mx-1 text-[#2E8F8A]">*</span>}
+                {required && <span className="mx-1 text-[var(--mutqan-accent)]">*</span>}
             </label>
             {children}
             {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
@@ -426,7 +426,7 @@ function fieldClass(error?: string) {
         'h-12 w-full rounded-lg border bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:ring-2',
         error
             ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-            : 'border-slate-200 focus:border-[#3AAFA9] focus:ring-[#3AAFA9]/20'
+            : 'border-slate-200 focus:border-[#00b2a9] focus:ring-[#00b2a9]/20'
     )
 }
 

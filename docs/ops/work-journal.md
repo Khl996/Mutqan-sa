@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-05-09 — Codex — (commit pending)
+Tags: #brand #ui #docs
+**هدف:** صقل تطبيق Brand v2 على صفحة الهبوط والصفحات العامة/الدخول ومعالجة تبديل الشعار في الوضع الداكن.
+**أُنجز:** توحيد الألوان مع Brand v2، تخفيف زحمة الهبوط ومعاينة المنتج، تفعيل شعار مناسب للفاتح/الداكن في SiteNav/SiteFooter/PlatformSidebar، وتوحيد legal pages مع SiteNav/SiteFooter.
+**ملفات:** `src/pages/LandingPage.tsx`, `src/pages/site/*`, `src/pages/auth/*`, `src/components/site/*`, `src/components/layout/*`, `docs/ops/ai-handoff.md`, `docs/ops/work-journal.md`.
+**التحقق:** ✅ `npm run build`; ✅ `npm run lint` بلا أخطاء (تحذيرات قديمة موجودة)؛ ✅ لا `flowmark` داخل `src`.
+**التالي:** مراجعة بصرية في المتصفح للوضع الفاتح/الداكن ثم فصل التغييرات عن أي ملفات غير مرتبطة قبل commit أو PR.
+
 ## 2026-05-08 — Codex — (commit pending)
 Tags: #sales #pilot #ops #docs
 **هدف:** تحويل بيانات HubSpot الفعلية إلى نواة CRM صالحة لأول Pilot دون لمس الكود أو التصميم.

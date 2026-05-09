@@ -87,7 +87,7 @@ export default function LoginPage() {
                     <h2 className="text-2xl font-bold text-[#1A202C] font-cairo mb-3">
                         {t('auth.welcomeBack')}
                     </h2>
-                    <p className="text-[#6C7A86] font-cairo text-base">
+                    <p className="text-[#6b7785] font-cairo text-base">
                         {t('auth.enterCredentials')}
                     </p>
                 </div>
@@ -106,14 +106,14 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@company.com"
                                 className={cn(
-                                    'w-full h-12 bg-white border border-[#E9EEF1] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
-                                    'focus:border-[#3AAFA9] focus:ring-4 focus:ring-[#3AAFA9]/10 outline-none',
+                                    'w-full h-12 bg-white border border-[#e6e9ed] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
+                                    'focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none',
                                     isRTL ? 'pr-11 pl-4' : 'pl-11 pr-4'
                                 )}
                                 dir="ltr"
                             />
                             <Mail className={cn(
-                                'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#3AAFA9] transition-colors',
+                                'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#00b2a9] transition-colors',
                                 isRTL ? 'right-4' : 'left-4'
                             )} />
                         </div>
@@ -131,21 +131,21 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 className={cn(
-                                    'w-full h-12 bg-white border border-[#E9EEF1] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
-                                    'focus:border-[#3AAFA9] focus:ring-4 focus:ring-[#3AAFA9]/10 outline-none',
+                                    'w-full h-12 bg-white border border-[#e6e9ed] rounded-xl text-[#1A202C] placeholder-[#A0AEC0] font-cairo transition-all duration-200',
+                                    'focus:border-[#00b2a9] focus:ring-4 focus:ring-[#00b2a9]/10 outline-none',
                                     isRTL ? 'pr-11 pl-11' : 'pl-11 pr-11'
                                 )}
                                 dir="ltr"
                             />
                             <Lock className={cn(
-                                'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#3AAFA9] transition-colors',
+                                'absolute top-1/2 -translate-y-1/2 w-5 h-5 text-[#A0AEC0] group-focus-within:text-[#00b2a9] transition-colors',
                                 isRTL ? 'right-4' : 'left-4'
                             )} />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                                 className={cn(
-                                    'absolute top-1/2 -translate-y-1/2 text-[#A0AEC0] hover:text-[#3AAFA9] transition-colors p-1',
+                                    'absolute top-1/2 -translate-y-1/2 text-[#A0AEC0] hover:text-[#00b2a9] transition-colors p-1',
                                     isRTL ? 'left-3' : 'right-3'
                                 )}
                             >
@@ -166,17 +166,17 @@ export default function LoginPage() {
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="peer h-5 w-5 rounded-md border-2 border-[#E9EEF1] text-[#3AAFA9] focus:ring-[#3AAFA9]/20 transition-all checked:border-[#3AAFA9] checked:bg-[#3AAFA9]"
+                                    className="peer h-5 w-5 rounded-md border-2 border-[#e6e9ed] text-[#00b2a9] focus:ring-[#00b2a9]/20 transition-all checked:border-[#00b2a9] checked:bg-[#00b2a9]"
                                 />
                             </div>
-                            <span className="text-sm text-[#6C7A86] group-hover:text-[#1A202C] transition-colors font-cairo">
+                            <span className="text-sm text-[#6b7785] group-hover:text-[#1A202C] transition-colors font-cairo">
                                 {t('auth.rememberMe')}
                             </span>
                         </label>
                         <button
                             type="button"
                             onClick={() => navigate('/forgot-password')}
-                            className="text-sm text-[#3AAFA9] hover:text-[#2B8C87] font-semibold font-cairo transition-colors"
+                            className="text-sm text-[#00b2a9] hover:text-[#00968f] font-semibold font-cairo transition-colors"
                         >
                             {t('auth.forgotPassword')}
                         </button>
@@ -187,8 +187,8 @@ export default function LoginPage() {
                         type="submit"
                         disabled={isLoading}
                         className={cn(
-                            'w-full h-12 rounded-xl font-bold text-white font-cairo text-base shadow-lg shadow-[#3AAFA9]/20',
-                            'bg-[#3AAFA9] hover:bg-[#2B8C87] transition-all duration-200',
+                            'w-full h-12 rounded-xl font-bold text-white font-cairo text-base shadow-lg shadow-[#00b2a9]/20',
+                            'bg-[#00b2a9] hover:bg-[#00968f] transition-all duration-200',
                             'flex items-center justify-center gap-2',
                             'disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.99]'
                         )}

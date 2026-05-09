@@ -123,7 +123,7 @@ export default function CompleteRegistrationPage() {
                                 ? t('authPages.complete.blockedTitle')
                                 : t('authPages.complete.progressTitle')}
                         </h2>
-                        <p className="text-sm text-[#6C7A86] font-cairo leading-7">
+                        <p className="text-sm text-[#6b7785] font-cairo leading-7">
                             {errorMessage
                                 ? t('authPages.complete.blockedBody')
                                 : t('authPages.complete.progressBody')}
