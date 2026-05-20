@@ -82,9 +82,10 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
 
     return (
         <aside
+            data-testid="tenant-sidebar-fixed-brand"
             style={{ backgroundColor: '#0B1320', color: '#ffffff' }}
             className={cn(
-                'fixed top-0 h-full w-64 !bg-[#0B1320] !text-white z-50 transition-transform duration-300 lg:transition-all',
+                'tenant-sidebar-fixed-brand fixed top-0 h-full w-64 !bg-[#0B1320] !text-white z-50 transition-transform duration-300 lg:transition-all',
                 'dark:!bg-[#0B1320] dark:!text-white',
                 compact ? 'lg:w-20' : 'lg:w-64',
                 mobileOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'),
