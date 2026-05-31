@@ -44,3 +44,7 @@ screenshots/chrome-profile*/
 vite.config.ts.timestamp-*
 .vercel
 .env*.local
+
+# Supabase CLI local link state (infrastructure identifiers — never commit)
+supabase/.temp/
+supabase/.temp/linked-project.json

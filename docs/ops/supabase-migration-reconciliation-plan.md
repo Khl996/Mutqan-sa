@@ -2,7 +2,7 @@
 
 Audit date: 2026-04-25  
 Repository: Mutqan SaaS CMMS  
-Linked local Supabase project ref found in `supabase/.temp/linked-project.json`: `mzpohntjotgeeaukwnbz`
+Linked local Supabase project ref found in `supabase/.temp/linked-project.json`: `<YOUR_SUPABASE_PROJECT_REF>`
 
 ## A. Executive Summary
 
@@ -438,7 +438,7 @@ supabase status
 Expected output:
 
 - CLI version is printed.
-- The linked project should match project ref `mzpohntjotgeeaukwnbz` for the current staging target.
+- The linked project should match project ref `<YOUR_SUPABASE_PROJECT_REF>` for the current staging target.
 - `supabase status` may require local stack context; if it fails because no local stack is running, that is not itself a remote ledger finding.
 
 Safe capture:

@@ -297,8 +297,8 @@ Recommended path:
 Any writing mode in `scripts/prepare-demo-tenant.ts` must:
 
 - Refuse to run unless `DEMO_SEED_ALLOWED=true`.
-- Refuse to run unless `VITE_SUPABASE_URL` or `SUPABASE_URL` resolves to the approved staging/demo project `mzpohntjotgeeaukwnbz`.
-- Refuse to run if the host does not match `mzpohntjotgeeaukwnbz.supabase.co`.
+- Refuse to run unless `VITE_SUPABASE_URL` or `SUPABASE_URL` resolves to the approved staging/demo project `<YOUR_SUPABASE_PROJECT_REF>`.
+- Refuse to run if the host does not match `<YOUR_SUPABASE_PROJECT_REF>.supabase.co`.
 - Require `SUPABASE_SERVICE_ROLE_KEY`, but never print it.
 - Require an explicit write confirmation for write modes. Phase 2 uses `DEMO_SEED_CONFIRM=NOURA_GARDENS_FOUNDATION`.
 - Use deterministic tenant slug and record codes.
@@ -329,7 +329,7 @@ DEMO_SEED_ALLOWED=true DEMO_SEED_MODE=verify npm run verify:demo-tenant
 
 Required environment:
 
-- `VITE_SUPABASE_URL` or `SUPABASE_URL` must resolve to `mzpohntjotgeeaukwnbz.supabase.co`.
+- `VITE_SUPABASE_URL` or `SUPABASE_URL` must resolve to `<YOUR_SUPABASE_PROJECT_REF>.supabase.co`.
 - `SUPABASE_SERVICE_ROLE_KEY` must be set for read-only verification and must never be printed.
 - `DEMO_SEED_ALLOWED=true` must be set explicitly.
 
@@ -337,8 +337,8 @@ Expected output shape:
 
 ```text
 Demo tenant verifier: READ-ONLY VERIFY MODE
-Approved project ref: mzpohntjotgeeaukwnbz
-Supabase host: mzpohntjotgeeaukwnbz.supabase.co
+Approved project ref: <YOUR_SUPABASE_PROJECT_REF>
+Supabase host: <YOUR_SUPABASE_PROJECT_REF>.supabase.co
 Writes: disabled
 
 Overall: MISSING

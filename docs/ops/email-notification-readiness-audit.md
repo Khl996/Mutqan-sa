@@ -119,7 +119,7 @@ Edge Function:
 الأمر المنفذ:
 
 ```powershell
-npx supabase functions deploy resend-email --project-ref mzpohntjotgeeaukwnbz --no-verify-jwt --use-api
+npx supabase functions deploy resend-email --project-ref <YOUR_SUPABASE_PROJECT_REF> --no-verify-jwt --use-api
 ```
 
 هذا لا يلغي الحماية كلها، لأن كود الدالة ما زال يرفض أي طلب لا يحمل السر الداخلي الصحيح.
