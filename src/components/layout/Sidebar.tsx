@@ -65,9 +65,13 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
         can(item.permission)
     )
 
+    // Billing is visible by default; hidden only when the tenant explicitly sets
+    // enabled_modules.billing.enabled = false (e.g. Hospital Lite tenants).
+    const billingVisible = tenantModules?.billing?.enabled !== false
+
     const adminItems = [
         { icon: Settings, label: t('sidebar.settings'), href: '/settings', permission: 'settings.view' as Permission },
-        ...(can('subscription.manage')
+        ...(billingVisible && can('subscription.manage')
             ? [{
                 icon: CreditCard,
                 label: isRTL ? 'الاشتراك' : 'Subscription',
