@@ -4,12 +4,14 @@ import { WorkOrder, useIssueTypes } from '@/hooks/useWorkOrders'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
-import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck, Copy, MessageSquare } from 'lucide-react'
+import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck, Copy, MessageSquare, UserCog } from 'lucide-react'
 import { toast } from 'sonner'
 import { useWorkOrderWorkflow } from '@/hooks/useWorkOrderWorkflow'
 import { usePermission } from '@/hooks/usePermission'
 import InventorySelector, { SelectedPart } from './InventorySelector'
 import { buildWhatsAppMessage } from '@/lib/whatsapp'
+import { useWorkTeams } from '@/hooks/useWorkTeams'
+import { useTeamMembers } from '@/hooks/useTeams'
 
 interface WorkOrderActionsProps {
     workOrder: WorkOrder
@@ -36,10 +38,16 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
 
     const isWorkflowEnabled = useFeatureEnabled('work_orders', 'workflow')
     const isPartsTrackingEnabled = useFeatureEnabled('work_orders', 'parts_tracking')
+    const isTeamsEnabled = useFeatureEnabled('work_teams', 'team_creation')
+    const { data: workTeams = [] } = useWorkTeams()
+    const { data: teamMembers = [] } = useTeamMembers()
 
     const [notes, setNotes] = useState('')
     const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [showAssignPanel, setShowAssignPanel] = useState(false)
+    const [assignTeamId, setAssignTeamId] = useState('')
+    const [assignUserId, setAssignUserId] = useState('')
 
     const myUserId = user?.id ?? null
     const actorRole = role ?? ''
@@ -75,6 +83,11 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
 
         return isAssignedTechnician
     }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole])
+
+    const assignableMembers = useMemo(
+        () => teamMembers.filter(m => m.is_active && ['technician', 'engineer', 'maintenance_manager'].includes(m.role)),
+        [teamMembers]
+    )
 
     // WhatsApp copy: visible to non-technicians when order is in assigned status
     const showWhatsApp = workOrder.status === 'assigned' && actorRole !== 'technician'
@@ -113,6 +126,30 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         }
     }
 
+    const handleAssign = async () => {
+        if (!assignTeamId && !assignUserId) {
+            toast.error(isRTL ? 'اختر فريقاً أو مكلَّفاً على الأقل' : 'Select a team or assignee')
+            return
+        }
+        try {
+            setIsSubmitting(true)
+            await workflow.assignWorkOrder.mutateAsync({
+                workOrderId: workOrder.id,
+                assignedTo: assignUserId || null,
+                assignedTeam: assignTeamId || null,
+            })
+            setShowAssignPanel(false)
+            setAssignTeamId('')
+            setAssignUserId('')
+            onActionCompleted()
+        } catch (error) {
+            console.error(error)
+            toast.error(isRTL ? 'تعذر التعيين' : 'Assignment failed')
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
     const whatsAppCard = showWhatsApp ? (
         <div className="bg-card border rounded-xl p-5 shadow-sm space-y-3 border-l-4 border-l-green-600">
             <div className="flex items-center gap-2">
@@ -138,6 +175,8 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
             </button>
         </div>
     ) : null
+
+    const canAssignByRole = CLOSURE_ROLES.has(actorRole) || isPlatformWorkflowRole
 
     const canStart = (workOrder.status === 'assigned' || workOrder.status === 'pending') && canStartWork
     if (canStart) {
@@ -180,7 +219,81 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                         </div>
                     )}
 
-                    {workOrder.status === 'pending' && (
+                    {workOrder.status === 'pending' && canAssignByRole && (
+                        <div className="pt-2 border-t">
+                            {showAssignPanel ? (
+                                <div className="space-y-3">
+                                    {isTeamsEnabled && workTeams.length > 0 && (
+                                        <div>
+                                            <label className="text-xs font-bold text-muted-foreground mb-1 block font-cairo">
+                                                {isRTL ? 'الفريق' : 'Team'}
+                                            </label>
+                                            <select
+                                                value={assignTeamId}
+                                                onChange={e => setAssignTeamId(e.target.value)}
+                                                className="w-full p-2.5 border rounded-lg bg-background text-sm font-cairo"
+                                            >
+                                                <option value="">{isRTL ? '— بدون فريق —' : '— No team —'}</option>
+                                                {workTeams.map(t => (
+                                                    <option key={t.id} value={t.id}>
+                                                        {isRTL ? (t.name_ar || t.name) : t.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="text-xs font-bold text-muted-foreground mb-1 block font-cairo">
+                                            {isRTL ? 'المكلَّف' : 'Assignee'}
+                                        </label>
+                                        <select
+                                            value={assignUserId}
+                                            onChange={e => setAssignUserId(e.target.value)}
+                                            className="w-full p-2.5 border rounded-lg bg-background text-sm font-cairo"
+                                        >
+                                            <option value="">{isRTL ? '— بدون تعيين —' : '— Unassigned —'}</option>
+                                            {assignableMembers.map(m => (
+                                                <option key={m.id} value={m.id}>
+                                                    {isRTL ? (m.full_name_ar || m.full_name || m.email) : (m.full_name || m.email)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleAssign}
+                                            disabled={isSubmitting}
+                                            className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold font-cairo text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            <UserCog className="w-4 h-4" />
+                                            {isRTL ? 'تعيين' : 'Assign'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setShowAssignPanel(false); setAssignTeamId(''); setAssignUserId('') }}
+                                            className="px-4 py-2.5 border rounded-lg text-sm font-cairo hover:bg-muted/30 transition-colors"
+                                        >
+                                            {isRTL ? 'إلغاء' : 'Cancel'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAssignPanel(true)}
+                                    className="w-full flex items-center justify-center gap-2 py-2 border border-dashed rounded-lg text-sm font-bold font-cairo hover:bg-muted/30 transition-colors text-muted-foreground"
+                                >
+                                    <UserCog className="w-4 h-4" />
+                                    {isRTL ? 'تعيين لفريق / شخص' : 'Assign to Team / Person'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {workOrder.status === 'pending' && !canAssignByRole && (
                         <p className="text-xs text-muted text-center font-cairo">
                             {isRTL ? 'سيتم إسناد البلاغ إليك تلقائيًا عند البدء' : 'Ticket will be assigned to you automatically'}
                         </p>

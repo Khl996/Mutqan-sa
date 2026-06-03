@@ -592,17 +592,17 @@ export default function PublicReportPage() {
                                     </button>
                                 </div>
                             ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-primary/50 hover:text-primary transition-all text-sm w-full justify-center"
+                                <label
+                                    htmlFor="photo-input"
+                                    className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-primary/50 hover:text-primary transition-all text-sm w-full justify-center cursor-pointer"
                                 >
                                     <Camera className="w-5 h-5" />
                                     اضغط لإرفاق صورة
-                                </button>
+                                </label>
                             )}
                             <input
                                 ref={fileInputRef}
+                                id="photo-input"
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                                 onChange={handlePhotoSelect}
