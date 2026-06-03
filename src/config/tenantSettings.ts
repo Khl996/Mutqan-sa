@@ -58,7 +58,6 @@ export interface TenantSettings {
         notify_on_status_change: boolean
         notify_admins_on_escalation: boolean
         daily_summary_enabled: boolean
-        whatsapp_group_url: string | null
     }
     display: {
         default_language: 'ar' | 'en'
@@ -378,7 +377,6 @@ export const DEFAULT_TENANT_SETTINGS: TenantSettings = {
         notify_on_status_change: true,
         notify_admins_on_escalation: true,
         daily_summary_enabled: false,
-        whatsapp_group_url: null,
     },
     display: {
         default_language: 'ar',

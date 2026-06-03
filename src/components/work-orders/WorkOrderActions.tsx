@@ -1,18 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useQuery } from '@tanstack/react-query'
 import { WorkOrder, useIssueTypes } from '@/hooks/useWorkOrders'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
-import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck, Copy, Users, Phone, MessageSquare } from 'lucide-react'
+import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck, Copy, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { useWorkOrderWorkflow } from '@/hooks/useWorkOrderWorkflow'
 import { usePermission } from '@/hooks/usePermission'
 import InventorySelector, { SelectedPart } from './InventorySelector'
-import { supabase } from '@/lib/supabase'
-import { normalizePhone, buildWhatsAppMessage, buildWhatsAppUrl } from '@/lib/whatsapp'
-import { cn } from '@/lib/utils'
+import { buildWhatsAppMessage } from '@/lib/whatsapp'
 
 interface WorkOrderActionsProps {
     workOrder: WorkOrder
@@ -36,7 +33,6 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
     const requireSupervisorApproval = tenantSettings?.work_orders?.require_supervisor_approval ?? true
     const requireEngineerReview = tenantSettings?.work_orders?.require_engineer_review ?? true
     const allowTechnicianReject = tenantSettings?.work_orders?.allow_technician_reject ?? true
-    const groupUrl = tenantSettings?.notifications?.whatsapp_group_url ?? null
 
     const isWorkflowEnabled = useFeatureEnabled('work_orders', 'workflow')
     const isPartsTrackingEnabled = useFeatureEnabled('work_orders', 'parts_tracking')
@@ -80,35 +76,17 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         return isAssignedTechnician
     }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole])
 
-    // WhatsApp notification: visible to non-technicians when order is assigned to someone
-    const showWhatsApp = workOrder.status === 'assigned'
-        && !!workOrder.assigned_to
-        && actorRole !== 'technician'
-
-    // Fetch assignee phone (disabled when section is not shown)
-    const { data: assigneePhone } = useQuery({
-        queryKey: ['profile-phone', workOrder.assigned_to],
-        queryFn: async () => {
-            const { data } = await (supabase
-                .from('profiles')
-                .select('phone')
-                .eq('id', workOrder.assigned_to!)
-                .single() as any)
-            return (data?.phone as string | null) ?? null
-        },
-        enabled: showWhatsApp,
-    })
+    // WhatsApp copy: visible to non-technicians when order is in assigned status
+    const showWhatsApp = workOrder.status === 'assigned' && actorRole !== 'technician'
 
     const { data: issueTypes } = useIssueTypes()
     const matchedIssueType = issueTypes?.find(it => it.id === workOrder.issue_type_id)
-
-    const normalizedPhone = assigneePhone ? normalizePhone(assigneePhone) : null
 
     const assigneeName = workOrder.assignee
         ? (isRTL
             ? (workOrder.assignee.full_name_ar ?? workOrder.assignee.full_name)
             : workOrder.assignee.full_name)
-        : ''
+        : null
 
     const whatsAppMessage = showWhatsApp
         ? buildWhatsAppMessage({
@@ -135,7 +113,6 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         }
     }
 
-    // WhatsApp notification card — rendered alongside workflow actions or standalone
     const whatsAppCard = showWhatsApp ? (
         <div className="bg-card border rounded-xl p-5 shadow-sm space-y-3 border-l-4 border-l-green-600">
             <div className="flex items-center gap-2">
@@ -149,48 +126,16 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                 {whatsAppMessage}
             </pre>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                    onClick={() => {
-                        navigator.clipboard.writeText(whatsAppMessage)
-                        toast.success(isRTL ? 'تم نسخ الرسالة' : 'Message copied')
-                    }}
-                    className="flex items-center justify-center gap-2 py-2.5 px-3 border rounded-lg text-sm font-bold font-cairo hover:bg-muted/30 transition-colors"
-                >
-                    <Copy className="w-4 h-4" />
-                    {isRTL ? 'نسخ الرسالة' : 'Copy Message'}
-                </button>
-
-                <button
-                    onClick={() => window.open(groupUrl!, '_blank', 'noopener,noreferrer')}
-                    disabled={!groupUrl}
-                    title={!groupUrl ? (isRTL ? 'لم يُكوَّن رابط القروب في الإعدادات' : 'Group URL not set in settings') : undefined}
-                    className={cn(
-                        'flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-bold font-cairo transition-colors border',
-                        groupUrl
-                            ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
-                            : 'opacity-50 cursor-not-allowed bg-muted/20 border-muted/30'
-                    )}
-                >
-                    <Users className="w-4 h-4" />
-                    {isRTL ? 'قروب الصيانة' : 'Maintenance Group'}
-                </button>
-
-                <button
-                    onClick={() => window.open(buildWhatsAppUrl(normalizedPhone!, whatsAppMessage), '_blank', 'noopener,noreferrer')}
-                    disabled={!normalizedPhone}
-                    title={!normalizedPhone ? (isRTL ? 'رقم الفني غير متوفر أو غير صالح' : 'Technician phone unavailable or invalid') : undefined}
-                    className={cn(
-                        'flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-bold font-cairo transition-colors border',
-                        normalizedPhone
-                            ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
-                            : 'opacity-50 cursor-not-allowed bg-muted/20 border-muted/30'
-                    )}
-                >
-                    <Phone className="w-4 h-4" />
-                    {isRTL ? 'إرسال للفني' : 'Send to Technician'}
-                </button>
-            </div>
+            <button
+                onClick={() => {
+                    navigator.clipboard.writeText(whatsAppMessage)
+                    toast.success(isRTL ? 'تم نسخ الرسالة' : 'Message copied')
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border rounded-lg text-sm font-bold font-cairo hover:bg-muted/30 transition-colors"
+            >
+                <Copy className="w-4 h-4" />
+                {isRTL ? 'نسخ رسالة واتساب' : 'Copy WhatsApp Message'}
+            </button>
         </div>
     ) : null
 
@@ -415,8 +360,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         )
     }
 
-    // No workflow action available, but show WhatsApp section if applicable
-    // (e.g., a supervisor viewing an assigned order they didn't create)
+    // No workflow action, but show copy button for non-technicians viewing assigned orders
     if (whatsAppCard) return whatsAppCard
 
     return null

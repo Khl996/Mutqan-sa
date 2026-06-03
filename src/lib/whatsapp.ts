@@ -3,14 +3,15 @@ import type { WorkOrder } from '@/hooks/useWorkOrders'
 // Normalizes a Saudi phone number to international format (+966XXXXXXXXX).
 // Assumption: all numbers belong to Saudi Arabia (country code 966) unless
 // already prefixed.  Three input forms are handled:
-//   05XXXXXXXX   → +9665XXXXXXXX  (local mobile, strip leading zero)
-//   9665XXXXXXXX → +9665XXXXXXXX  (without + sign)
+//   05XXXXXXXX    → +9665XXXXXXXX  (local mobile, strip leading zero)
+//   9665XXXXXXXX  → +9665XXXXXXXX  (without + sign)
 //   +9665XXXXXXXX → +9665XXXXXXXX  (already normalized, pass through)
-// Returns null for unrecognized formats; callers should disable the button.
+// Returns null for unrecognized formats.
+// Reserved for future WhatsApp Business API integration (Phase N).
 export function normalizePhone(raw: string): string | null {
     const cleaned = raw.replace(/[\s\-().]/g, '')
-    if (/^05\d{8}$/.test(cleaned))   return `+966${cleaned.slice(1)}`
-    if (/^9665\d{8}$/.test(cleaned)) return `+${cleaned}`
+    if (/^05\d{8}$/.test(cleaned))    return `+966${cleaned.slice(1)}`
+    if (/^9665\d{8}$/.test(cleaned))  return `+${cleaned}`
     if (/^\+9665\d{8}$/.test(cleaned)) return cleaned
     return null
 }
@@ -25,8 +26,9 @@ function joinLocation(parts: LocationRef[], ar: boolean): string {
 }
 
 export interface WhatsAppMessageParams {
-    workOrder: Pick<WorkOrder, 'code' | 'description' | 'id' | 'building' | 'floor' | 'room'>
-    assigneeName: string
+    workOrder: Pick<WorkOrder, 'code' | 'description' | 'id' | 'building' | 'floor' | 'room' | 'assigned_team'>
+    // assigneeName: shown only when a specific technician is assigned
+    assigneeName?: string | null
     issueTypeAr?: string | null
     issueTypeEn?: string | null
     baseUrl: string
@@ -52,7 +54,12 @@ export function buildWhatsAppMessage({
         locationAr || locationEn
             ? `الموقع / Location: ${[locationAr, locationEn].filter(Boolean).join(' / ')}`
             : null,
-        `المكلّف / Assigned to: ${assigneeName}`,
+        workOrder.assigned_team
+            ? `الفريق / Team: ${workOrder.assigned_team}`
+            : null,
+        assigneeName
+            ? `المكلّف / Assigned to: ${assigneeName}`
+            : null,
         workOrder.description
             ? `الوصف / Description: ${workOrder.description}`
             : null,
@@ -62,6 +69,7 @@ export function buildWhatsAppMessage({
     return lines.filter(Boolean).join('\n')
 }
 
+// Reserved for future WhatsApp Business API / direct messaging (Phase N).
 export function buildWhatsAppUrl(normalizedPhone: string, message: string): string {
     return `https://wa.me/${normalizedPhone.replace('+', '')}?text=${encodeURIComponent(message)}`
 }
