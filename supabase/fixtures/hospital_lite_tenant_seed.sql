@@ -1,12 +1,16 @@
 -- =============================================================================
--- Hospital Lite — Phase 1+2+3 demo tenant seed (staging-only, idempotent).
+-- Hospital Lite — Phase 1+2+3+4 demo tenant seed (staging-only, idempotent).
 --
 -- Creates: tenant, public-portal token, Lite-only enabled_modules, demo
--- buildings/floors/departments for the intake form.
+-- buildings/floors/departments for the intake form, demo technician account
+-- (auth.users + profile) and a pre-assigned work order for RLS testing.
 --
 -- Fixed UUIDs → safe to re-run; no drift between runs.
 -- No real patient data (per roadmap: no real data before phase 7 full RLS).
--- Does NOT create auth.users (phase 4).
+--
+-- Demo technician credentials (staging only):
+--   Email:    tech1@hospital-lite.test
+--   Password: TechDemo@2026
 --
 -- Run via Supabase MCP execute_sql or psql against staging.
 -- =============================================================================
@@ -46,6 +50,10 @@ DECLARE
     v_dept_lab   UUID := 'd0000000-0000-4000-8000-d00000000007'; -- مختبر
     v_dept_rad   UUID := 'd0000000-0000-4000-8000-d00000000008'; -- أشعة
     v_dept_pharm UUID := 'd0000000-0000-4000-8000-d00000000009'; -- صيدلية
+
+    -- Phase 4: demo technician + test work order (fixed UUIDs for idempotency)
+    v_tech1_id   UUID := 'd0000000-0000-4000-8000-000000000031';
+    v_wo_test_id UUID := 'd0000000-0000-4000-8000-000000000041';
 BEGIN
 
     -- ── Tenant ──────────────────────────────────────────────────────────────────
@@ -108,73 +116,130 @@ BEGIN
     -- ── Buildings ────────────────────────────────────────────────────────────────
     INSERT INTO public.buildings (id, tenant_id, code, name, name_ar, is_active, created_at, updated_at)
     VALUES
-        (v_bld_main, v_tenant_id, 'MAIN', 'Main Building',     'المبنى الرئيسي',    TRUE, NOW(), NOW()),
-        (v_bld_emg,  v_tenant_id, 'EMG',  'Emergency Building','مبنى الطوارئ',      TRUE, NOW(), NOW()),
-        (v_bld_diag, v_tenant_id, 'DIAG', 'Diagnostics Block', 'مجمع التشخيص',     TRUE, NOW(), NOW())
+        (v_bld_main, v_tenant_id, 'MAIN', 'Main Building',      'المبنى الرئيسي', TRUE, NOW(), NOW()),
+        (v_bld_emg,  v_tenant_id, 'EMG',  'Emergency Building', 'مبنى الطوارئ',   TRUE, NOW(), NOW()),
+        (v_bld_diag, v_tenant_id, 'DIAG', 'Diagnostics Block',  'مجمع التشخيص',  TRUE, NOW(), NOW())
     ON CONFLICT (tenant_id, code) DO UPDATE
-        SET name      = EXCLUDED.name,
-            name_ar   = EXCLUDED.name_ar,
-            is_active = TRUE,
-            updated_at = NOW();
+        SET name = EXCLUDED.name, name_ar = EXCLUDED.name_ar,
+            is_active = TRUE, updated_at = NOW();
 
-    -- ── Floors — Main Building ───────────────────────────────────────────────────
+    -- ── Floors ───────────────────────────────────────────────────────────────────
     INSERT INTO public.floors (id, building_id, code, name, name_ar, level, is_active, created_at, updated_at)
     VALUES
-        (v_fl_main_g, v_bld_main, 'G',  'Ground Floor', 'الدور الأرضي', 0, TRUE, NOW(), NOW()),
-        (v_fl_main_1, v_bld_main, '1',  'First Floor',  'الدور الأول',  1, TRUE, NOW(), NOW()),
-        (v_fl_main_2, v_bld_main, '2',  'Second Floor', 'الدور الثاني', 2, TRUE, NOW(), NOW())
-    ON CONFLICT (building_id, code) DO UPDATE
-        SET name      = EXCLUDED.name,
-            name_ar   = EXCLUDED.name_ar,
-            is_active = TRUE,
-            updated_at = NOW();
-
-    -- ── Floors — Emergency Building ──────────────────────────────────────────────
-    INSERT INTO public.floors (id, building_id, code, name, name_ar, level, is_active, created_at, updated_at)
-    VALUES
-        (v_fl_emg_g, v_bld_emg, 'G', 'Ground Floor', 'الدور الأرضي', 0, TRUE, NOW(), NOW()),
-        (v_fl_emg_1, v_bld_emg, '1', 'First Floor',  'الدور الأول',  1, TRUE, NOW(), NOW())
-    ON CONFLICT (building_id, code) DO UPDATE
-        SET name      = EXCLUDED.name,
-            name_ar   = EXCLUDED.name_ar,
-            is_active = TRUE,
-            updated_at = NOW();
-
-    -- ── Floors — Diagnostics Building ───────────────────────────────────────────
-    INSERT INTO public.floors (id, building_id, code, name, name_ar, level, is_active, created_at, updated_at)
-    VALUES
+        (v_fl_main_g, v_bld_main, 'G', 'Ground Floor', 'الدور الأرضي', 0, TRUE, NOW(), NOW()),
+        (v_fl_main_1, v_bld_main, '1', 'First Floor',  'الدور الأول',  1, TRUE, NOW(), NOW()),
+        (v_fl_main_2, v_bld_main, '2', 'Second Floor', 'الدور الثاني', 2, TRUE, NOW(), NOW()),
+        (v_fl_emg_g,  v_bld_emg,  'G', 'Ground Floor', 'الدور الأرضي', 0, TRUE, NOW(), NOW()),
+        (v_fl_emg_1,  v_bld_emg,  '1', 'First Floor',  'الدور الأول',  1, TRUE, NOW(), NOW()),
         (v_fl_diag_g, v_bld_diag, 'G', 'Ground Floor', 'الدور الأرضي', 0, TRUE, NOW(), NOW()),
         (v_fl_diag_1, v_bld_diag, '1', 'First Floor',  'الدور الأول',  1, TRUE, NOW(), NOW())
     ON CONFLICT (building_id, code) DO UPDATE
-        SET name      = EXCLUDED.name,
-            name_ar   = EXCLUDED.name_ar,
-            is_active = TRUE,
-            updated_at = NOW();
+        SET name = EXCLUDED.name, name_ar = EXCLUDED.name_ar,
+            is_active = TRUE, updated_at = NOW();
 
     -- ── Departments ──────────────────────────────────────────────────────────────
     INSERT INTO public.departments (id, tenant_id, building_id, floor_id, code, name, name_ar, is_active, created_at, updated_at)
     VALUES
-        -- Main Building — Ground Floor
-        (v_dept_recep, v_tenant_id, v_bld_main, v_fl_main_g, 'RECEP', 'Reception',           'الاستقبال',            TRUE, NOW(), NOW()),
-        (v_dept_pharm, v_tenant_id, v_bld_main, v_fl_main_g, 'PHARM', 'Pharmacy',             'الصيدلية',             TRUE, NOW(), NOW()),
-        -- Main Building — First Floor
-        (v_dept_out,   v_tenant_id, v_bld_main, v_fl_main_1, 'OUT',   'Outpatient Clinics',   'العيادات الخارجية',     TRUE, NOW(), NOW()),
-        (v_dept_admin, v_tenant_id, v_bld_main, v_fl_main_1, 'ADMIN', 'Administration',        'الإدارة',              TRUE, NOW(), NOW()),
-        -- Main Building — Second Floor
-        (v_dept_icu,   v_tenant_id, v_bld_main, v_fl_main_2, 'ICU',   'Intensive Care Unit',  'العناية المركزة',       TRUE, NOW(), NOW()),
-        (v_dept_surg,  v_tenant_id, v_bld_main, v_fl_main_2, 'SURG',  'Operating Rooms',      'غرف العمليات',         TRUE, NOW(), NOW()),
-        -- Emergency Building — Ground Floor
-        (v_dept_emg,   v_tenant_id, v_bld_emg,  v_fl_emg_g,  'EMG',   'Emergency Dept',       'قسم الطوارئ',          TRUE, NOW(), NOW()),
-        -- Diagnostics Building
-        (v_dept_lab,   v_tenant_id, v_bld_diag, v_fl_diag_g, 'LAB',   'Laboratory',           'المختبر',              TRUE, NOW(), NOW()),
-        (v_dept_rad,   v_tenant_id, v_bld_diag, v_fl_diag_1, 'RAD',   'Radiology',            'الأشعة',               TRUE, NOW(), NOW())
+        (v_dept_recep, v_tenant_id, v_bld_main, v_fl_main_g, 'RECEP', 'Reception',          'الاستقبال',        TRUE, NOW(), NOW()),
+        (v_dept_pharm, v_tenant_id, v_bld_main, v_fl_main_g, 'PHARM', 'Pharmacy',            'الصيدلية',         TRUE, NOW(), NOW()),
+        (v_dept_out,   v_tenant_id, v_bld_main, v_fl_main_1, 'OUT',   'Outpatient Clinics',  'العيادات الخارجية', TRUE, NOW(), NOW()),
+        (v_dept_admin, v_tenant_id, v_bld_main, v_fl_main_1, 'ADMIN', 'Administration',       'الإدارة',          TRUE, NOW(), NOW()),
+        (v_dept_icu,   v_tenant_id, v_bld_main, v_fl_main_2, 'ICU',   'Intensive Care Unit', 'العناية المركزة',   TRUE, NOW(), NOW()),
+        (v_dept_surg,  v_tenant_id, v_bld_main, v_fl_main_2, 'SURG',  'Operating Rooms',     'غرف العمليات',     TRUE, NOW(), NOW()),
+        (v_dept_emg,   v_tenant_id, v_bld_emg,  v_fl_emg_g,  'EMG',   'Emergency Dept',      'قسم الطوارئ',      TRUE, NOW(), NOW()),
+        (v_dept_lab,   v_tenant_id, v_bld_diag, v_fl_diag_g, 'LAB',   'Laboratory',          'المختبر',          TRUE, NOW(), NOW()),
+        (v_dept_rad,   v_tenant_id, v_bld_diag, v_fl_diag_1, 'RAD',   'Radiology',           'الأشعة',           TRUE, NOW(), NOW())
     ON CONFLICT (tenant_id, code) DO UPDATE
-        SET name        = EXCLUDED.name,
-            name_ar     = EXCLUDED.name_ar,
-            building_id = EXCLUDED.building_id,
-            floor_id    = EXCLUDED.floor_id,
-            is_active   = TRUE,
+        SET name = EXCLUDED.name, name_ar = EXCLUDED.name_ar,
+            building_id = EXCLUDED.building_id, floor_id = EXCLUDED.floor_id,
+            is_active = TRUE, updated_at = NOW();
+
+    -- ── Phase 4: Demo technician auth account ────────────────────────────────────
+    -- Creates a real login-capable auth.users entry for E2E testing of:
+    --   • deep link redirect-after-login
+    --   • RLS: technician sees only assigned/reported/created orders
+    --   • WorkOrderActions: start → in_progress → complete flow
+    --
+    -- pgcrypto lives in extensions schema; qualified call prevents search_path
+    -- issues (same guard as SECURITY DEFINER RPCs).
+    -- ON CONFLICT (id): idempotent re-run updates password + confirms email.
+    INSERT INTO auth.users (
+        instance_id, id, aud, role, email,
+        encrypted_password, email_confirmed_at,
+        raw_app_meta_data, raw_user_meta_data,
+        is_super_admin, created_at, updated_at,
+        confirmation_token, email_change, email_change_token_new, recovery_token
+    ) VALUES (
+        '00000000-0000-0000-0000-000000000000',
+        v_tech1_id,
+        'authenticated', 'authenticated',
+        'tech1@hospital-lite.test',
+        extensions.crypt('TechDemo@2026', extensions.gen_salt('bf')),
+        NOW(),
+        '{"provider": "email", "providers": ["email"]}'::jsonb,
+        '{"full_name": "Ahmed Al-Fanni"}'::jsonb,
+        FALSE, NOW(), NOW(),
+        '', '', '', ''
+    )
+    ON CONFLICT (id) DO UPDATE
+        SET email              = EXCLUDED.email,
+            encrypted_password = EXCLUDED.encrypted_password,
+            email_confirmed_at = COALESCE(auth.users.email_confirmed_at, NOW()),
+            updated_at         = NOW();
+
+    -- Profile for the demo technician
+    INSERT INTO public.profiles (
+        id, tenant_id, full_name, full_name_ar, email,
+        role, is_active, created_at, updated_at
+    ) VALUES (
+        v_tech1_id,
+        v_tenant_id,
+        'Ahmed Al-Fanni',
+        'أحمد الفني',
+        'tech1@hospital-lite.test',
+        'technician', TRUE, NOW(), NOW()
+    )
+    ON CONFLICT (id) DO UPDATE
+        SET full_name    = EXCLUDED.full_name,
+            full_name_ar = EXCLUDED.full_name_ar,
+            tenant_id    = EXCLUDED.tenant_id,
+            role         = EXCLUDED.role,
+            is_active    = TRUE,
+            updated_at   = NOW();
+
+    -- ── Phase 4: Pre-assigned work order for RLS regression testing ──────────────
+    -- status = 'assigned' so the technician can start it immediately.
+    -- ON CONFLICT: preserve status if already progressed (don't reset to 'assigned').
+    INSERT INTO public.work_orders (
+        id, tenant_id, code, title, description,
+        status, priority,
+        building_id, department_id,
+        assigned_to,
+        reporter_name, reporter_phone,
+        reported_at, created_at, updated_at
+    ) VALUES (
+        v_wo_test_id,
+        v_tenant_id,
+        'TEST-TECH-001',
+        'بلاغ تجريبي — فني أحمد',
+        'أمر عمل تجريبي لاختبار مسار الفني: deep link، تحديث الحالة، إقفال الأمر.',
+        'assigned', 'medium',
+        v_bld_main,
+        v_dept_recep,
+        v_tech1_id,
+        'نظام الاختبار', '0500000000',
+        NOW(), NOW(), NOW()
+    )
+    ON CONFLICT (id) DO UPDATE
+        SET assigned_to = EXCLUDED.assigned_to,
+            -- Don't reset a completed/rejected/cancelled order back to assigned
+            status      = CASE
+                            WHEN work_orders.status IN ('completed', 'rejected', 'cancelled')
+                            THEN work_orders.status
+                            ELSE EXCLUDED.status
+                          END,
             updated_at  = NOW();
 
-    RAISE NOTICE 'Hospital Lite seed complete: tenant=% buildings=3 floors=7 departments=9', v_tenant_id;
+    RAISE NOTICE 'Hospital Lite seed complete: tenant=% buildings=3 floors=7 departments=9 tech1=% test_wo=%',
+        v_tenant_id, v_tech1_id, v_wo_test_id;
 END $$;
