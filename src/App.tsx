@@ -23,6 +23,7 @@ const TermsOfUsePage = lazy(() => import('@/pages/site/TermsOfUsePage'))
 const ContactPage = lazy(() => import('@/pages/site/ContactPage'))
 const PaymentCallbackPage = lazy(() => import('@/pages/payment/PaymentCallbackPage'))
 const PublicReportPage = lazy(() => import('@/pages/public/PublicReportPage'))
+const PublicTrackPage = lazy(() => import('@/pages/public/PublicTrackPage'))
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
@@ -282,6 +283,9 @@ function AppRoutes() {
 
             {/* Public Report Route */}
             <Route path="/portal/:token" element={renderLazyPage(PublicReportPage)} />
+
+            {/* Public Track Route */}
+            <Route path="/track/:token" element={renderLazyPage(PublicTrackPage)} />
 
             {/* 404 Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
