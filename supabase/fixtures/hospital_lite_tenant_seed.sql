@@ -105,6 +105,21 @@ BEGIN
            updated_at      = NOW()
      WHERE id = v_tenant_id;
 
+    -- Seed tenant settings including demo WhatsApp group URL for Phase 5 testing.
+    -- jsonb_build_object preserves existing keys not listed here via || merge.
+    UPDATE public.tenants
+       SET settings = COALESCE(settings, '{}'::jsonb) || jsonb_build_object(
+               'notifications', jsonb_build_object(
+                   'notify_on_new_work_order',    TRUE,
+                   'notify_on_status_change',     TRUE,
+                   'notify_admins_on_escalation', TRUE,
+                   'daily_summary_enabled',       FALSE,
+                   'whatsapp_group_url',          'https://chat.whatsapp.com/HospitalLiteDemoGroup'
+               )
+           ),
+           updated_at = NOW()
+     WHERE id = v_tenant_id;
+
     -- ── Public access token ──────────────────────────────────────────────────────
     INSERT INTO public.tenant_access_tokens (tenant_id, token, name, is_active, created_at)
     VALUES (v_tenant_id, v_token, 'Hospital Lite Public Portal', TRUE, NOW())
@@ -187,22 +202,24 @@ BEGIN
             email_confirmed_at = COALESCE(auth.users.email_confirmed_at, NOW()),
             updated_at         = NOW();
 
-    -- Profile for the demo technician
+    -- Profile for the demo technician (phone in Saudi local format for normalizePhone testing)
     INSERT INTO public.profiles (
         id, tenant_id, full_name, full_name_ar, email,
-        role, is_active, created_at, updated_at
+        phone, role, is_active, created_at, updated_at
     ) VALUES (
         v_tech1_id,
         v_tenant_id,
         'Ahmed Al-Fanni',
         'أحمد الفني',
         'tech1@hospital-lite.test',
+        '0512345678',
         'technician', TRUE, NOW(), NOW()
     )
     ON CONFLICT (id) DO UPDATE
         SET full_name    = EXCLUDED.full_name,
             full_name_ar = EXCLUDED.full_name_ar,
             tenant_id    = EXCLUDED.tenant_id,
+            phone        = EXCLUDED.phone,
             role         = EXCLUDED.role,
             is_active    = TRUE,
             updated_at   = NOW();
