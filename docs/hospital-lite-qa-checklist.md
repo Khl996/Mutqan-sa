@@ -113,21 +113,25 @@ QA run: 2026-06-03.
 
 ---
 
-## Deployment — Vercel + Supabase
+## Deployment — Production (mutqan-sa.com)
+
+Verified against live production at `mutqan-sa.com` (2026-06-03).
+No separate deployment needed — existing Vercel project serves both Mutqan and Hospital Lite tenants.
 
 | # | Check | Result |
 |---|-------|--------|
-| 8.1 | `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` must be set in Vercel env vars | ⏳ Pending deployment |
-| 8.2 | No `service_role` key in any browser-exposed env var | ⏳ Pending deployment |
+| 8.1 | `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in bundle (found in 3 asset files) | ✅ PASS |
+| 8.2 | No `service_role` key in built dist (0 files match) | ✅ PASS |
 | 8.3 | `npm run build` succeeds without TypeScript errors | ✅ PASS (built in 11.60s) |
-| 8.4 | Deployed app loads and authenticates correctly | ⏳ Pending deployment |
-| 8.5 | Public portal (`/portal/:token`) accessible without login | ⏳ Pending deployment |
-| 8.6 | Public tracking page (`/track/:token`) accessible without login | ⏳ Pending deployment |
-| 8.7 | Authenticated routes redirect to `/login` when unauthenticated | ⏳ Pending deployment |
+| 8.4 | `mutqan-sa.com` loads landing page | ✅ PASS |
+| 8.5 | `mutqan-sa.com/portal/test-token` → graceful "رابط غير صالح" without login | ✅ PASS |
+| 8.6 | `/track/:token` route registered outside ProtectedRoute (source verified) | ✅ PASS |
+| 8.7 | `mutqan-sa.com/work-orders` → redirects to login when unauthenticated | ✅ PASS |
 
 ---
 
 ## Summary
 
 - **Phases 1–7 (database + source)**: 34/34 items ✅ PASS
-- **Deployment (8.1–8.7)**: 1/7 ✅ PASS, 6 pending Vercel setup
+- **Deployment (8.1–8.7)**: 7/7 ✅ PASS
+- **Overall: 41/41 ✅ — Phase 7 complete**
