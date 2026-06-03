@@ -8,6 +8,7 @@ import AuthLayout from '@/components/layout/AuthLayout'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import PlatformLayout from '@/components/layout/PlatformLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import ModuleProtectedRoute from '@/components/auth/ModuleProtectedRoute'
 
 // Contexts
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
@@ -22,6 +23,7 @@ const TermsOfUsePage = lazy(() => import('@/pages/site/TermsOfUsePage'))
 const ContactPage = lazy(() => import('@/pages/site/ContactPage'))
 const PaymentCallbackPage = lazy(() => import('@/pages/payment/PaymentCallbackPage'))
 const PublicReportPage = lazy(() => import('@/pages/public/PublicReportPage'))
+const PublicTrackPage = lazy(() => import('@/pages/public/PublicTrackPage'))
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
@@ -147,7 +149,9 @@ function AppRoutes() {
             <Route
                 path="/"
                 element={
-                    isAuthenticated
+                    authLoading
+                        ? null
+                        : isAuthenticated
                         ? (needsTenantProvisioning
                             ? <Navigate to="/register/complete" replace />
                             : isPlatformUser && !currentTenant
@@ -208,29 +212,39 @@ function AppRoutes() {
                 <Route path="/profile" element={renderLazyPage(ProfilePage)} />
 
                 <Route element={<ProtectedRoute permission="facilities.view" />}>
-                    <Route path="/facilities" element={renderLazyPage(FacilitiesPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="facilities" />}>
+                        <Route path="/facilities" element={renderLazyPage(FacilitiesPage)} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="assets.view" />}>
-                    <Route path="/assets" element={renderLazyPage(AssetsPage)} />
-                    <Route path="/assets/:id" element={renderLazyPage(AssetDetailsPage)} />
-                    <Route path="/asset-logs" element={renderLazyPage(AssetLogsPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="assets" />}>
+                        <Route path="/assets" element={renderLazyPage(AssetsPage)} />
+                        <Route path="/assets/:id" element={renderLazyPage(AssetDetailsPage)} />
+                        <Route path="/asset-logs" element={renderLazyPage(AssetLogsPage)} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="work_orders.view" />}>
-                    <Route path="/work-orders" element={renderLazyPage(WorkOrdersPage)} />
-                    <Route path="/work-orders/:id" element={renderLazyPage(WorkOrderDetailsPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="work_orders" />}>
+                        <Route path="/work-orders" element={renderLazyPage(WorkOrdersPage)} />
+                        <Route path="/work-orders/:id" element={renderLazyPage(WorkOrderDetailsPage)} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="maintenance.view" />}>
-                    <Route path="/maintenance" element={renderLazyPage(MaintenancePage)} />
-                    <Route path="/maintenance/job-plans/:id" element={renderLazyPage(PMJobPlanDetailsPage)} />
-                    <Route path="/maintenance/schedules/:id" element={renderLazyPage(PMScheduleDetailsPage)} />
-                    <Route path="/maintenance/plans/:id" element={<Navigate to="/maintenance" replace />} />
+                    <Route element={<ModuleProtectedRoute moduleCode="maintenance" />}>
+                        <Route path="/maintenance" element={renderLazyPage(MaintenancePage)} />
+                        <Route path="/maintenance/job-plans/:id" element={renderLazyPage(PMJobPlanDetailsPage)} />
+                        <Route path="/maintenance/schedules/:id" element={renderLazyPage(PMScheduleDetailsPage)} />
+                        <Route path="/maintenance/plans/:id" element={<Navigate to="/maintenance" replace />} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="inventory.view" />}>
-                    <Route path="/inventory" element={renderLazyPage(InventoryPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="inventory" />}>
+                        <Route path="/inventory" element={renderLazyPage(InventoryPage)} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="users.view" />}>
@@ -238,11 +252,15 @@ function AppRoutes() {
                 </Route>
 
                 <Route element={<ProtectedRoute permission="work_teams.view" />}>
-                    <Route path="/work-teams" element={renderLazyPage(WorkTeamsPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="work_teams" />}>
+                        <Route path="/work-teams" element={renderLazyPage(WorkTeamsPage)} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="reports.view" />}>
-                    <Route path="/reports" element={renderLazyPage(ReportsPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="reports" />}>
+                        <Route path="/reports" element={renderLazyPage(ReportsPage)} />
+                    </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute permission="settings.view" />}>
@@ -257,12 +275,17 @@ function AppRoutes() {
                 </Route>
 
                 <Route element={<ProtectedRoute permission="subscription.manage" />}>
-                    <Route path="/subscription" element={renderLazyPage(TenantSubscriptionPage)} />
+                    <Route element={<ModuleProtectedRoute moduleCode="billing" defaultAccess={true} />}>
+                        <Route path="/subscription" element={renderLazyPage(TenantSubscriptionPage)} />
+                    </Route>
                 </Route>
             </Route>
 
             {/* Public Report Route */}
             <Route path="/portal/:token" element={renderLazyPage(PublicReportPage)} />
+
+            {/* Public Track Route */}
+            <Route path="/track/:token" element={renderLazyPage(PublicTrackPage)} />
 
             {/* 404 Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />

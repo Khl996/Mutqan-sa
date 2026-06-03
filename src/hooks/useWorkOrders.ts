@@ -74,6 +74,32 @@ export interface WorkOrder {
     engineer_approved_at?: string | null
     maintenance_manager_approved_by?: string | null
     maintenance_manager_approved_at?: string | null
+
+    // PDF generation fields (Phase 6)
+    pdf_snapshot?: WorkOrderPdfSnapshot | null
+    pdf_generated_at?: string | null
+    pdf_version?: number | null
+    pdf_file_url?: string | null
+}
+
+export interface WorkOrderPdfSnapshot {
+    code: string
+    description: string | null
+    priority: string
+    created_at: string
+    closed_at: string
+    reporter_notes: string | null
+    reporter_image_url: string | null
+    before_images: unknown[]
+    after_images: unknown[]
+    issue_type: { id: string; name: string; name_ar: string | null } | null
+    building: { id: string; name: string; name_ar: string | null } | null
+    floor: { id: string; name: string; name_ar: string | null } | null
+    room: { id: string; name: string; name_ar: string | null } | null
+    assigned_team: { id: string; name: string; name_ar: string | null } | null
+    assignee: { id: string; full_name: string } | null
+    reporter: { id: string; full_name: string } | null
+    closed_by: { id: string; full_name: string }
 }
 
 export function isPreventiveWorkOrder(wo: Pick<WorkOrder, 'work_type' | 'source_schedule_id'>): boolean {

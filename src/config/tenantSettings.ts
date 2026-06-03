@@ -10,6 +10,7 @@ export type SettingsCategory =
     | 'notifications'
     | 'display'
     | 'portal'
+    | 'pdf_identity'
 
 export interface SettingDefinition {
     key: string
@@ -71,6 +72,14 @@ export interface TenantSettings {
         show_estimated_time: boolean
         welcome_message: string | null
         thank_you_message: string | null
+    }
+    pdf_identity: {
+        organization_name: string
+        organization_name_ar: string
+        logo_path: string | null
+        footer_note: string | null
+        show_reporter_images: boolean
+        show_before_after_images: boolean
     }
 }
 
@@ -351,6 +360,61 @@ export const SETTINGS_CATEGORIES: SettingsCategoryDefinition[] = [
             },
         ],
     },
+    {
+        code: 'pdf_identity',
+        name: 'PDF Identity',
+        name_ar: 'هوية الـ PDF',
+        description: 'Configure organization branding on generated PDF reports',
+        description_ar: 'ضبط هوية المنشأة في تقارير الـ PDF المولّدة',
+        icon: 'FileText',
+        settings: [
+            {
+                key: 'organization_name',
+                name: 'Organization Name (EN)',
+                name_ar: 'اسم المنشأة (إنجليزي)',
+                description: 'Organization name shown at the top of PDF reports',
+                description_ar: 'اسم المنشأة يظهر في أعلى تقارير الـ PDF',
+                type: 'string',
+                default: '',
+            },
+            {
+                key: 'organization_name_ar',
+                name: 'Organization Name (AR)',
+                name_ar: 'اسم المنشأة (عربي)',
+                description: 'Arabic organization name shown at the top of PDF reports',
+                description_ar: 'الاسم العربي للمنشأة يظهر في أعلى تقارير الـ PDF',
+                type: 'string',
+                default: '',
+            },
+            {
+                key: 'footer_note',
+                name: 'Footer Note',
+                name_ar: 'ملاحظة التذييل',
+                description: 'Optional note shown at the bottom of each PDF page',
+                description_ar: 'ملاحظة اختيارية تظهر أسفل كل صفحة في الـ PDF',
+                type: 'string',
+                default: '',
+            },
+            {
+                key: 'show_reporter_images',
+                name: 'Show Reporter Image',
+                name_ar: 'عرض صورة المبلّغ',
+                description: 'Include the reporter photo in the PDF',
+                description_ar: 'تضمين صورة المبلّغ في الـ PDF',
+                type: 'boolean',
+                default: true,
+            },
+            {
+                key: 'show_before_after_images',
+                name: 'Show Before / After Images',
+                name_ar: 'عرض صور قبل / بعد',
+                description: 'Include before and after maintenance photos in the PDF',
+                description_ar: 'تضمين صور قبل وبعد الصيانة في الـ PDF',
+                type: 'boolean',
+                default: true,
+            },
+        ],
+    },
 ]
 
 export const DEFAULT_TENANT_SETTINGS: TenantSettings = {
@@ -391,6 +455,14 @@ export const DEFAULT_TENANT_SETTINGS: TenantSettings = {
         welcome_message: null,
         thank_you_message: null,
     },
+    pdf_identity: {
+        organization_name: '',
+        organization_name_ar: '',
+        logo_path: null,
+        footer_note: null,
+        show_reporter_images: true,
+        show_before_after_images: true,
+    },
 }
 
 export function getSettingValue<T>(
@@ -424,5 +496,6 @@ export function mergeWithDefaults(settings: Partial<TenantSettings> | null): Ten
         notifications: { ...DEFAULT_TENANT_SETTINGS.notifications, ...settings.notifications },
         display: { ...DEFAULT_TENANT_SETTINGS.display, ...settings.display },
         portal: { ...DEFAULT_TENANT_SETTINGS.portal, ...settings.portal },
+        pdf_identity: { ...DEFAULT_TENANT_SETTINGS.pdf_identity, ...settings.pdf_identity },
     }
 }

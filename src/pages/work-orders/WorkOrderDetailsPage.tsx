@@ -18,6 +18,7 @@ import WorkOrderQuickInfo from '@/components/work-orders/WorkOrderQuickInfo'
 import WorkOrderAssetLocation from '@/components/work-orders/WorkOrderAssetLocation'
 import WorkOrderActions from '@/components/work-orders/WorkOrderActions'
 import WorkOrderPrintView from '@/components/work-orders/WorkOrderPrintView'
+import WorkOrderPdfButton from '@/components/work-orders/WorkOrderPdfButton'
 import ExecutionDialog from '@/components/maintenance/ExecutionDialog'
 import { en as pmEn, ar as pmAr } from '@/components/maintenance/foundationPmUtils'
 import { AlertTriangle } from 'lucide-react'
@@ -171,6 +172,11 @@ export default function WorkOrderDetailsPage() {
                             toast.success(isRTL ? 'تم تنفيذ الإجراء بنجاح' : 'Action completed successfully')
                         }}
                     />
+
+                    {/* PDF Report — only for completed orders */}
+                    {workOrder.status === 'completed' && (
+                        <WorkOrderPdfButton workOrder={workOrder} isRTL={isRTL} />
+                    )}
                 </div>
             </div>
 

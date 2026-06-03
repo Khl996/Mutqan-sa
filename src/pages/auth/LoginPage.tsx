@@ -27,7 +27,25 @@ export default function LoginPage() {
     useEffect(() => {
         if (!pendingRedirect || !isAuthenticated || !profile) return
 
-        // Profile is now loaded — route based on role
+        setPendingRedirect(false)
+
+        // Deep-link redirect: if ProtectedRoute saved an intended destination,
+        // send the user there (e.g. /work-orders/<id> from a WhatsApp link).
+        // Only follow internal paths; discard anything outside the app.
+        const savedRedirect = sessionStorage.getItem('redirectAfterLogin')
+        sessionStorage.removeItem('redirectAfterLogin')
+
+        if (
+            savedRedirect &&
+            savedRedirect.startsWith('/') &&
+            !savedRedirect.startsWith('/login') &&
+            !savedRedirect.startsWith('/register')
+        ) {
+            navigate(savedRedirect, { replace: true })
+            return
+        }
+
+        // Default role-based redirect
         if (isPlatformRole(profile.role)) {
             navigate('/platform', { replace: true })
         } else if (!profile.tenant_id) {
@@ -35,7 +53,6 @@ export default function LoginPage() {
         } else {
             navigate('/dashboard', { replace: true })
         }
-        setPendingRedirect(false)
     }, [pendingRedirect, isAuthenticated, profile, navigate])
 
     const handleSubmit = async (e: React.FormEvent) => {

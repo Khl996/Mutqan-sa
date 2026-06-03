@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { WorkOrder } from '@/hooks/useWorkOrders'
+import { WorkOrder, useIssueTypes } from '@/hooks/useWorkOrders'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
-import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck } from 'lucide-react'
+import { PlayCircle, CheckCircle2, AlertOctagon, ShieldCheck, Copy, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { useWorkOrderWorkflow } from '@/hooks/useWorkOrderWorkflow'
 import { usePermission } from '@/hooks/usePermission'
 import InventorySelector, { SelectedPart } from './InventorySelector'
+import { buildWhatsAppMessage } from '@/lib/whatsapp'
 
 interface WorkOrderActionsProps {
     workOrder: WorkOrder
@@ -75,6 +76,28 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         return isAssignedTechnician
     }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole])
 
+    // WhatsApp copy: visible to non-technicians when order is in assigned status
+    const showWhatsApp = workOrder.status === 'assigned' && actorRole !== 'technician'
+
+    const { data: issueTypes } = useIssueTypes()
+    const matchedIssueType = issueTypes?.find(it => it.id === workOrder.issue_type_id)
+
+    const assigneeName = workOrder.assignee
+        ? (isRTL
+            ? (workOrder.assignee.full_name_ar ?? workOrder.assignee.full_name)
+            : workOrder.assignee.full_name)
+        : null
+
+    const whatsAppMessage = showWhatsApp
+        ? buildWhatsAppMessage({
+            workOrder,
+            assigneeName,
+            issueTypeAr: matchedIssueType?.name_ar ?? workOrder.issue_type,
+            issueTypeEn: matchedIssueType?.name,
+            baseUrl: window.location.origin,
+        })
+        : ''
+
     const handleAction = async (actionFn: () => Promise<unknown>) => {
         try {
             setIsSubmitting(true)
@@ -90,51 +113,80 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
         }
     }
 
+    const whatsAppCard = showWhatsApp ? (
+        <div className="bg-card border rounded-xl p-5 shadow-sm space-y-3 border-l-4 border-l-green-600">
+            <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-green-600" />
+                <h3 className="font-bold text-base font-cairo">
+                    {isRTL ? 'إشعار واتساب' : 'WhatsApp Notification'}
+                </h3>
+            </div>
+
+            <pre className="text-xs text-muted-foreground bg-muted/20 rounded-lg p-3 whitespace-pre-wrap font-cairo leading-relaxed overflow-x-auto">
+                {whatsAppMessage}
+            </pre>
+
+            <button
+                onClick={() => {
+                    navigator.clipboard.writeText(whatsAppMessage)
+                    toast.success(isRTL ? 'تم نسخ الرسالة' : 'Message copied')
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border rounded-lg text-sm font-bold font-cairo hover:bg-muted/30 transition-colors"
+            >
+                <Copy className="w-4 h-4" />
+                {isRTL ? 'نسخ رسالة واتساب' : 'Copy WhatsApp Message'}
+            </button>
+        </div>
+    ) : null
+
     const canStart = (workOrder.status === 'assigned' || workOrder.status === 'pending') && canStartWork
     if (canStart) {
         return (
-            <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-primary">
-                <h3 className="font-bold text-lg font-cairo">{isRTL ? 'الإجراءات المتاحة' : 'Available Actions'}</h3>
-                <button
-                    onClick={() => handleAction(() => workflow.startWork.mutateAsync({ workOrderId: workOrder.id }))}
-                    disabled={isSubmitting}
-                    className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow hover:shadow-lg transition-all font-cairo flex items-center justify-center gap-2"
-                >
-                    <PlayCircle className="w-5 h-5" />
-                    {isRTL ? 'بدء العمل' : 'Start Work'}
-                </button>
+            <div className="space-y-4">
+                <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 border-l-primary">
+                    <h3 className="font-bold text-lg font-cairo">{isRTL ? 'الإجراءات المتاحة' : 'Available Actions'}</h3>
+                    <button
+                        onClick={() => handleAction(() => workflow.startWork.mutateAsync({ workOrderId: workOrder.id }))}
+                        disabled={isSubmitting}
+                        className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow hover:shadow-lg transition-all font-cairo flex items-center justify-center gap-2"
+                    >
+                        <PlayCircle className="w-5 h-5" />
+                        {isRTL ? 'بدء العمل' : 'Start Work'}
+                    </button>
 
-                {allowTechnicianReject && workOrder.status === 'assigned' && canStartWork && (
-                    <div className="pt-2 border-t">
-                        <textarea
-                            className="w-full p-3 border rounded-lg bg-background text-sm font-cairo outline-none mb-2"
-                            rows={2}
-                            placeholder={isRTL ? 'سبب الرفض (إجباري)...' : 'Rejection reason (required)...'}
-                            value={notes}
-                            onChange={e => setNotes(e.target.value)}
-                        />
-                        <button
-                            onClick={() => {
-                                if (!notes.trim()) {
-                                    toast.error(isRTL ? 'يرجى كتابة سبب الرفض' : 'Please provide a rejection reason')
-                                    return
-                                }
-                                handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, reason: notes }))
-                            }}
-                            disabled={isSubmitting}
-                            className="w-full py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg font-bold font-cairo flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
-                        >
-                            <AlertOctagon className="w-4 h-4" />
-                            {isRTL ? 'رفض أمر العمل' : 'Reject Work Order'}
-                        </button>
-                    </div>
-                )}
+                    {allowTechnicianReject && workOrder.status === 'assigned' && canStartWork && (
+                        <div className="pt-2 border-t">
+                            <textarea
+                                className="w-full p-3 border rounded-lg bg-background text-sm font-cairo outline-none mb-2"
+                                rows={2}
+                                placeholder={isRTL ? 'سبب الرفض (إجباري)...' : 'Rejection reason (required)...'}
+                                value={notes}
+                                onChange={e => setNotes(e.target.value)}
+                            />
+                            <button
+                                onClick={() => {
+                                    if (!notes.trim()) {
+                                        toast.error(isRTL ? 'يرجى كتابة سبب الرفض' : 'Please provide a rejection reason')
+                                        return
+                                    }
+                                    handleAction(() => workflow.rejectWork.mutateAsync({ workOrderId: workOrder.id, reason: notes }))
+                                }}
+                                disabled={isSubmitting}
+                                className="w-full py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg font-bold font-cairo flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
+                            >
+                                <AlertOctagon className="w-4 h-4" />
+                                {isRTL ? 'رفض أمر العمل' : 'Reject Work Order'}
+                            </button>
+                        </div>
+                    )}
 
-                {workOrder.status === 'pending' && (
-                    <p className="text-xs text-muted text-center font-cairo">
-                        {isRTL ? 'سيتم إسناد البلاغ إليك تلقائيًا عند البدء' : 'Ticket will be assigned to you automatically'}
-                    </p>
-                )}
+                    {workOrder.status === 'pending' && (
+                        <p className="text-xs text-muted text-center font-cairo">
+                            {isRTL ? 'سيتم إسناد البلاغ إليك تلقائيًا عند البدء' : 'Ticket will be assigned to you automatically'}
+                        </p>
+                    )}
+                </div>
+                {whatsAppCard}
             </div>
         )
     }
@@ -307,6 +359,9 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
             </div>
         )
     }
+
+    // No workflow action, but show copy button for non-technicians viewing assigned orders
+    if (whatsAppCard) return whatsAppCard
 
     return null
 }
