@@ -47,6 +47,33 @@ submit work orders without authentication.
 - `src/pages/work-orders/WorkOrderDetailsPage.tsx`: `WorkOrderPdfButton` injected into sidebar.
 - `src/pages/settings/TenantSettingsPage.tsx`: `pdf_identity` tab with `LogoUploadRow` (upload to `tenant-assets`) + generic settings for org names, footer, image toggles.
 
+### Phase 7 — تثبيت وتأمين ونشر (Hardening, Cleanup, QA)
+**No new features — hardening, data cleanup, full QA pass.**
+
+**أ — RLS Hardening (Migrations 136–137):**
+- `work_order_costs`: RLS enabled; `woc_select` (same-tenant via parent WO) + `woc_manage` (manage-scope roles).
+- `custom_roles` + `user_custom_roles`: explicit `USING(false)` deny-all — all access goes through SECURITY DEFINER RPCs.
+- `work_order_parts`: stale `{public}` policies dropped; 4 scoped `{authenticated}` policies (select/insert/update/delete).
+- `work_orders`: 3 stale `{public}` policies dropped (`Users can view…`, `Users can update assigned…`, `Admins can delete…`).
+  - Replacement: `work_orders_update_involved` (UPDATE, authenticated) — same-tenant AND (assigned_to/reported_by/created_by = caller).
+  - `work_orders_delete_disabled_direct` now fully effective (no stale OR path bypasses it).
+
+**ب — Seed Cleanup (Migration 138):**
+- Deleted: `tech1@hospital-lite.test` auth user + profile, 3 demo buildings, 7 demo floors, portal token.
+- **Kept**: Hospital Lite Demo tenant shell (`d0000000-0000-4000-8000-000000000020`) and all `@example.com` fixture data.
+
+**ج — Isolation Tests (all pass):**
+- T1: Tenant B admin reads Tenant A WOs → 0 rows.
+- T2: Tenant A maintenance_manager reads own tenant → 18 rows.
+- T3: Technician UPDATEs assigned WO → 1 row.
+- T4: Technician UPDATEs uninvolved WO → 0 rows.
+- T5: Tenant B admin UPDATEs Tenant A WO → 0 rows.
+- T6: Technician SELECT count (12) = ground-truth involved count (12).
+
+**QA:** Full checklist in `docs/hospital-lite-qa-checklist.md` — 34/34 database + source items pass. Build clean (`npm run build`).
+
+**Local migration files created**: 136_rls_fix_a1–a3, 137_rls_fix_a4, 138_seed_cleanup.
+
 ---
 
 ## Deferred / Future
