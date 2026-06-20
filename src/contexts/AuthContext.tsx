@@ -40,8 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // جلب الـ profile مباشرة باستخدام fetch لتجنب مشاكل AbortError
     const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
         try {
-            console.log('🔄 Fetching profile for:', userId)
-
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -74,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const data = await response.json()
 
             if (data && data.length > 0) {
-                console.log('✅ Profile loaded:', data[0].full_name, 'Role:', data[0].role)
                 return data[0] as Profile
             }
             return null
@@ -98,8 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         initializingRef.current = true
         isMountedRef.current = true
 
-        console.log('🔄 AuthContext initializing...')
-
         const initAuth = async () => {
             try {
                 const { data: { session: sess } } = await supabase.auth.getSession()
@@ -107,12 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (!isMountedRef.current) return
 
                 if (!sess?.user) {
-                    console.log('No session found')
                     setIsLoading(false)
                     return
                 }
 
-                console.log('✅ Session found for:', sess.user.email)
                 setSession(sess)
                 setUser(sess.user)
 
@@ -121,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (isMountedRef.current) {
                     setProfile(profileData)
                     setIsLoading(false)
-                    console.log('✅ Auth init complete')
                 }
             } catch (err) {
                 console.error('Auth init error:', err)
@@ -134,8 +126,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, sess) => {
-                console.log('Auth event:', event)
-
                 if (!isMountedRef.current) return
 
                 if (event === 'SIGNED_OUT') {
@@ -158,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )
 
         return () => {
-            console.log('🔄 AuthContext cleanup')
             isMountedRef.current = false
             subscription.unsubscribe()
         }

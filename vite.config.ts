@@ -4,7 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+    // Strip console.* and debugger from production bundles so debug logs and
+    // any user data passed to them never reach the browser console in prod.
+    esbuild: {
+        drop: mode === 'production' ? ['console', 'debugger'] : [],
+    },
     plugins: [
         react(),
         VitePWA({
@@ -87,4 +92,37 @@ export default defineConfig({
         port: 5173,
         host: true,
     },
-})
+    build: {
+        rollupOptions: {
+            output: {
+                // Split large always-loaded vendor libraries out of the main
+                // bundle into separately cacheable chunks.
+                manualChunks: {
+                    'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+                    'supabase': ['@supabase/supabase-js'],
+                    'query-vendor': ['@tanstack/react-query', '@tanstack/react-table'],
+                    'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+                    'radix-vendor': [
+                        '@radix-ui/react-accordion',
+                        '@radix-ui/react-alert-dialog',
+                        '@radix-ui/react-avatar',
+                        '@radix-ui/react-checkbox',
+                        '@radix-ui/react-dialog',
+                        '@radix-ui/react-dropdown-menu',
+                        '@radix-ui/react-label',
+                        '@radix-ui/react-popover',
+                        '@radix-ui/react-progress',
+                        '@radix-ui/react-scroll-area',
+                        '@radix-ui/react-select',
+                        '@radix-ui/react-separator',
+                        '@radix-ui/react-slot',
+                        '@radix-ui/react-switch',
+                        '@radix-ui/react-tabs',
+                        '@radix-ui/react-toast',
+                        '@radix-ui/react-tooltip',
+                    ],
+                },
+            },
+        },
+    },
+}))

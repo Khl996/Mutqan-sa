@@ -6,6 +6,14 @@
 
 ---
 
+## 2026-06-20 — Claude Code — [system-improvements-updates]
+Tags: #quality #ops #security #tests #docs
+**هدف:** مراجعة النظام وتنفيذ قائمة تحسينات طلبها خالد.
+**أُنجز:** (1) مزامنة التوثيق مع الواقع (كان متوقفاً عند 2026-05-08 رغم تقدّم Hospital Lite 1–7). (2) إيقاف تسريب console/PII: `esbuild.drop` في بناء الإنتاج + حذف debug logs الحاوية على إيميل/دور/معرّف في AuthContext و PlatformLayout. (3) إطار Vitest + 28 اختبار يغطّي permissions/roles/whatsapp؛ `npm test` صار يشغّل vitest. (4) manualChunks: الحزمة الرئيسية 1,075→636 kB. اكتُشف أن بق logout وتحويل /platform المبكر مُصلَحان أصلاً في الكود — التوثيق فقط كان قديماً.
+**ملفات:** `vite.config.ts`، `vitest.config.ts`، `src/config/*.test.ts`، `src/lib/whatsapp.test.ts`، `src/contexts/AuthContext.tsx`، `src/components/layout/PlatformLayout.tsx`، `package.json`، `README.md`، `docs/ops/*`، `docs/PROGRESS.md`.
+**التحقق:** ✅ vitest 28/28 · ✅ build · ✅ lint 0 errors (218 تحذير قائم).
+**التالي:** حالات Tap السلبية (تحتاج IDs من خالد)؛ توسيع الاختبارات لـ workflow/billing.
+
 ## 2026-05-08 — Claude Code — d39cdb4 [logo-vector-fix]
 Tags: #product #brand #ui
 **هدف:** إصلاح الشعار الأبيض الذي كان يظهر صغيراً في كل مواقع الـ dark theme.
