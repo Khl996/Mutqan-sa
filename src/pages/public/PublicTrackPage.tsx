@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import {
     Clock, Search, Wrench, CheckCircle2, XCircle, Ban,
-    AlertTriangle, Loader2, Image as ImageIcon, ExternalLink,
+    AlertTriangle, Loader2, ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -18,7 +18,6 @@ interface TrackData {
     created_at: string
     updated_at: string
     rejection_reason: string | null
-    reporter_image_url: string | null
 }
 
 // ── Status config ──────────────────────────────────────────────────────────────
@@ -98,7 +97,6 @@ export default function PublicTrackPage() {
     const [loading, setLoading] = useState(true)
     const [trackData, setTrackData] = useState<TrackData | null>(null)
     const [invalidToken, setInvalidToken] = useState(false)
-    const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
     useEffect(() => {
         if (!token) {
@@ -119,18 +117,7 @@ export default function PublicTrackPage() {
                     return
                 }
 
-                const result = data as TrackData
-                setTrackData(result)
-
-                // Fetch signed URL for reporter's photo if present
-                if (result.reporter_image_url) {
-                    const { data: signedData, error: signedError } = await supabase.storage
-                        .from('public-report-photos')
-                        .createSignedUrl(result.reporter_image_url, 3600)
-                    if (!signedError && signedData?.signedUrl) {
-                        setPhotoUrl(signedData.signedUrl)
-                    }
-                }
+                setTrackData(data as TrackData)
             } finally {
                 setLoading(false)
             }
@@ -230,29 +217,6 @@ export default function PublicTrackPage() {
                             <span className="text-sm font-medium text-gray-800">{formatDate(trackData.updated_at)}</span>
                         </div>
                     </div>
-
-                    {/* Reporter's photo */}
-                    {photoUrl && (
-                        <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-3">
-                            <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                                <ImageIcon className="w-4 h-4 text-primary" />
-                                صورة البلاغ
-                            </div>
-                            <img
-                                src={photoUrl}
-                                alt="صورة البلاغ"
-                                className="w-full rounded-xl object-cover max-h-64"
-                            />
-                        </div>
-                    )}
-
-                    {/* No photo placeholder — only shown if upload was attempted but signed URL failed */}
-                    {trackData.reporter_image_url && !photoUrl && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-gray-400">
-                            <ImageIcon className="w-5 h-5 flex-shrink-0" />
-                            <span className="text-sm">الصورة غير متاحة مؤقتاً</span>
-                        </div>
-                    )}
 
                     {/* Footer action */}
                     <div className="pb-8 pt-2 flex flex-col gap-3">
