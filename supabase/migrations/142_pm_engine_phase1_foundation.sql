@@ -35,10 +35,14 @@
 --      not here — this migration only adds the table + constraint.)
 --   5. Blackout dates are Gregorian ranges, not Hijri-computed. Ramadan/Eid
 --      shift ~11 days/year on the Gregorian calendar, so platform-wide
---      windows must be reseeded yearly. See the seed section at the bottom —
---      those specific dates are best-effort estimates and MUST be confirmed
---      against the official Umm Al-Qura calendar before relying on them in
---      production blackout behavior.
+--      windows must be reseeded yearly. Seed data is NOT in this migration —
+--      it lives in a separate, yearly-maintained migration
+--      (143_seed_blackout_windows.sql) so reference-data updates never need
+--      to touch this structural file. v1 seeds Eid windows only (full-stop
+--      'skip' is correct for a 3-4 day holiday); Ramadan is intentionally
+--      NOT seeded as 'skip' — deferring a month of PM is an SLA risk, and
+--      the correct behavior for Ramadan is 'reduce_frequency', which is not
+--      yet buildable (see decision 4).
 -- =============================================================================
 
 
@@ -263,14 +267,16 @@ CREATE TABLE IF NOT EXISTS public.pm_blackout_windows (
 
 COMMENT ON TABLE public.pm_blackout_windows IS
     'PM generation blackout calendar. tenant_id IS NULL rows are platform-wide '
-    'defaults (Ramadan, Eid al-Fitr, Eid al-Adha). v1 behavior is skip only: '
-    'a due_date inside [start_date, end_date] defers to the first day after '
-    'end_date, generating exactly one WO after the window — never zero, never '
-    'duplicated. reduce_frequency is deliberately NOT in the allowed values '
-    'yet; it will be added with a real parameter when actually built, not as '
-    'an inert option. Dates are Gregorian and shift ~11 days/year against the '
-    'Hijri calendar — must be reseeded yearly until a Hijri-aware generator '
-    'exists.';
+    'defaults (v1: Eid al-Fitr, Eid al-Adha — see 143_seed_blackout_windows.sql). '
+    'v1 behavior is skip only: a due_date inside [start_date, end_date] defers '
+    'to the first day after end_date, generating exactly one WO after the '
+    'window — never zero, never duplicated. reduce_frequency is deliberately '
+    'NOT in the allowed values yet; it will be added with a real parameter '
+    'when actually built (Ramadan needs this, not skip — a full month of '
+    'deferred PM is an SLA risk, so Ramadan is not seeded in v1 at all). '
+    'Dates are Gregorian and shift ~11 days/year against the Hijri calendar — '
+    'platform-wide rows must be reseeded yearly via a dedicated seed '
+    'migration, never edited in place here.';
 
 CREATE INDEX IF NOT EXISTS idx_pm_blackout_windows_tenant_dates
     ON public.pm_blackout_windows (tenant_id, start_date, end_date);
@@ -302,27 +308,7 @@ CREATE POLICY pm_blackout_windows_manage_platform ON public.pm_blackout_windows
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.pm_blackout_windows TO authenticated;
 
-
--- =============================================================================
--- SECTION 7 — Seed: platform-wide Ramadan / Eid windows
---
--- *** REVIEW REQUIRED BEFORE APPLY ***
--- These Gregorian dates are best-effort estimates derived from the Umm
--- Al-Qura calendar projection. Actual moon-sighting announcements from
--- Saudi authorities can shift any of these by 1 day in either direction.
--- Confirm/correct each row against the official calendar before this
--- migration is applied to production — do not trust these as final.
--- =============================================================================
-
-INSERT INTO public.pm_blackout_windows (tenant_id, label, start_date, end_date, behavior)
-VALUES
-    (NULL, 'Ramadan 1447 (estimated)',      '2026-02-18', '2026-03-19', 'skip'),
-    (NULL, 'Eid al-Fitr 1447 (estimated)',  '2026-03-20', '2026-03-22', 'skip'),
-    (NULL, 'Eid al-Adha 1447 (estimated)',  '2026-05-26', '2026-05-29', 'skip'),
-    (NULL, 'Ramadan 1448 (estimated)',      '2027-02-08', '2027-03-09', 'skip'),
-    (NULL, 'Eid al-Fitr 1448 (estimated)',  '2027-03-10', '2027-03-12', 'skip'),
-    (NULL, 'Eid al-Adha 1448 (estimated)',  '2027-05-15', '2027-05-18', 'skip'),
-    (NULL, 'Ramadan 1449 (estimated)',      '2028-01-28', '2028-02-26', 'skip'),
-    (NULL, 'Eid al-Fitr 1449 (estimated)',  '2028-02-27', '2028-02-29', 'skip'),
-    (NULL, 'Eid al-Adha 1449 (estimated)',  '2028-05-04', '2028-05-07', 'skip')
-ON CONFLICT DO NOTHING;
+-- No seed data in this migration. Platform-wide blackout rows (Eid, etc.)
+-- are seeded by 143_seed_blackout_windows.sql, a separate yearly-maintained
+-- file, so reference-data updates never require touching this schema
+-- migration.
