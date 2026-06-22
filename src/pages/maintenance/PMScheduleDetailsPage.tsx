@@ -252,18 +252,25 @@ export default function PMScheduleDetailsPage() {
                                     </div>
                                 ) : null}
                                 <div className="grid gap-4">
-                                    <div className="space-y-1" title={(schedule.anchor_mode ?? 'fixed') === 'fixed' ? copy.anchorFixedHint : copy.anchorFloatingHint}>
+                                    <div
+                                        className="space-y-1"
+                                        title={schedule.anchor_mode ? (schedule.anchor_mode === 'fixed' ? copy.anchorFixedHint : copy.anchorFloatingHint) : undefined}
+                                    >
                                         <p className="text-xs text-muted-foreground font-cairo">{copy.anchorMode}</p>
                                         <p className="text-sm font-medium font-cairo">
-                                            {(schedule.anchor_mode ?? 'fixed') === 'fixed' ? copy.anchorFixed : copy.anchorFloating}
+                                            {schedule.anchor_mode ? (schedule.anchor_mode === 'fixed' ? copy.anchorFixed : copy.anchorFloating) : copy.notSpecified}
                                         </p>
                                     </div>
-                                    <Info label={copy.generationMode} value={schedule.generation_mode === 'per_asset' ? copy.modePerAsset : copy.modeBatch} />
-                                    <Info label={copy.trigger} value={schedule.trigger_type} />
-                                    <Info label={copy.nextDue} value={schedule.next_due_date ? formatDate(schedule.next_due_date, locale) : '-'} />
-                                    {schedule.master_template ? (
-                                        <Info label={copy.masterTemplate} value={displayName(schedule.master_template, isAr)} />
-                                    ) : null}
+                                    <Info
+                                        label={copy.generationMode}
+                                        value={schedule.generation_mode ? (schedule.generation_mode === 'per_asset' ? copy.modePerAsset : copy.modeBatch) : copy.notSpecified}
+                                    />
+                                    <Info label={copy.trigger} value={schedule.trigger_type ?? copy.notSpecified} />
+                                    <Info label={copy.nextDue} value={schedule.next_due_date ? formatDate(schedule.next_due_date, locale) : copy.notSpecified} />
+                                    <Info
+                                        label={copy.masterTemplate}
+                                        value={schedule.master_template ? displayName(schedule.master_template, isAr) : copy.notSpecified}
+                                    />
                                 </div>
                             </div>
                         </Section>
