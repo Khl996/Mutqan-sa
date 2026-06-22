@@ -1,10 +1,17 @@
 -- =============================================================================
 -- Migration: 144_pm_engine_generator_rewrite
 --
--- *** STATUS: DRAFT — NOT APPLIED ANYWHERE. Awaiting review per the standing
--- process (inspect -> propose DDL -> apply only after explicit approval).
--- "Nothing live until reviewed" — do not run apply_migration against this
--- file without a separate, explicit go-ahead. ***
+-- *** STATUS: APPLIED to production (mzpohntjotgeeaukwnbz). ***
+--
+-- *** SUPERSEDED IN PART: the blackout-deferral logging in this version of
+-- pm_generate_due_work_orders() and pm_schedule_forecast() has a bug — the
+-- loop's final (non-matching) SELECT ... INTO nulls out the blackout label
+-- right before it's used, which crashes the generator with a NOT NULL
+-- violation on operation_logs.description whenever a deferral actually
+-- happens, and silently always returns blackout_label = NULL from the
+-- forecast RPC. See migration 145_fix_blackout_label_null_overwrite, which
+-- replaces both function bodies with a fix and is the current source of
+-- truth for that logic. ***
 --
 -- Purpose:
 --   PM Engine Phase 1 — generator rewrite. Builds on the schema foundation
