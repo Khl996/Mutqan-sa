@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type * as React from 'react'
-import { CalendarClock, Loader2, Route, Save, Wrench } from 'lucide-react'
+import { Anchor, Loader2, Route, Save, Waves, Wrench } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type {
+    PMAnchorMode,
     PMAssetRef,
     PMFrequencyType,
     PMGenerationMode,
@@ -82,6 +83,7 @@ export default function ScheduleDialog({
             description: schedule.description ?? '',
             job_plan_id: schedule.job_plan_id,
             generation_mode: schedule.generation_mode,
+            anchor_mode: schedule.anchor_mode ?? 'fixed',
             trigger_type: schedule.trigger_type,
             frequency_type: schedule.frequency_type ?? 'daily',
             frequency_interval: schedule.frequency_interval ?? 1,
@@ -149,6 +151,29 @@ export default function ScheduleDialog({
                                 </Button>
                             ))}
                         </div>
+                    </Field>
+                    <Field label={copy.anchorMode}>
+                        <div className="grid grid-cols-2 gap-2">
+                            {(['fixed', 'floating'] as PMAnchorMode[]).map((mode) => (
+                                <Button
+                                    key={mode}
+                                    type="button"
+                                    variant={form.anchor_mode === mode ? 'default' : 'outline'}
+                                    className="h-auto justify-start py-3 text-start"
+                                    disabled={!!schedule?.master_template_id}
+                                    onClick={() => setForm({ ...form, anchor_mode: mode })}
+                                >
+                                    {mode === 'fixed' ? <Anchor className="me-2 h-4 w-4 shrink-0" /> : <Waves className="me-2 h-4 w-4 shrink-0" />}
+                                    <span className="grid gap-1">
+                                        <span>{mode === 'fixed' ? copy.anchorFixed : copy.anchorFloating}</span>
+                                        <span className="text-xs font-normal opacity-80">{mode === 'fixed' ? copy.anchorFixedHint : copy.anchorFloatingHint}</span>
+                                    </span>
+                                </Button>
+                            ))}
+                        </div>
+                        {schedule?.master_template_id ? (
+                            <p className="text-xs text-amber-700 font-cairo">{copy.masterTemplateLinkedWarning}</p>
+                        ) : null}
                     </Field>
                     <Field label={copy.status}>
                         <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value as PMScheduleStatus })}>

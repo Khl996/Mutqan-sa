@@ -577,6 +577,7 @@ export const blankSchedule = (): PMScheduleInput => ({
     description: '',
     job_plan_id: '',
     generation_mode: 'batch_route',
+    anchor_mode: 'fixed',
     trigger_type: 'calendar',
     frequency_type: 'daily',
     frequency_interval: 1,
