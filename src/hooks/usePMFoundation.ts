@@ -195,6 +195,7 @@ export interface PMScheduleInput {
     description?: string | null
     job_plan_id: string
     generation_mode: PMGenerationMode
+    anchor_mode?: PMAnchorMode
     trigger_type: PMTriggerType
     frequency_type: PMFrequencyType
     frequency_interval: number
@@ -417,6 +418,7 @@ function schedulePayload(input: PMScheduleInput, tenantId?: string) {
         job_plan_id: input.job_plan_id,
         primary_asset_id: input.asset_ids[0] ?? null,
         generation_mode: input.generation_mode,
+        anchor_mode: input.anchor_mode ?? 'fixed',
         trigger_type: input.trigger_type,
         frequency_type: input.frequency_type,
         frequency_interval: input.frequency_interval || 1,
