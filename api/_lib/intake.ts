@@ -166,22 +166,32 @@ const CLASSIFIER_SYSTEM_PROMPT = `أنت مصنّف بلاغات صيانة لم
 رسالة: "المكيف بالطوارئ للحين ما انصلح؟ امس بلغنا عنه"
 {"is_maintenance_report": true, "title": "متابعة عطل مكيف قسم الطوارئ", "description": "مكيف قسم الطوارئ لا يزال معطلاً، سبق التبليغ عنه أمس (قد يكون بلاغاً مكرراً — للمراجعة والدمج).", "location": "قسم الطوارئ", "priority": "high", "category": "تكييف"}`
 
-// Calls Claude (Anthropic API) to classify one intake message. Text only in
-// v1 — media never leaves Mutqan. Throws ClassificationParseError when the
-// model responds with something that is not valid JSON (message → failed);
-// other errors (network, 5xx) propagate so the message stays 'new' for retry.
-export async function classifyIntakeMessage(
-    messageText: string,
-    groupName: string | null
-): Promise<Classification> {
+const GEMINI_DEFAULT_MODEL = 'gemini-flash-lite-latest'
+const GEMINI_FALLBACK_MODEL = 'gemini-2.5-flash-lite'
+
+function getClassifierUserContent(messageText: string, groupName: string | null): string {
+    return groupName
+        ? `المجموعة: ${groupName}\nالرسالة: ${messageText}`
+        : `الرسالة: ${messageText}`
+}
+
+function getAiProvider(): 'gemini' | 'anthropic' {
+    return process.env.AI_PROVIDER?.toLowerCase() === 'anthropic' ? 'anthropic' : 'gemini'
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function isGeminiModelNotFound(status: number, detail: string): boolean {
+    return status === 404 || /model[^a-z0-9_-]*not[^a-z0-9_-]*found/i.test(detail)
+}
+
+async function classifyWithAnthropic(userContent: string): Promise<Classification> {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
         throw new Error('Missing ANTHROPIC_API_KEY')
     }
-
-    const userContent = groupName
-        ? `المجموعة: ${groupName}\nالرسالة: ${messageText}`
-        : `الرسالة: ${messageText}`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -191,7 +201,7 @@ export async function classifyIntakeMessage(
             'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-            model: 'claude-haiku-4-5',
+            model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5',
             max_tokens: 1024,
             system: CLASSIFIER_SYSTEM_PROMPT,
             messages: [{ role: 'user', content: userContent }],
@@ -211,6 +221,94 @@ export async function classifyIntakeMessage(
         .trim()
 
     return parseClassification(rawText)
+}
+
+async function requestGemini(model: string, userContent: string): Promise<Response> {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+        throw new Error('Missing GEMINI_API_KEY')
+    }
+
+    return fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'x-goog-api-key': apiKey,
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [{ text: `${CLASSIFIER_SYSTEM_PROMPT}\n\n${userContent}` }],
+                    },
+                ],
+                generationConfig: {
+                    temperature: 0,
+                    maxOutputTokens: 1024,
+                    responseMimeType: 'application/json',
+                },
+            }),
+        }
+    )
+}
+
+async function classifyWithGeminiModel(model: string, userContent: string): Promise<Classification> {
+    const backoffMs = [1000, 2000, 4000]
+
+    for (let attempt = 0; attempt <= backoffMs.length; attempt += 1) {
+        const response = await requestGemini(model, userContent)
+        if (response.ok) {
+            const data = (await response.json()) as {
+                candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+            }
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
+            return parseClassification(rawText)
+        }
+
+        const detail = await response.text().catch(() => '')
+        if (isGeminiModelNotFound(response.status, detail)) {
+            throw new Error(`Gemini model not found: ${detail.slice(0, 300)}`)
+        }
+
+        if (response.status === 429 && attempt < backoffMs.length) {
+            await sleep(backoffMs[attempt])
+            continue
+        }
+
+        throw new Error(`Gemini API error ${response.status}: ${detail.slice(0, 300)}`)
+    }
+
+    throw new Error('Gemini API error 429: retry limit exceeded')
+}
+
+async function classifyWithGemini(userContent: string): Promise<Classification> {
+    const configuredModel = process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL
+
+    try {
+        return await classifyWithGeminiModel(configuredModel, userContent)
+    } catch (err) {
+        if (configuredModel !== GEMINI_FALLBACK_MODEL && err instanceof Error && isGeminiModelNotFound(0, err.message)) {
+            return classifyWithGeminiModel(GEMINI_FALLBACK_MODEL, userContent)
+        }
+        throw err
+    }
+}
+
+// Calls the configured AI provider to classify one intake message. Text only
+// in v1 — media never leaves Mutqan. Throws ClassificationParseError when the
+// model responds with something that is not valid JSON (message → failed);
+// other errors (network, 5xx, 429 after retry) propagate so the message stays
+// 'new' for retry.
+export async function classifyIntakeMessage(
+    messageText: string,
+    groupName: string | null
+): Promise<Classification> {
+    const userContent = getClassifierUserContent(messageText, groupName)
+    return getAiProvider() === 'anthropic'
+        ? classifyWithAnthropic(userContent)
+        : classifyWithGemini(userContent)
 }
 
 // Defensive parse: strip code fences, extract the first JSON object, validate
