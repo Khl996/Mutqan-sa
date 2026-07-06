@@ -4,7 +4,8 @@ import {
     useTenantSettings,
     useUpdateSetting,
     useResetCategorySettings,
-    SETTINGS_CATEGORIES
+    SETTINGS_CATEGORIES,
+    DEFAULT_TENANT_SETTINGS,
 } from '@/hooks/useTenantSettings'
 import { useCurrentTenantId } from '@/hooks/useTenantQuery'
 import { SettingsCategory, SettingDefinition, TenantSettings } from '@/config/tenantSettings'
@@ -110,53 +111,7 @@ export default function TenantSettingsPage() {
     }
 
     // If settings is null/undefined, show with defaults
-    const currentSettings = settings || {
-        work_orders: {
-            require_supervisor_approval: true,
-            require_engineer_review: true,
-            auto_close_after_days: 7,
-            allow_technician_reject: true,
-            max_response_time_hours: 24,
-            priority_escalation_enabled: true
-        },
-        maintenance: {
-            auto_generate_work_orders: false,
-            advance_notice_days: 0,
-            allow_postpone: false
-        },
-        inventory: {
-            low_stock_threshold_percent: 20,
-            require_approval_for_consumption: false,
-            track_consumption_by_technician: true
-        },
-        notifications: {
-            notify_on_new_work_order: true,
-            notify_on_status_change: true,
-            notify_admins_on_escalation: true,
-            daily_summary_enabled: false
-        },
-        display: {
-            default_language: 'ar' as const,
-            date_format: 'DD/MM/YYYY',
-            time_format: '12h' as const,
-            timezone: 'Asia/Riyadh'
-        },
-        portal: {
-            require_phone: false,
-            auto_assign_to_team: true,
-            show_estimated_time: false,
-            welcome_message: null,
-            thank_you_message: null
-        },
-        pdf_identity: {
-            organization_name: '',
-            organization_name_ar: '',
-            logo_path: null,
-            footer_note: null,
-            show_reporter_images: true,
-            show_before_after_images: true,
-        }
-    }
+    const currentSettings = settings || DEFAULT_TENANT_SETTINGS
 
     const activeCategoryDef = SETTINGS_CATEGORIES.find(c => c.code === activeCategory)
     const isMaintenanceSoftLaunchCategory = activeCategoryDef?.code === 'maintenance'

@@ -51,7 +51,9 @@ export interface Round {
 
 export interface RoundsFilters {
     type?: RoundType | 'all'
-    date?: string
+    supervisorId?: string
+    dateFrom?: string
+    dateTo?: string
 }
 
 export interface CreateObservationInput {
@@ -65,6 +67,8 @@ export interface CreateObservationInput {
 export interface ConvertObservationResult {
     work_order_id: string
     code: string
+    assigned_team_id?: string | null
+    assigned_team_name?: string | null
     already_converted: boolean
 }
 
@@ -72,6 +76,7 @@ export const roundsKeys = {
     all: ['rounds'] as const,
     list: (filters: RoundsFilters) => [...roundsKeys.all, 'list', filters] as const,
     byWorkOrder: (workOrderId: string | undefined) => [...roundsKeys.all, 'byWorkOrder', workOrderId] as const,
+    supervisors: (tenantId: string | null) => [...roundsKeys.all, 'supervisors', tenantId] as const,
 }
 
 const ROUND_SELECT = `
@@ -118,7 +123,9 @@ export function useRounds(filters: RoundsFilters = {}) {
     const tenantId = useCurrentTenantId()
     const normalizedFilters = {
         type: filters.type ?? 'all',
-        date: filters.date ?? '',
+        supervisorId: filters.supervisorId ?? '',
+        dateFrom: filters.dateFrom ?? '',
+        dateTo: filters.dateTo ?? '',
     }
 
     return useQuery({
@@ -128,16 +135,34 @@ export function useRounds(filters: RoundsFilters = {}) {
 
             if (tenantId) query = query.eq('tenant_id', tenantId)
             if (normalizedFilters.type !== 'all') query = query.eq('round_type', normalizedFilters.type)
-            if (normalizedFilters.date) {
-                query = query
-                    .gte('started_at', startDate(normalizedFilters.date))
-                    .lt('started_at', nextDate(normalizedFilters.date))
-            }
+            if (normalizedFilters.supervisorId) query = query.eq('supervisor_id', normalizedFilters.supervisorId)
+            if (normalizedFilters.dateFrom) query = query.gte('started_at', startDate(normalizedFilters.dateFrom))
+            if (normalizedFilters.dateTo) query = query.lt('started_at', nextDate(normalizedFilters.dateTo))
 
             const { data, error } = await query.order('started_at', { ascending: false })
             if (error) throw error
             return (data ?? []) as Round[]
         },
+    })
+}
+
+export function useRoundSupervisors() {
+    const tenantId = useCurrentTenantId()
+
+    return useQuery({
+        queryKey: roundsKeys.supervisors(tenantId),
+        queryFn: async () => {
+            if (!tenantId) return []
+            const { data, error } = await (supabase.from('profiles') as any)
+                .select('id, full_name, full_name_ar, email, role')
+                .eq('tenant_id', tenantId)
+                .eq('is_active', true)
+                .in('role', ['tenant_admin', 'facility_manager', 'maintenance_manager', 'supervisor', 'engineer'])
+                .order('full_name_ar', { ascending: true })
+            if (error) throw error
+            return (data ?? []) as Array<RoundSupervisor & { role?: string | null }>
+        },
+        enabled: !!tenantId,
     })
 }
 
@@ -195,9 +220,10 @@ export function useConvertRoundObservation() {
     const invalidate = useInvalidateRounds()
 
     return useMutation({
-        mutationFn: async (observationId: string) => {
+        mutationFn: async ({ observationId, assignedTeamId }: { observationId: string; assignedTeamId: string }) => {
             const { data, error } = await (supabase as any).rpc('convert_observation_to_wo', {
                 p_observation_id: observationId,
+                p_assigned_team_id: assignedTeamId,
             })
             if (error) throw new Error(error.message)
             return data as ConvertObservationResult
@@ -221,4 +247,3 @@ export function useRoundObservationForWorkOrder(workOrderId: string | undefined)
         enabled: !!workOrderId,
     })
 }
-

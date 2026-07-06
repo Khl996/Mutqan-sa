@@ -44,6 +44,7 @@ export interface WorkOrder {
     // Joined data
     reporter?: { id: string; full_name: string; full_name_ar: string | null }
     assignee?: { id: string; full_name: string; full_name_ar: string | null }
+    assignedTeam?: { id: string; code: string; name: string; name_ar: string | null }
     building?: { id: string; name: string; name_ar: string | null }
     floor?: { id: string; name: string; name_ar: string | null }
     room?: { id: string; name: string; name_ar: string | null }
@@ -254,6 +255,7 @@ export function useWorkOrders() {
                     *,
                     reporter:reported_by(id, full_name, full_name_ar),
                     assignee:assigned_to(id, full_name, full_name_ar),
+                    assignedTeam:teams!work_orders_assigned_team_fkey(id, code, name, name_ar),
                     building:buildings(id, name, name_ar),
                     floor:floors(id, name, name_ar),
                     room:rooms(id, name, name_ar),
@@ -290,6 +292,7 @@ export function useWorkOrder(id: string) {
                     *,
                     reporter:reported_by(id, full_name, full_name_ar),
                     assignee:assigned_to(id, full_name, full_name_ar),
+                    assignedTeam:teams!work_orders_assigned_team_fkey(id, code, name, name_ar),
                     building:buildings(id, name, name_ar),
                     floor:floors(id, name, name_ar),
                     room:rooms(id, name, name_ar),

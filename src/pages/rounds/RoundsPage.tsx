@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -14,7 +14,9 @@ import {
     SearchCheck,
     Sparkles,
     UserRound,
+    Users,
     Wrench,
+    X,
 } from 'lucide-react'
 import { useDepartments } from '@/hooks/useFacilities'
 import {
@@ -22,11 +24,13 @@ import {
     useCompleteRound,
     useConvertRoundObservation,
     useCreateRound,
+    useRoundSupervisors,
     useRounds,
     type Round,
     type RoundObservation,
     type RoundType,
 } from '@/hooks/useRounds'
+import { getTeamPrimarySpecialization, useWorkTeams, type WorkTeam } from '@/hooks/useWorkTeams'
 import { cn } from '@/lib/utils'
 
 const ROUND_TYPES: Record<RoundType, { label: string; className: string; Icon: typeof Wrench }> = {
@@ -53,12 +57,16 @@ const STATUS_META = {
     },
 }
 
-function formatDateTime(value: string | null | undefined) {
+const ROUTING_ORDER = ['cleaning', 'electrical', 'plumbing', 'hvac', 'civil', 'general']
+
+function formatDate(value: string | null | undefined) {
     if (!value) return '-'
-    return new Date(value).toLocaleString('ar-SA', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-    })
+    return new Date(value).toLocaleDateString('ar-SA', { dateStyle: 'medium' })
+}
+
+function formatTime(value: string | null | undefined) {
+    if (!value) return '-'
+    return new Date(value).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
 }
 
 function durationLabel(round: Round) {
@@ -85,7 +93,45 @@ function typeMeta(type: RoundType) {
     return ROUND_TYPES[type] ?? ROUND_TYPES.maintenance
 }
 
-function RoundSummaryCard({
+function validRoundType(value: string | null): RoundType | 'all' {
+    return value === 'maintenance' || value === 'cleaning' ? value : 'all'
+}
+
+function roundCounts(round: Round) {
+    const observations = round.observations ?? []
+    return {
+        observations: observations.length,
+        converted: observations.filter((obs) => !!obs.created_work_order_id).length,
+        needsWorkOrder: observations.filter((obs) => obs.needs_work_order).length,
+    }
+}
+
+function sortRoutingTeams(teams: WorkTeam[]) {
+    return [...teams].sort((a, b) => {
+        const aSpec = getTeamPrimarySpecialization(a)
+        const bSpec = getTeamPrimarySpecialization(b)
+        return (ROUTING_ORDER.indexOf(aSpec) + 1 || 99) - (ROUTING_ORDER.indexOf(bSpec) + 1 || 99)
+            || (a.name_ar || a.name).localeCompare(b.name_ar || b.name, 'ar')
+    })
+}
+
+function SummaryCard({ label, value, Icon }: { label: string; value: number; Icon: typeof ClipboardCheck }) {
+    return (
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                    <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                    <p className="text-2xl font-bold leading-none">{value}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function RoundCard({
     round,
     selected,
     onSelect,
@@ -96,20 +142,19 @@ function RoundSummaryCard({
 }) {
     const meta = typeMeta(round.round_type)
     const status = STATUS_META[round.status]
-    const observationCount = round.observations?.length ?? 0
-    const needsWorkOrderCount = round.observations?.filter((obs) => obs.needs_work_order).length ?? 0
+    const counts = roundCounts(round)
     const Icon = meta.Icon
 
     return (
         <button
             onClick={onSelect}
             className={cn(
-                'w-full text-right rounded-lg border bg-card p-4 transition-colors',
-                selected ? 'border-primary shadow-sm' : 'border-border hover:border-primary/50'
+                'w-full rounded-lg border bg-card p-4 text-right shadow-sm transition-colors hover:border-primary/60',
+                selected ? 'border-primary ring-2 ring-primary/10' : 'border-border'
             )}
         >
             <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2 min-w-0">
+                <div className="min-w-0 space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                         <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold', meta.className)}>
                             <Icon className="h-3.5 w-3.5" />
@@ -119,26 +164,34 @@ function RoundSummaryCard({
                             {status.label}
                         </span>
                     </div>
-                    <p className="font-bold text-foreground truncate">{supervisorName(round)}</p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            {formatDateTime(round.started_at)}
-                        </span>
-                        {round.completed_at && (
+                    <div>
+                        <p className="truncate font-bold text-foreground">{supervisorName(round)}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                             <span className="inline-flex items-center gap-1">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                {formatDateTime(round.completed_at)}
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                {formatDate(round.started_at)}
                             </span>
-                        )}
+                            <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {formatTime(round.started_at)} - {formatTime(round.completed_at)}
+                            </span>
+                            <span>{durationLabel(round)}</span>
+                        </div>
                     </div>
                 </div>
-                <div className="shrink-0 text-left">
-                    <p className="text-2xl font-bold leading-none">{observationCount}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">ملاحظة</p>
-                    {needsWorkOrderCount > 0 && (
-                        <p className="mt-2 text-xs font-bold text-primary">{needsWorkOrderCount} لأمر عمل</p>
-                    )}
+                <div className="shrink-0 rounded-lg bg-muted/10 px-3 py-2 text-center">
+                    <p className="text-xl font-bold leading-none">{counts.observations}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">ملاحظات</p>
+                </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-md bg-muted/10 px-3 py-2">
+                    <span className="text-muted-foreground">تحتاج أمر عمل</span>
+                    <p className="mt-1 font-bold">{counts.needsWorkOrder}</p>
+                </div>
+                <div className="rounded-md bg-muted/10 px-3 py-2">
+                    <span className="text-muted-foreground">محولة</span>
+                    <p className="mt-1 font-bold text-primary">{counts.converted}</p>
                 </div>
             </div>
         </button>
@@ -147,17 +200,15 @@ function RoundSummaryCard({
 
 function ObservationRow({
     observation,
-    canConvert,
     onConvert,
     converting,
 }: {
     observation: RoundObservation
-    canConvert: boolean
     onConvert: () => void
     converting: boolean
 }) {
     return (
-        <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+        <div className="space-y-3 rounded-lg border border-border bg-background p-4">
             <div className="flex items-start justify-between gap-3">
                 <div className="space-y-2">
                     <p className="font-semibold leading-7">{observation.observation_text}</p>
@@ -166,7 +217,7 @@ function ObservationRow({
                             <MapPin className="h-3.5 w-3.5" />
                             {displayName(observation.location)}
                         </span>
-                        <span>{formatDateTime(observation.created_at)}</span>
+                        <span>{formatDate(observation.created_at)} {formatTime(observation.created_at)}</span>
                     </div>
                 </div>
                 {observation.needs_work_order && (
@@ -195,7 +246,7 @@ function ObservationRow({
                     ) : (
                         <button
                             onClick={onConvert}
-                            disabled={!canConvert || converting}
+                            disabled={converting}
                             className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-50"
                         >
                             <SearchCheck className="h-4 w-4" />
@@ -211,8 +262,11 @@ function ObservationRow({
 export default function RoundsPage() {
     const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
-    const [typeFilter, setTypeFilter] = useState<RoundType | 'all'>('all')
-    const [dateFilter, setDateFilter] = useState('')
+    const [searchParams, setSearchParams] = useSearchParams()
+    const [typeFilter, setTypeFilter] = useState<RoundType | 'all'>(() => validRoundType(searchParams.get('type')))
+    const [supervisorFilter, setSupervisorFilter] = useState(() => searchParams.get('supervisor') ?? '')
+    const [dateFrom, setDateFrom] = useState(() => searchParams.get('from') ?? '')
+    const [dateTo, setDateTo] = useState(() => searchParams.get('to') ?? '')
     const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null)
     const [newRoundType, setNewRoundType] = useState<RoundType>('maintenance')
     const [locationId, setLocationId] = useState('')
@@ -220,23 +274,67 @@ export default function RoundsPage() {
     const [actionTaken, setActionTaken] = useState('')
     const [needsWorkOrder, setNeedsWorkOrder] = useState(true)
     const [summary, setSummary] = useState('')
+    const [conversionObservation, setConversionObservation] = useState<RoundObservation | null>(null)
+    const [assignedTeamId, setAssignedTeamId] = useState('')
 
-    const { data: rounds, isLoading } = useRounds({ type: typeFilter, date: dateFilter })
+    const { data: rounds, isLoading } = useRounds({
+        type: typeFilter,
+        supervisorId: supervisorFilter,
+        dateFrom,
+        dateTo,
+    })
+    const { data: supervisors } = useRoundSupervisors()
     const { data: departments, isLoading: locationsLoading } = useDepartments()
+    const { data: teams } = useWorkTeams()
     const createRoundMutation = useCreateRound()
     const addObservationMutation = useAddRoundObservation()
     const completeRoundMutation = useCompleteRound()
     const convertMutation = useConvertRoundObservation()
+
+    useEffect(() => {
+        const next = new URLSearchParams()
+        if (typeFilter !== 'all') next.set('type', typeFilter)
+        if (supervisorFilter) next.set('supervisor', supervisorFilter)
+        if (dateFrom) next.set('from', dateFrom)
+        if (dateTo) next.set('to', dateTo)
+        setSearchParams(next, { replace: true })
+    }, [dateFrom, dateTo, setSearchParams, supervisorFilter, typeFilter])
 
     const activeDepartments = useMemo(
         () => (departments ?? []).filter((department) => department.is_active),
         [departments]
     )
 
+    const routingTeams = useMemo(
+        () => sortRoutingTeams((teams ?? []).filter((team) => team.status === 'active')),
+        [teams]
+    )
+
+    const cleaningTeamId = useMemo(
+        () => routingTeams.find((team) => getTeamPrimarySpecialization(team) === 'cleaning')?.id ?? '',
+        [routingTeams]
+    )
+
     const selectedRound = useMemo(
         () => (rounds ?? []).find((round) => round.id === selectedRoundId) ?? rounds?.[0] ?? null,
         [rounds, selectedRoundId]
     )
+
+    const summaryCounts = useMemo(() => {
+        const list = rounds ?? []
+        return list.reduce(
+            (acc, round) => {
+                const counts = roundCounts(round)
+                acc.total += 1
+                acc.maintenance += round.round_type === 'maintenance' ? 1 : 0
+                acc.cleaning += round.round_type === 'cleaning' ? 1 : 0
+                acc.observations += counts.observations
+                acc.converted += counts.converted
+                return acc
+            },
+            { total: 0, maintenance: 0, cleaning: 0, observations: 0, converted: 0 }
+        )
+    }, [rounds])
 
     useEffect(() => {
         if (!selectedRoundId && rounds?.[0]) {
@@ -299,11 +397,28 @@ export default function RoundsPage() {
         )
     }
 
-    const handleConvertObservation = (observation: RoundObservation) => {
-        convertMutation.mutate(observation.id, {
-            onSuccess: (result) => toast.success(`تم إنشاء أمر العمل ${result.code}`),
-            onError: (error) => toast.error(error.message || 'تعذر تحويل الملاحظة'),
-        })
+    const openConvertDialog = (observation: RoundObservation) => {
+        setConversionObservation(observation)
+        setAssignedTeamId(selectedRound?.round_type === 'cleaning' ? cleaningTeamId : '')
+    }
+
+    const handleConvertObservation = () => {
+        if (!conversionObservation || !assignedTeamId) {
+            toast.error('اختر الفريق أو التخصص')
+            return
+        }
+
+        convertMutation.mutate(
+            { observationId: conversionObservation.id, assignedTeamId },
+            {
+                onSuccess: (result) => {
+                    setConversionObservation(null)
+                    setAssignedTeamId('')
+                    toast.success(`تم إنشاء أمر العمل ${result.code}`)
+                },
+                onError: (error) => toast.error(error.message || 'تعذر تحويل الملاحظة'),
+            }
+        )
     }
 
     const selectedIsOpen = selectedRound?.status === 'in_progress'
@@ -316,294 +431,340 @@ export default function RoundsPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold md:text-3xl">الجولات</h1>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                            <ClipboardCheck className="h-4 w-4" />
-                            جولات المشرفين
-                        </span>
-                        {selectedRound?.completed_at && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-green-200 bg-green-50 px-2 py-1 font-bold text-green-700">
-                                <CheckCircle2 className="h-4 w-4" />
-                                اكتملت خلال {durationLabel(selectedRound)}
-                            </span>
-                        )}
-                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        ملخص أداء الجولات حسب المشرف، الفترة، ونوع الجولة.
+                    </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-border bg-card p-1">
-                        {(['all', 'maintenance', 'cleaning'] as const).map((item) => {
-                            const active = typeFilter === item
-                            const label = item === 'all' ? 'الكل' : ROUND_TYPES[item].label
+                <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        {(['maintenance', 'cleaning'] as RoundType[]).map((item) => {
+                            const meta = typeMeta(item)
+                            const Icon = meta.Icon
+                            const active = newRoundType === item
                             return (
                                 <button
                                     key={item}
-                                    onClick={() => setTypeFilter(item)}
+                                    onClick={() => setNewRoundType(item)}
                                     className={cn(
-                                        'min-h-9 rounded-md px-3 text-sm font-bold transition-colors',
-                                        active ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted/20'
+                                        'flex min-h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-bold transition-colors',
+                                        active ? 'border-primary bg-primary text-white' : 'border-border hover:bg-muted/10'
                                     )}
                                 >
-                                    {label}
+                                    <Icon className="h-4 w-4" />
+                                    {meta.label}
                                 </button>
                             )
                         })}
                     </div>
-                    <label className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm">
-                        <Filter className="h-4 w-4 text-muted-foreground" />
+                    <button
+                        onClick={handleStartRound}
+                        disabled={createRoundMutation.isPending}
+                        className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-50"
+                    >
+                        <Plus className="h-4 w-4" />
+                        {createRoundMutation.isPending ? 'جاري البدء...' : 'بدء جولة'}
+                    </button>
+                </div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                    <Filter className="h-4 w-4" />
+                    تصفية الجولات
+                </div>
+                <div className="grid gap-3 md:grid-cols-4">
+                    <label className="space-y-1">
+                        <span className="text-xs text-muted-foreground">المشرف</span>
+                        <select
+                            value={supervisorFilter}
+                            onChange={(event) => setSupervisorFilter(event.target.value)}
+                            className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                        >
+                            <option value="">كل المشرفين</option>
+                            {(supervisors ?? []).map((supervisor) => (
+                                <option key={supervisor.id} value={supervisor.id}>
+                                    {supervisor.full_name_ar || supervisor.full_name || supervisor.email}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="space-y-1">
+                        <span className="text-xs text-muted-foreground">نوع الجولة</span>
+                        <select
+                            value={typeFilter}
+                            onChange={(event) => setTypeFilter(validRoundType(event.target.value))}
+                            className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                        >
+                            <option value="all">كل الأنواع</option>
+                            <option value="maintenance">صيانة</option>
+                            <option value="cleaning">نظافة</option>
+                        </select>
+                    </label>
+                    <label className="space-y-1">
+                        <span className="text-xs text-muted-foreground">من</span>
                         <input
                             type="date"
-                            value={dateFilter}
-                            onChange={(event) => setDateFilter(event.target.value)}
-                            className="bg-transparent outline-none"
+                            value={dateFrom}
+                            onChange={(event) => setDateFrom(event.target.value)}
+                            className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
                         />
                     </label>
-                    {dateFilter && (
-                        <button
-                            onClick={() => setDateFilter('')}
-                            className="min-h-11 rounded-lg border border-border px-3 text-sm font-bold hover:bg-muted/10"
-                        >
-                            مسح
-                        </button>
-                    )}
+                    <label className="space-y-1">
+                        <span className="text-xs text-muted-foreground">إلى</span>
+                        <input
+                            type="date"
+                            value={dateTo}
+                            onChange={(event) => setDateTo(event.target.value)}
+                            className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                        />
+                    </label>
                 </div>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
-                <div className="space-y-4">
-                    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-                        <div className="flex items-center justify-between gap-3">
-                            <h2 className="font-bold">جولة جديدة</h2>
-                            <span className="rounded-md bg-muted/20 px-2 py-1 text-xs text-muted-foreground">
-                                جوال
-                            </span>
-                        </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <SummaryCard label="إجمالي الجولات" value={summaryCounts.total} Icon={ClipboardCheck} />
+                <SummaryCard label="جولات الصيانة" value={summaryCounts.maintenance} Icon={Wrench} />
+                <SummaryCard label="جولات النظافة" value={summaryCounts.cleaning} Icon={Sparkles} />
+                <SummaryCard label="إجمالي الملاحظات" value={summaryCounts.observations} Icon={UserRound} />
+                <SummaryCard label="محولة لأوامر عمل" value={summaryCounts.converted} Icon={CheckCircle2} />
+            </div>
 
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                            {(['maintenance', 'cleaning'] as RoundType[]).map((item) => {
-                                const meta = typeMeta(item)
-                                const Icon = meta.Icon
-                                const active = newRoundType === item
-                                return (
-                                    <button
-                                        key={item}
-                                        onClick={() => setNewRoundType(item)}
-                                        className={cn(
-                                            'flex min-h-14 items-center justify-center gap-2 rounded-lg border text-sm font-bold transition-colors',
-                                            active ? 'border-primary bg-primary text-white' : 'border-border hover:bg-muted/10'
-                                        )}
-                                    >
-                                        <Icon className="h-4 w-4" />
-                                        {meta.label}
-                                    </button>
-                                )
-                            })}
-                        </div>
-
-                        <button
-                            onClick={handleStartRound}
-                            disabled={createRoundMutation.isPending}
-                            className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-50"
-                        >
-                            <Plus className="h-4 w-4" />
-                            {createRoundMutation.isPending ? 'جاري البدء...' : 'بدء الجولة'}
-                        </button>
-                    </div>
-
-                    <div className="space-y-2">
-                        {isLoading && (
-                            <div className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-                                جاري التحميل...
-                            </div>
-                        )}
-                        {!isLoading && (rounds?.length ?? 0) === 0 && (
-                            <div className="rounded-lg border-2 border-dashed border-border bg-card p-8 text-center">
-                                <ClipboardCheck className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-                                <p className="font-bold">لا توجد جولات</p>
-                            </div>
-                        )}
-                        {rounds?.map((round) => (
-                            <RoundSummaryCard
-                                key={round.id}
-                                round={round}
-                                selected={selectedRound?.id === round.id}
-                                onSelect={() => setSelectedRoundId(round.id)}
-                            />
-                        ))}
-                    </div>
+            {isLoading && (
+                <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                    جاري تحميل الجولات...
                 </div>
+            )}
 
-                <div className="space-y-4">
-                    {!selectedRound && (
-                        <div className="rounded-lg border-2 border-dashed border-border bg-card p-10 text-center">
-                            <ClipboardCheck className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-                            <p className="font-bold">اختر جولة</p>
-                        </div>
-                    )}
+            {!isLoading && (rounds?.length ?? 0) === 0 && (
+                <div className="rounded-lg border-2 border-dashed border-border bg-card p-10 text-center">
+                    <ClipboardCheck className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                    <p className="font-bold">لا توجد جولات ضمن هذا النطاق</p>
+                </div>
+            )}
 
-                    {selectedRound && selectedMeta && selectedStatus && (
-                        <>
-                            <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-                                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                                    <div className="space-y-3">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold', selectedMeta.className)}>
-                                                <selectedMeta.Icon className="h-3.5 w-3.5" />
-                                                {selectedMeta.label}
-                                            </span>
-                                            <span className={cn('rounded-md border px-2 py-1 text-xs font-bold', selectedStatus.className)}>
-                                                {selectedStatus.label}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold">{supervisorName(selectedRound)}</h2>
-                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                                                <span className="inline-flex items-center gap-1">
-                                                    <CalendarDays className="h-4 w-4" />
-                                                    {formatDateTime(selectedRound.started_at)}
-                                                </span>
-                                                {selectedRound.completed_at && (
-                                                    <span className="inline-flex items-center gap-1">
-                                                        <CheckCircle2 className="h-4 w-4" />
-                                                        {formatDateTime(selectedRound.completed_at)}
-                                                    </span>
-                                                )}
-                                                <span className="inline-flex items-center gap-1">
-                                                    <UserRound className="h-4 w-4" />
-                                                    {observations.length} ملاحظات
-                                                </span>
-                                            </div>
-                                        </div>
+            {(rounds?.length ?? 0) > 0 && (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {rounds?.map((round) => (
+                        <RoundCard
+                            key={round.id}
+                            round={round}
+                            selected={selectedRound?.id === round.id}
+                            onSelect={() => setSelectedRoundId(round.id)}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {selectedRound && selectedMeta && selectedStatus && (
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="space-y-4">
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                <div className="space-y-3">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold', selectedMeta.className)}>
+                                            <selectedMeta.Icon className="h-3.5 w-3.5" />
+                                            {selectedMeta.label}
+                                        </span>
+                                        <span className={cn('rounded-md border px-2 py-1 text-xs font-bold', selectedStatus.className)}>
+                                            {selectedStatus.label}
+                                        </span>
                                     </div>
-
-                                    {selectedRound.completed_at && (
-                                        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
-                                            <p className="text-xs font-bold">وقت الإكمال</p>
-                                            <p className="mt-1 font-bold">{formatDateTime(selectedRound.completed_at)}</p>
-                                        </div>
-                                    )}
+                                    <h2 className="text-xl font-bold">{supervisorName(selectedRound)}</h2>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                                        <span className="inline-flex items-center gap-1">
+                                            <CalendarDays className="h-4 w-4" />
+                                            {formatDate(selectedRound.started_at)}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1">
+                                            <Clock className="h-4 w-4" />
+                                            {formatTime(selectedRound.started_at)} - {formatTime(selectedRound.completed_at)}
+                                        </span>
+                                        <span>{durationLabel(selectedRound)}</span>
+                                    </div>
                                 </div>
-
-                                {selectedRound.summary && (
-                                    <p className="mt-4 rounded-lg bg-muted/20 p-3 text-sm leading-7 text-muted-foreground">
-                                        {selectedRound.summary}
-                                    </p>
+                                {selectedRound.completed_at && (
+                                    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+                                        <p className="text-xs font-bold">وقت الإكمال</p>
+                                        <p className="mt-1 font-bold">{formatDate(selectedRound.completed_at)} {formatTime(selectedRound.completed_at)}</p>
+                                    </div>
                                 )}
                             </div>
-
-                            {selectedIsOpen && (
-                                <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-                                    <h3 className="font-bold">إضافة ملاحظة</h3>
-                                    <div className="mt-4 grid gap-3 md:grid-cols-2">
-                                        <label className="space-y-1 md:col-span-2">
-                                            <span className="text-xs font-bold text-muted-foreground">الموقع</span>
-                                            <select
-                                                value={locationId}
-                                                onChange={(event) => setLocationId(event.target.value)}
-                                                disabled={locationsLoading}
-                                                className="min-h-12 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-                                            >
-                                                {activeDepartments.map((department) => (
-                                                    <option key={department.id} value={department.id}>
-                                                        {displayName(department)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </label>
-
-                                        <label className="space-y-1 md:col-span-2">
-                                            <span className="text-xs font-bold text-muted-foreground">الملاحظة</span>
-                                            <textarea
-                                                value={observationText}
-                                                onChange={(event) => setObservationText(event.target.value)}
-                                                rows={3}
-                                                placeholder="مثال: تسريب خفيف تحت المغسلة"
-                                                className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary"
-                                            />
-                                        </label>
-
-                                        <label className="space-y-1 md:col-span-2">
-                                            <span className="text-xs font-bold text-muted-foreground">الإجراء أثناء الجولة</span>
-                                            <input
-                                                value={actionTaken}
-                                                onChange={(event) => setActionTaken(event.target.value)}
-                                                placeholder="مثال: تم عزل المنطقة وإبلاغ المناوب"
-                                                className="min-h-12 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-                                            />
-                                        </label>
-
-                                        <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border bg-background px-3 text-sm font-bold">
-                                            <input
-                                                type="checkbox"
-                                                checked={needsWorkOrder}
-                                                onChange={(event) => setNeedsWorkOrder(event.target.checked)}
-                                                className="h-5 w-5 accent-primary"
-                                            />
-                                            تحتاج أمر عمل؟
-                                        </label>
-
-                                        <button
-                                            onClick={handleAddObservation}
-                                            disabled={addObservationMutation.isPending}
-                                            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-50"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            {addObservationMutation.isPending ? 'جاري الإضافة...' : 'إضافة'}
-                                        </button>
-                                    </div>
-
-                                    <div className="mt-5 space-y-2 border-t border-border pt-4">
-                                        <label className="space-y-1">
-                                            <span className="text-xs font-bold text-muted-foreground">ملخص الإكمال</span>
-                                            <textarea
-                                                value={summary}
-                                                onChange={(event) => setSummary(event.target.value)}
-                                                rows={2}
-                                                className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary"
-                                            />
-                                        </label>
-                                        <button
-                                            onClick={handleCompleteRound}
-                                            disabled={completeRoundMutation.isPending || observations.length === 0}
-                                            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-                                        >
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            {completeRoundMutation.isPending ? 'جاري الإكمال...' : 'إكمال الجولة'}
-                                        </button>
-                                    </div>
-                                </div>
+                            {selectedRound.summary && (
+                                <p className="mt-4 rounded-lg bg-muted/20 p-3 text-sm leading-7 text-muted-foreground">
+                                    {selectedRound.summary}
+                                </p>
                             )}
+                        </div>
 
-                            <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-                                <div className="flex items-center justify-between gap-3">
-                                    <h3 className="font-bold">الملاحظات</h3>
-                                    <span className="rounded-md bg-muted/20 px-2 py-1 text-xs text-muted-foreground">
-                                        {observations.length}
-                                    </span>
-                                </div>
-
-                                <div className="mt-4 space-y-3">
-                                    {observations.length === 0 && (
-                                        <div className="rounded-lg border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                                            لا توجد ملاحظات بعد
-                                        </div>
-                                    )}
-                                    {observations.map((observation) => (
-                                        <ObservationRow
-                                            key={observation.id}
-                                            observation={observation}
-                                            canConvert
-                                            converting={convertMutation.isPending}
-                                            onConvert={() => handleConvertObservation(observation)}
-                                        />
-                                    ))}
-                                </div>
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+                            <div className="flex items-center justify-between gap-3">
+                                <h3 className="font-bold">الملاحظات</h3>
+                                <span className="rounded-md bg-muted/20 px-2 py-1 text-xs text-muted-foreground">
+                                    {observations.length}
+                                </span>
                             </div>
-                        </>
+                            <div className="mt-4 space-y-3">
+                                {observations.length === 0 && (
+                                    <div className="rounded-lg border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                                        لا توجد ملاحظات بعد
+                                    </div>
+                                )}
+                                {observations.map((observation) => (
+                                    <ObservationRow
+                                        key={observation.id}
+                                        observation={observation}
+                                        converting={convertMutation.isPending}
+                                        onConvert={() => openConvertDialog(observation)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {selectedIsOpen && (
+                        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+                            <h3 className="font-bold">إضافة ملاحظة</h3>
+                            <div className="mt-4 space-y-3">
+                                <label className="space-y-1">
+                                    <span className="text-xs font-bold text-muted-foreground">الموقع</span>
+                                    <select
+                                        value={locationId}
+                                        onChange={(event) => setLocationId(event.target.value)}
+                                        disabled={locationsLoading}
+                                        className="min-h-12 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                                    >
+                                        {activeDepartments.map((department) => (
+                                            <option key={department.id} value={department.id}>
+                                                {displayName(department)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <label className="space-y-1">
+                                    <span className="text-xs font-bold text-muted-foreground">الملاحظة</span>
+                                    <textarea
+                                        value={observationText}
+                                        onChange={(event) => setObservationText(event.target.value)}
+                                        rows={3}
+                                        placeholder="مثال: تسريب خفيف تحت المغسلة"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary"
+                                    />
+                                </label>
+
+                                <label className="space-y-1">
+                                    <span className="text-xs font-bold text-muted-foreground">الإجراء أثناء الجولة</span>
+                                    <input
+                                        value={actionTaken}
+                                        onChange={(event) => setActionTaken(event.target.value)}
+                                        placeholder="مثال: تم عزل المنطقة وإبلاغ المناوب"
+                                        className="min-h-12 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                                    />
+                                </label>
+
+                                <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border bg-background px-3 text-sm font-bold">
+                                    <input
+                                        type="checkbox"
+                                        checked={needsWorkOrder}
+                                        onChange={(event) => setNeedsWorkOrder(event.target.checked)}
+                                        className="h-5 w-5 accent-primary"
+                                    />
+                                    تحتاج أمر عمل؟
+                                </label>
+
+                                <button
+                                    onClick={handleAddObservation}
+                                    disabled={addObservationMutation.isPending}
+                                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-50"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    {addObservationMutation.isPending ? 'جاري الإضافة...' : 'إضافة'}
+                                </button>
+                            </div>
+
+                            <div className="mt-5 space-y-2 border-t border-border pt-4">
+                                <label className="space-y-1">
+                                    <span className="text-xs font-bold text-muted-foreground">ملخص الإكمال</span>
+                                    <textarea
+                                        value={summary}
+                                        onChange={(event) => setSummary(event.target.value)}
+                                        rows={2}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary"
+                                    />
+                                </label>
+                                <button
+                                    onClick={handleCompleteRound}
+                                    disabled={completeRoundMutation.isPending || observations.length === 0}
+                                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                                >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    {completeRoundMutation.isPending ? 'جاري الإكمال...' : 'إكمال الجولة'}
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
-            </div>
+            )}
+
+            {conversionObservation && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-lg rounded-lg border border-border bg-card p-5 shadow-xl">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="text-lg font-bold">توجيه الملاحظة لأمر عمل</h2>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    اختر الفريق أو التخصص قبل إنشاء أمر العمل.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setConversionObservation(null)}
+                                className="rounded-md p-2 text-muted-foreground hover:bg-muted/20"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="mt-4 rounded-lg bg-muted/10 p-3 text-sm leading-7">
+                            {conversionObservation.observation_text}
+                        </div>
+
+                        <label className="mt-4 block space-y-1">
+                            <span className="text-xs font-bold text-muted-foreground">الفريق / التخصص</span>
+                            <select
+                                value={assignedTeamId}
+                                onChange={(event) => setAssignedTeamId(event.target.value)}
+                                className="min-h-12 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                            >
+                                <option value="">اختر الفريق</option>
+                                {routingTeams.map((team) => (
+                                    <option key={team.id} value={team.id}>
+                                        {team.name_ar || team.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <div className="mt-5 flex flex-wrap justify-end gap-2">
+                            <button
+                                onClick={() => setConversionObservation(null)}
+                                className="min-h-11 rounded-lg border border-border px-4 text-sm font-bold hover:bg-muted/10"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={handleConvertObservation}
+                                disabled={!assignedTeamId || convertMutation.isPending}
+                                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                <Users className="h-4 w-4" />
+                                {convertMutation.isPending ? 'جاري التحويل...' : 'إنشاء أمر العمل'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
-

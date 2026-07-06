@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { cn, formatDate, formatRelativeTime } from '@/lib/utils'
 import { useWorkOrders, useWorkOrderStats, isPreventiveWorkOrder, WorkOrder } from '@/hooks/useWorkOrders'
@@ -63,19 +63,38 @@ const priorityConfig = {
     urgent: { color: 'text-destructive', bg: 'bg-destructive/10', label: 'urgent' },
 }
 
+function validStatusFilter(value: string | null): WorkOrderFilterKey {
+    return WORK_ORDER_FILTERS.some((filter) => filter.key === value) ? value as WorkOrderFilterKey : 'all'
+}
+
+function validTypeFilter(value: string | null): 'all' | 'preventive' | 'corrective' {
+    return value === 'preventive' || value === 'corrective' ? value : 'all'
+}
+
+function startOfDate(value: string) {
+    return new Date(`${value}T00:00:00`).getTime()
+}
+
+function endOfDate(value: string) {
+    return new Date(`${value}T23:59:59.999`).getTime()
+}
+
 export default function WorkOrdersPage() {
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const locale = isRTL ? 'ar-SA' : 'en-US'
+    const [searchParams, setSearchParams] = useSearchParams()
 
     // Check create WO feature
     const { can } = usePermission()
     const isCreateWorkOrderEnabled = useFeatureEnabled('work_orders', 'create_wo')
     const canCreate = can('work_orders.create')
 
-    const [searchQuery, setSearchQuery] = useState('')
-    const [statusFilter, setStatusFilter] = useState<WorkOrderFilterKey>('all')
-    const [typeFilter, setTypeFilter] = useState<'all' | 'preventive' | 'corrective'>('all')
+    const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '')
+    const [statusFilter, setStatusFilter] = useState<WorkOrderFilterKey>(() => validStatusFilter(searchParams.get('status')))
+    const [typeFilter, setTypeFilter] = useState<'all' | 'preventive' | 'corrective'>(() => validTypeFilter(searchParams.get('type')))
+    const [dateFrom, setDateFrom] = useState(() => searchParams.get('from') ?? '')
+    const [dateTo, setDateTo] = useState(() => searchParams.get('to') ?? '')
     const [showFilters, setShowFilters] = useState(false)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
@@ -83,8 +102,18 @@ export default function WorkOrdersPage() {
     const { data: workOrders, isLoading, error } = useWorkOrders()
     const { data: stats } = useWorkOrderStats()
 
+    useEffect(() => {
+        const next = new URLSearchParams()
+        if (searchQuery.trim()) next.set('q', searchQuery.trim())
+        if (statusFilter !== 'all') next.set('status', statusFilter)
+        if (typeFilter !== 'all') next.set('type', typeFilter)
+        if (dateFrom) next.set('from', dateFrom)
+        if (dateTo) next.set('to', dateTo)
+        setSearchParams(next, { replace: true })
+    }, [dateFrom, dateTo, searchQuery, setSearchParams, statusFilter, typeFilter])
+
     // Filter work orders
-    const filteredWorkOrders = workOrders?.filter(wo => {
+    const filteredWorkOrders = useMemo(() => workOrders?.filter(wo => {
         const matchesSearch =
             wo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             wo.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -103,8 +132,12 @@ export default function WorkOrdersPage() {
             (typeFilter === 'preventive' && preventive) ||
             (typeFilter === 'corrective' && !preventive)
 
-        return matchesSearch && matchesStatus && matchesType
-    }) || []
+        const createdAt = new Date(wo.created_at).getTime()
+        const matchesDateFrom = !dateFrom || createdAt >= startOfDate(dateFrom)
+        const matchesDateTo = !dateTo || createdAt <= endOfDate(dateTo)
+
+        return matchesSearch && matchesStatus && matchesType && matchesDateFrom && matchesDateTo
+    }) || [], [dateFrom, dateTo, searchQuery, statusFilter, typeFilter, workOrders])
 
     if (isLoading) {
         return (
@@ -273,6 +306,31 @@ export default function WorkOrdersPage() {
                                 </button>
                             ))}
                         </div>
+                        {/* Date range filter */}
+                        <div className="grid gap-3 pt-2 border-t border-border/50 sm:grid-cols-2">
+                            <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground font-cairo">
+                                    {isRTL ? 'من تاريخ الإنشاء' : 'Created from'}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(event) => setDateFrom(event.target.value)}
+                                    className="min-h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-secondary"
+                                />
+                            </label>
+                            <label className="space-y-1">
+                                <span className="text-xs text-muted-foreground font-cairo">
+                                    {isRTL ? 'إلى تاريخ الإنشاء' : 'Created to'}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(event) => setDateTo(event.target.value)}
+                                    className="min-h-11 w-full rounded-lg border border-border bg-card px-3 text-sm outline-none focus:border-secondary"
+                                />
+                            </label>
+                        </div>
                     </div>
                 )}
             </div>
@@ -359,6 +417,9 @@ function WorkOrdersTable({
                             : workOrder.reporter
                                 ? (isRTL ? workOrder.reporter.full_name_ar || workOrder.reporter.full_name : workOrder.reporter.full_name)
                                 : null
+                        const teamName = workOrder.assignedTeam
+                            ? (isRTL ? workOrder.assignedTeam.name_ar || workOrder.assignedTeam.name : workOrder.assignedTeam.name)
+                            : null
 
                         return (
                             <TableRow
@@ -415,7 +476,10 @@ function WorkOrdersTable({
                                     </div>
                                 </TableCell>
                                 <TableCell className="font-cairo text-sm text-muted-foreground">
-                                    {ownerName || '-'}
+                                    <div className="space-y-1">
+                                        <p>{ownerName || '-'}</p>
+                                        {teamName ? <p className="text-xs font-bold text-primary">{teamName}</p> : null}
+                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     <div className={cn('font-cairo text-sm', overdue ? 'font-semibold text-destructive' : 'text-muted-foreground')}>
@@ -472,6 +536,9 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
     const priority = priorityConfig[workOrder.priority] || priorityConfig.medium
     const StatusIcon = statusIcons[workOrder.status] || Clock
     const preventive = isPreventiveWorkOrder(workOrder)
+    const teamName = workOrder.assignedTeam
+        ? (isRTL ? workOrder.assignedTeam.name_ar || workOrder.assignedTeam.name : workOrder.assignedTeam.name)
+        : null
 
     return (
         <div
@@ -517,6 +584,12 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
                                         <span className="font-cairo">
                                             {isRTL ? workOrder.reporter.full_name_ar : workOrder.reporter.full_name}
                                         </span>
+                                    </div>
+                                )}
+                                {teamName && (
+                                    <div className="flex items-center gap-1">
+                                        <User className="w-4 h-4" />
+                                        <span className="font-cairo">{teamName}</span>
                                     </div>
                                 )}
                                 <div className="flex items-center gap-1">

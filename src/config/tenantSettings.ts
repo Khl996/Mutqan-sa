@@ -77,6 +77,10 @@ export interface TenantSettings {
         organization_name: string
         organization_name_ar: string
         logo_path: string | null
+        print_letterhead_url: string | null
+        print_logo_url: string | null
+        print_header_name: string | null
+        print_header_secondary: string | null
         footer_note: string | null
         show_reporter_images: boolean
         show_before_after_images: boolean
@@ -459,6 +463,10 @@ export const DEFAULT_TENANT_SETTINGS: TenantSettings = {
         organization_name: '',
         organization_name_ar: '',
         logo_path: null,
+        print_letterhead_url: null,
+        print_logo_url: null,
+        print_header_name: null,
+        print_header_secondary: null,
         footer_note: null,
         show_reporter_images: true,
         show_before_after_images: true,
