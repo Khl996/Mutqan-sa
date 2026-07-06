@@ -21,6 +21,10 @@ type TenantManagedRole =
 type ManagedRole = PlatformManagedRole | TenantManagedRole
 
 type Operation = 'upsert' | 'revoke'
+// The platform admin route works across a broad set of tables/RPC-era shapes
+// that are not represented in the generated Supabase client types here.
+// Keep the service client untyped so Vercel type checks do not narrow tables to never.
+type UntypedSupabaseClient = any
 
 const PLATFORM_MANAGED_ROLES = new Set<PlatformManagedRole>([
     'platform_admin',
@@ -100,7 +104,7 @@ async function sleep(ms: number) {
 }
 
 async function ensureProfileExists(
-    adminSupabase: ReturnType<typeof createClient>,
+    adminSupabase: UntypedSupabaseClient,
     userId: string,
     email: string,
     fullName: string,
@@ -137,7 +141,7 @@ async function ensureProfileExists(
 }
 
 async function findProfileByIdentifier(
-    adminSupabase: ReturnType<typeof createClient>,
+    adminSupabase: UntypedSupabaseClient,
     { userId, email }: { userId?: string | null; email?: string | null },
 ) {
     if (userId) {
@@ -172,7 +176,7 @@ async function findProfileByIdentifier(
 }
 
 async function insertAuditLog(
-    adminSupabase: ReturnType<typeof createClient>,
+    adminSupabase: UntypedSupabaseClient,
     input: {
         actorId: string
         actorEmail: string | null
@@ -238,11 +242,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             global: { headers: { Authorization: `Bearer ${callerToken}` } },
             auth: { autoRefreshToken: false, persistSession: false },
-        })
+        }) as UntypedSupabaseClient
 
         const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
             auth: { autoRefreshToken: false, persistSession: false },
-        })
+        }) as UntypedSupabaseClient
 
         const { data: authData, error: authError } = await userSupabase.auth.getUser()
         if (authError || !authData.user) {
