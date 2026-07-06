@@ -42,6 +42,7 @@ const PMScheduleDetailsPage = lazy(() => import('@/pages/maintenance/PMScheduleD
 const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage'))
 const WorkOrderDetailsPage = lazy(() => import('@/pages/work-orders/WorkOrderDetailsPage'))
 const IntakeReviewPage = lazy(() => import('@/pages/intake/IntakeReviewPage'))
+const RoundsPage = lazy(() => import('@/pages/rounds/RoundsPage'))
 const IntakeSettingsPage = lazy(() => import('@/pages/settings/IntakeSettingsPage'))
 const TeamsPage = lazy(() => import('@/pages/teams/TeamsPage'))
 const WorkTeamsPage = lazy(() => import('@/pages/work-teams/WorkTeamsPage'))
@@ -232,6 +233,7 @@ function AppRoutes() {
                         <Route path="/work-orders" element={renderLazyPage(WorkOrdersPage)} />
                         <Route path="/work-orders/:id" element={renderLazyPage(WorkOrderDetailsPage)} />
                         <Route path="/intake" element={renderLazyPage(IntakeReviewPage)} />
+                        <Route path="/rounds" element={renderLazyPage(RoundsPage)} />
                     </Route>
                 </Route>
 

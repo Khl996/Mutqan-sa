@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useWorkOrder, useWorkOrderLogs, isPreventiveWorkOrder } from '@/hooks/useWorkOrders'
 import { useIntakeDraftForWorkOrder } from '@/hooks/useIntake'
+import { useRoundObservationForWorkOrder } from '@/hooks/useRounds'
 import type { PMWorkOrder } from '@/hooks/usePMFoundation'
 import { useQueryClient } from '@tanstack/react-query'
 import { ErrorBoundary } from '@/components/ErrorBoundary' // Assuming we have one or will create simple wrapper
@@ -22,7 +23,7 @@ import WorkOrderPrintView from '@/components/work-orders/WorkOrderPrintView'
 import WorkOrderPdfButton from '@/components/work-orders/WorkOrderPdfButton'
 import ExecutionDialog from '@/components/maintenance/ExecutionDialog'
 import { en as pmEn, ar as pmAr } from '@/components/maintenance/foundationPmUtils'
-import { AlertTriangle, Inbox } from 'lucide-react'
+import { AlertTriangle, ClipboardCheck, Inbox } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
 
@@ -66,6 +67,10 @@ export default function WorkOrderDetailsPage() {
     // intake draft (وارد واتساب). work_orders carries no intake column — the
     // link lives on intake_drafts.created_work_order_id.
     const { data: intakeDraft } = useIntakeDraftForWorkOrder(id)
+
+    // Rounds provenance: set when a supervisor round observation was converted
+    // into this work order. The link lives on round_observations.
+    const { data: roundObservation } = useRoundObservationForWorkOrder(id)
 
     // 3. Real-time Subscription
     useEffect(() => {
@@ -156,6 +161,26 @@ export default function WorkOrderDetailsPage() {
                     </div>
                     <Link to="/intake" className="text-sm text-emerald-700 font-bold hover:underline shrink-0">
                         {isRTL ? 'عرض الرسالة الأصلية' : 'View original message'}
+                    </Link>
+                </div>
+            )}
+
+            {roundObservation && (
+                <div className="flex items-center justify-between gap-3 p-3 bg-cyan-50 border border-cyan-200 rounded-xl font-cairo flex-wrap">
+                    <div className="flex items-center gap-2 text-sm text-cyan-800">
+                        <ClipboardCheck className="w-4 h-4 shrink-0" />
+                        <span>
+                            {isRTL ? 'المصدر: جولة مشرف' : 'Source: Supervisor round'}
+                            {roundObservation.round?.supervisor && (
+                                <> - {isRTL ? 'المشرف' : 'Supervisor'}: {roundObservation.round.supervisor.full_name_ar || roundObservation.round.supervisor.full_name}</>
+                            )}
+                            {roundObservation.location && (
+                                <> ({roundObservation.location.name_ar || roundObservation.location.name})</>
+                            )}
+                        </span>
+                    </div>
+                    <Link to="/rounds" className="text-sm text-cyan-700 font-bold hover:underline shrink-0">
+                        {isRTL ? 'عرض الجولة' : 'View round'}
                     </Link>
                 </div>
             )}
