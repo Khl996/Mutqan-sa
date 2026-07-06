@@ -22,6 +22,7 @@ import {
     Shield,
     History,
     CreditCard,
+    Inbox,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -52,6 +53,7 @@ export default function Sidebar({ collapsed, mobileOpen, onToggle, onNavigate }:
         { icon: Box, label: t('sidebar.assets'), href: '/assets', moduleCode: 'assets', permission: 'assets.view' },
         { icon: History, label: isRTL ? 'سجل الإجراءات' : 'Operations Log', href: '/asset-logs', moduleCode: 'assets', featureCode: 'asset_history', permission: 'assets.view' },
         { icon: ClipboardList, label: t('sidebar.workOrders'), href: '/work-orders', moduleCode: 'work_orders', permission: 'work_orders.view' },
+        { icon: Inbox, label: isRTL ? 'وارد واتساب' : 'WhatsApp Intake', href: '/intake', moduleCode: 'work_orders', permission: 'work_orders.view' },
         { icon: Wrench, label: t('sidebar.maintenance'), href: '/maintenance', moduleCode: 'maintenance', permission: 'maintenance.view' },
         { icon: Package, label: t('sidebar.inventory'), href: '/inventory', moduleCode: 'inventory', permission: 'inventory.view' },
         { icon: Users, label: t('sidebar.teams'), href: '/teams', moduleCode: 'employees', permission: 'users.view' },

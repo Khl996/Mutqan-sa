@@ -24,6 +24,7 @@ import {
     Check,
     QrCode,
     ChevronRight,
+    Inbox,
 } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -279,6 +280,30 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <ChevronRight className={cn('w-5 h-5 text-primary', isRTL && 'rotate-180')} />
+                    </div>
+                </SettingsSection>
+            )}
+
+            {can('settings.manage') && (
+                <SettingsSection
+                    title={isRTL ? 'إعدادات الوارد' : 'Intake Settings'}
+                    icon={Inbox}
+                    description={isRTL ? 'إدارة قنوات التقاط البلاغات الواردة (وارد واتساب)' : 'Manage inbound capture channels (WhatsApp intake)'}
+                >
+                    <div
+                        className="flex items-center justify-between p-4 bg-secondary/5 rounded-xl border border-secondary/10 cursor-pointer hover:bg-secondary/10 transition-colors"
+                        onClick={() => navigate('/settings/intake')}
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                                <Inbox className="w-6 h-6 text-secondary" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-secondary font-cairo">{isRTL ? 'إدارة مصادر الوارد' : 'Manage Intake Sources'}</h4>
+                                <p className="text-sm text-muted-foreground font-cairo">{isRTL ? 'الرقم، المجموعات المسموح بها، مفتاح الربط، وإيقاف الاستقبال' : 'Phone number, group allowlist, secret, and the pause switch'}</p>
+                            </div>
+                        </div>
+                        <ChevronRight className={cn('w-5 h-5 text-secondary', isRTL && 'rotate-180')} />
                     </div>
                 </SettingsSection>
             )}

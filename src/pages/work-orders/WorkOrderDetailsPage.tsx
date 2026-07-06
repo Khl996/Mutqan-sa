@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useWorkOrder, useWorkOrderLogs, isPreventiveWorkOrder } from '@/hooks/useWorkOrders'
+import { useIntakeDraftForWorkOrder } from '@/hooks/useIntake'
 import type { PMWorkOrder } from '@/hooks/usePMFoundation'
 import { useQueryClient } from '@tanstack/react-query'
 import { ErrorBoundary } from '@/components/ErrorBoundary' // Assuming we have one or will create simple wrapper
@@ -21,7 +22,8 @@ import WorkOrderPrintView from '@/components/work-orders/WorkOrderPrintView'
 import WorkOrderPdfButton from '@/components/work-orders/WorkOrderPdfButton'
 import ExecutionDialog from '@/components/maintenance/ExecutionDialog'
 import { en as pmEn, ar as pmAr } from '@/components/maintenance/foundationPmUtils'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Inbox } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
 
 // Simple Skeleton Loader
@@ -59,6 +61,11 @@ export default function WorkOrderDetailsPage() {
 
     // 2. Fetch Logs
     const { data: logs, isLoading: lLoading, refetch: refetchLogs } = useWorkOrderLogs(id!)
+
+    // Intake provenance: set when this work order was approved/merged from an
+    // intake draft (وارد واتساب). work_orders carries no intake column — the
+    // link lives on intake_drafts.created_work_order_id.
+    const { data: intakeDraft } = useIntakeDraftForWorkOrder(id)
 
     // 3. Real-time Subscription
     useEffect(() => {
@@ -131,6 +138,27 @@ export default function WorkOrderDetailsPage() {
     return (
         <div className="max-w-7xl mx-auto pb-20 space-y-6">
             <WorkOrderHeader workOrder={workOrder} isRTL={isRTL} onPrint={handlePrint} />
+
+            {/* Intake source banner (وارد واتساب) */}
+            {intakeDraft && (
+                <div className="flex items-center justify-between gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl font-cairo flex-wrap">
+                    <div className="flex items-center gap-2 text-sm text-emerald-800">
+                        <Inbox className="w-4 h-4 shrink-0" />
+                        <span>
+                            {isRTL ? 'المصدر: وارد واتساب' : 'Source: WhatsApp intake'}
+                            {intakeDraft.message?.sender_name && (
+                                <> — {isRTL ? 'المرسل' : 'Sender'}: {intakeDraft.message.sender_name}</>
+                            )}
+                            {intakeDraft.message?.group_name && (
+                                <> ({intakeDraft.message.group_name})</>
+                            )}
+                        </span>
+                    </div>
+                    <Link to="/intake" className="text-sm text-emerald-700 font-bold hover:underline shrink-0">
+                        {isRTL ? 'عرض الرسالة الأصلية' : 'View original message'}
+                    </Link>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content Column (Left in LTR, Right in RTL) */}

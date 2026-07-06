@@ -41,6 +41,8 @@ const PMJobPlanDetailsPage = lazy(() => import('@/pages/maintenance/PMJobPlanDet
 const PMScheduleDetailsPage = lazy(() => import('@/pages/maintenance/PMScheduleDetailsPage'))
 const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage'))
 const WorkOrderDetailsPage = lazy(() => import('@/pages/work-orders/WorkOrderDetailsPage'))
+const IntakeReviewPage = lazy(() => import('@/pages/intake/IntakeReviewPage'))
+const IntakeSettingsPage = lazy(() => import('@/pages/settings/IntakeSettingsPage'))
 const TeamsPage = lazy(() => import('@/pages/teams/TeamsPage'))
 const WorkTeamsPage = lazy(() => import('@/pages/work-teams/WorkTeamsPage'))
 const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'))
@@ -229,6 +231,7 @@ function AppRoutes() {
                     <Route element={<ModuleProtectedRoute moduleCode="work_orders" />}>
                         <Route path="/work-orders" element={renderLazyPage(WorkOrdersPage)} />
                         <Route path="/work-orders/:id" element={renderLazyPage(WorkOrderDetailsPage)} />
+                        <Route path="/intake" element={renderLazyPage(IntakeReviewPage)} />
                     </Route>
                 </Route>
 
@@ -270,6 +273,7 @@ function AppRoutes() {
 
                 <Route element={<ProtectedRoute permission="settings.manage" />}>
                     <Route path="/settings/portal" element={renderLazyPage(PortalSettingsPage)} />
+                    <Route path="/settings/intake" element={renderLazyPage(IntakeSettingsPage)} />
                     <Route path="/settings/tenant" element={renderLazyPage(TenantSettingsPage)} />
                     <Route path="/admin" element={renderLazyPage(AdminPage)} />
                 </Route>
