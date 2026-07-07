@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { useBuildings, useFloors, Building } from '@/hooks/useFacilities'
+import { useBuildings, useDepartments, useFloors, Building, Department } from '@/hooks/useFacilities'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
 import { usePermission } from '@/hooks/usePermission'
 import AddBuildingModal from '@/components/facilities/AddBuildingModal'
 import AddFloorModal from '@/components/facilities/AddFloorModal'
+import DepartmentModal from '@/components/facilities/DepartmentModal'
 import {
     Building2,
     MapPin,
+    Pencil,
     Plus,
     Search,
     ChevronDown,
@@ -27,6 +29,7 @@ export default function FacilitiesPage() {
     const isBuildingsEnabled = useFeatureEnabled('facilities', 'buildings')
     const canManage = can('facilities.manage')
     const isFloorsEnabled = useFeatureEnabled('facilities', 'floors')
+    const isDepartmentsEnabled = useFeatureEnabled('facilities', 'departments')
 
     const [searchQuery, setSearchQuery] = useState('')
     const [expandedBuilding, setExpandedBuilding] = useState<string | null>(null)
@@ -37,8 +40,30 @@ export default function FacilitiesPage() {
     const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null)
     const [selectedBuildingName, setSelectedBuildingName] = useState('')
 
+    // Department (location) Modal State
+    const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false)
+    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
+
     // Fetch buildings from Supabase
     const { data: buildings, isLoading, error } = useBuildings()
+    const { data: departments } = useDepartments()
+
+    // Group departments by building for hierarchy display
+    const departmentGroups = useMemo(() => {
+        const groups = new Map<string, { label: string; items: Department[] }>()
+        for (const department of departments ?? []) {
+            const key = department.building?.id ?? ''
+            const label = department.building
+                ? (isRTL
+                    ? (department.building.name_ar || department.building.name)
+                    : department.building.name)
+                : (isRTL ? 'بدون مبنى' : 'No building')
+            const group = groups.get(key) ?? { label, items: [] }
+            group.items.push(department)
+            groups.set(key, group)
+        }
+        return Array.from(groups.values())
+    }, [departments, isRTL])
 
     // Filter buildings based on search
     const filteredBuildings = buildings?.filter(building =>
@@ -96,6 +121,16 @@ export default function FacilitiesPage() {
                 onClose={() => setIsFloorModalOpen(false)}
                 buildingId={selectedBuildingId}
                 buildingName={selectedBuildingName}
+            />
+
+            {/* Add/Edit Department (Location) Modal */}
+            <DepartmentModal
+                isOpen={isDepartmentModalOpen}
+                onClose={() => {
+                    setIsDepartmentModalOpen(false)
+                    setEditingDepartment(null)
+                }}
+                department={editingDepartment}
             />
 
             {/* Header */}
@@ -182,6 +217,86 @@ export default function FacilitiesPage() {
                             canManage={canManage}
                         />
                     ))}
+                </div>
+            )}
+
+            {/* Locations (Departments) */}
+            {isDepartmentsEnabled && (
+                <div className="bg-card rounded-xl shadow-card p-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <h2 className="text-lg font-bold text-primary font-cairo flex items-center gap-2">
+                                <MapPin className="w-5 h-5 text-secondary" />
+                                {isRTL ? 'المواقع' : 'Locations'}
+                            </h2>
+                            <p className="text-sm text-muted font-cairo">
+                                {isRTL
+                                    ? `مواقع الجولات وأوامر العمل - ${departments?.length ?? 0} موقع`
+                                    : `Locations used by rounds and work orders - ${departments?.length ?? 0} locations`}
+                            </p>
+                        </div>
+                        {canManage && (
+                            <button
+                                onClick={() => {
+                                    setEditingDepartment(null)
+                                    setIsDepartmentModalOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-cairo"
+                            >
+                                <Plus className="w-5 h-5" />
+                                {isRTL ? 'إضافة موقع' : 'Add Location'}
+                            </button>
+                        )}
+                    </div>
+
+                    {departmentGroups.length === 0 ? (
+                        <div className="text-center py-8 text-muted font-cairo">
+                            {isRTL ? 'لا توجد مواقع مسجلة' : 'No locations registered'}
+                        </div>
+                    ) : (
+                        departmentGroups.map((group) => (
+                            <div key={group.label} className="space-y-2">
+                                <h3 className="text-sm font-bold text-muted font-cairo flex items-center gap-1.5">
+                                    <Building2 className="w-4 h-4" />
+                                    {group.label}
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {group.items.map((department) => (
+                                        <div
+                                            key={department.id}
+                                            className="flex items-center justify-between gap-2 p-3 bg-background rounded-lg border border-border hover:border-secondary/50 transition-colors"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-primary font-cairo truncate">
+                                                    {isRTL ? (department.name_ar || department.name) : department.name}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-xs text-muted font-inter">{department.code}</span>
+                                                    {!department.is_active && (
+                                                        <span className="px-1.5 py-0.5 text-[10px] bg-destructive/10 text-destructive rounded-full font-cairo">
+                                                            {isRTL ? 'غير نشط' : 'Inactive'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {canManage && (
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingDepartment(department)
+                                                        setIsDepartmentModalOpen(true)
+                                                    }}
+                                                    className="p-2 text-muted hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors shrink-0"
+                                                    aria-label={isRTL ? 'تعديل الموقع' : 'Edit location'}
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             )}
         </div>

@@ -10,9 +10,10 @@ interface WorkOrderAssetLocationProps {
 export default function WorkOrderAssetLocation({ workOrder, isRTL }: WorkOrderAssetLocationProps) {
     const locationBuilding = workOrder.building || workOrder.asset?.building
     const locationFloor = workOrder.floor || workOrder.asset?.floor
+    const locationDepartment = workOrder.department
     const locationRoom = workOrder.room || workOrder.asset?.room
 
-    if (!workOrder.asset && !locationBuilding && !locationFloor && !locationRoom) return null
+    if (!workOrder.asset && !locationBuilding && !locationFloor && !locationDepartment && !locationRoom) return null
 
     return (
         <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4">
@@ -57,6 +58,16 @@ export default function WorkOrderAssetLocation({ workOrder, isRTL }: WorkOrderAs
                             <div>
                                 <p className="text-xs text-muted-foreground font-cairo">{isRTL ? 'الطابق' : 'Floor'}</p>
                                 <p className="font-medium">{isRTL ? (locationFloor.name_ar || locationFloor.name) : locationFloor.name}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {locationDepartment && (
+                        <div className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
+                            <MapPin className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                                <p className="text-xs text-muted-foreground font-cairo">{isRTL ? 'الموقع / القسم' : 'Location'}</p>
+                                <p className="font-medium">{isRTL ? locationDepartment.name_ar || locationDepartment.name : locationDepartment.name}</p>
                             </div>
                         </div>
                     )}

@@ -47,6 +47,7 @@ export interface WorkOrder {
     assignedTeam?: { id: string; code: string; name: string; name_ar: string | null }
     building?: { id: string; name: string; name_ar: string | null }
     floor?: { id: string; name: string; name_ar: string | null }
+    department?: { id: string; name: string; name_ar: string | null }
     room?: { id: string; name: string; name_ar: string | null }
     asset?: {
         id: string
@@ -258,6 +259,7 @@ export function useWorkOrders() {
                     assignedTeam:teams!work_orders_assigned_team_fkey(id, code, name, name_ar),
                     building:buildings(id, name, name_ar),
                     floor:floors(id, name, name_ar),
+                    department:departments(id, name, name_ar),
                     room:rooms(id, name, name_ar),
                     asset:assets(
                         id,
@@ -295,6 +297,7 @@ export function useWorkOrder(id: string) {
                     assignedTeam:teams!work_orders_assigned_team_fkey(id, code, name, name_ar),
                     building:buildings(id, name, name_ar),
                     floor:floors(id, name, name_ar),
+                    department:departments(id, name, name_ar),
                     room:rooms(id, name, name_ar),
                     asset:assets(
                         id,
