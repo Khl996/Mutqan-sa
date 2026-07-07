@@ -54,6 +54,7 @@ export interface Department {
     is_active: boolean
     created_at: string
     updated_at: string
+    building?: { id: string; name: string; name_ar: string | null } | null
 }
 
 export interface Room {
@@ -92,6 +93,16 @@ export interface CreateFloorInput {
     name: string
     name_ar?: string | null
     level: number
+    is_active?: boolean
+}
+
+export interface CreateDepartmentInput {
+    tenant_id: string
+    code: string
+    name: string
+    name_ar?: string | null
+    building_id?: string | null
+    floor_id?: string | null
     is_active?: boolean
 }
 
@@ -206,16 +217,24 @@ export function useRooms(floorId: string) {
     })
 }
 
-// Fetch Departments
+// Fetch Departments (tenant locations) with their building for hierarchy display
 export function useDepartments() {
+    const tenantId = useCurrentTenantId()
+
     return useQuery({
-        queryKey: facilitiesKeys.departments(),
+        queryKey: [...facilitiesKeys.departments(), tenantId],
         queryFn: async () => {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const accessToken = getAccessToken()
             if (!accessToken) throw new Error('Not authenticated')
 
-            const response = await fetch(`${supabaseUrl}/rest/v1/departments?order=name.asc&select=*`, {
+            let query = `${supabaseUrl}/rest/v1/departments?order=name.asc&select=*,building:buildings(id,name,name_ar)`
+
+            if (tenantId) {
+                query += `&tenant_id=eq.${tenantId}`
+            }
+
+            const response = await fetch(query, {
                 headers: {
                     'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
                     'Authorization': `Bearer ${accessToken}`
@@ -224,6 +243,70 @@ export function useDepartments() {
 
             if (!response.ok) throw new Error('Failed to fetch departments')
             return await response.json() as Department[]
+        },
+    })
+}
+
+// Create Department (location)
+export function useCreateDepartment() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async (department: CreateDepartmentInput) => {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const accessToken = getAccessToken()
+            if (!accessToken) throw new Error('Not authenticated')
+
+            const response = await fetch(`${supabaseUrl}/rest/v1/departments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(department)
+            })
+
+            if (!response.ok) throw new Error('Failed to create department')
+            const data = await response.json()
+            return data && data.length > 0 ? data[0] : null
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: facilitiesKeys.departments() })
+        },
+    })
+}
+
+// Update Department (location)
+export function useUpdateDepartment() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ id, ...updates }: Partial<Department> & { id: string }) => {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+            const accessToken = getAccessToken()
+            if (!accessToken) throw new Error('Not authenticated')
+
+            delete (updates as Record<string, unknown>).building
+
+            const response = await fetch(`${supabaseUrl}/rest/v1/departments?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() })
+            })
+
+            if (!response.ok) throw new Error('Failed to update department')
+            const data = await response.json()
+            return data && data.length > 0 ? data[0] : null
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: facilitiesKeys.departments() })
         },
     })
 }

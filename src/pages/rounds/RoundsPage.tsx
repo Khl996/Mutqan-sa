@@ -305,6 +305,21 @@ export default function RoundsPage() {
         [departments]
     )
 
+    // Group locations by building so the dropdown reflects the facilities hierarchy
+    const locationGroups = useMemo(() => {
+        const groups = new Map<string, { label: string; items: typeof activeDepartments }>()
+        for (const department of activeDepartments) {
+            const key = department.building?.id ?? ''
+            const label = department.building
+                ? (department.building.name_ar || department.building.name)
+                : 'بدون مبنى'
+            const group = groups.get(key) ?? { label, items: [] }
+            group.items.push(department)
+            groups.set(key, group)
+        }
+        return Array.from(groups.values())
+    }, [activeDepartments])
+
     const routingTeams = useMemo(
         () => sortRoutingTeams((teams ?? []).filter((team) => team.status === 'active')),
         [teams]
@@ -635,10 +650,14 @@ export default function RoundsPage() {
                                         disabled={locationsLoading}
                                         className="min-h-12 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
                                     >
-                                        {activeDepartments.map((department) => (
-                                            <option key={department.id} value={department.id}>
-                                                {displayName(department)}
-                                            </option>
+                                        {locationGroups.map((group) => (
+                                            <optgroup key={group.label} label={group.label}>
+                                                {group.items.map((department) => (
+                                                    <option key={department.id} value={department.id}>
+                                                        {displayName(department)}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         ))}
                                     </select>
                                 </label>
@@ -726,8 +745,12 @@ export default function RoundsPage() {
                             </button>
                         </div>
 
-                        <div className="mt-4 rounded-lg bg-muted/10 p-3 text-sm leading-7">
-                            {conversionObservation.observation_text}
+                        <div className="mt-4 space-y-2 rounded-lg bg-muted/10 p-3 text-sm leading-7">
+                            <p>{conversionObservation.observation_text}</p>
+                            <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {displayName(conversionObservation.location)}
+                            </p>
                         </div>
 
                         <label className="mt-4 block space-y-1">
