@@ -1,0 +1,1687 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="دليل تعريفي شامل بمنصة متقن للشركاء التسويقيين وفريق المبيعات.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img,svg{max-width:100%}</style>
+<title>بروفايل متقن | دليل الشركاء والمبيعات</title>
+<style>
+  :root {
+    --ground: #f2f5f7;
+    --surface: #ffffff;
+    --surface-2: #e9eef1;
+    --ink: #0b1320;
+    --ink-2: #2b3a4d;
+    --muted: #64717f;
+    --border: #dfe5ea;
+    --border-2: #c9d3da;
+    --accent: #00b2a9;
+    --accent-deep: #007d77;
+    --accent-wash: #e2f4f3;
+    --ok: #0f7f57;
+    --ok-wash: #e0f0e9;
+    --warn: #96650c;
+    --warn-wash: #f6ecd9;
+    --stop: #a8403a;
+    --stop-wash: #f7e6e4;
+
+    --shadow: 0 1px 2px rgba(11, 19, 32, .05), 0 8px 24px -16px rgba(11, 19, 32, .3);
+
+    --sans: "Cairo", "Noto Kufi Arabic", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
+    --latin: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #070d16;
+      --surface: #0f1926;
+      --surface-2: #16222f;
+      --ink: #e8eef4;
+      --ink-2: #c2cedb;
+      --muted: #8593a3;
+      --border: #1e2b3b;
+      --border-2: #2b3a4d;
+      --accent: #2fd0c5;
+      --accent-deep: #7fe6de;
+      --accent-wash: #0d2a2c;
+      --ok: #4fc294;
+      --ok-wash: #0d2620;
+      --warn: #d7a94f;
+      --warn-wash: #2a2113;
+      --stop: #e08a83;
+      --stop-wash: #2c1715;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #070d16;
+    --surface: #0f1926;
+    --surface-2: #16222f;
+    --ink: #e8eef4;
+    --ink-2: #c2cedb;
+    --muted: #8593a3;
+    --border: #1e2b3b;
+    --border-2: #2b3a4d;
+    --accent: #2fd0c5;
+    --accent-deep: #7fe6de;
+    --accent-wash: #0d2a2c;
+    --ok: #4fc294;
+    --ok-wash: #0d2620;
+    --warn: #d7a94f;
+    --warn-wash: #2a2113;
+    --stop: #e08a83;
+    --stop-wash: #2c1715;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #f2f5f7;
+    --surface: #ffffff;
+    --surface-2: #e9eef1;
+    --ink: #0b1320;
+    --ink-2: #2b3a4d;
+    --muted: #64717f;
+    --border: #dfe5ea;
+    --border-2: #c9d3da;
+    --accent: #00b2a9;
+    --accent-deep: #007d77;
+    --accent-wash: #e2f4f3;
+    --ok: #0f7f57;
+    --ok-wash: #e0f0e9;
+    --warn: #96650c;
+    --warn-wash: #f6ecd9;
+    --stop: #a8403a;
+    --stop-wash: #f7e6e4;
+    --shadow: 0 1px 2px rgba(11, 19, 32, .05), 0 8px 24px -16px rgba(11, 19, 32, .3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.95;
+    direction: rtl;
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px 96px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 48px;
+  }
+
+  @media (min-width: 1080px) {
+    .wrap { grid-template-columns: 236px minmax(0, 1fr); }
+    .masthead, .footnote { grid-column: 1 / -1; }
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 56px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 44px;
+  }
+
+  .brandmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .brandmark .dot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-wash);
+  }
+
+  .brandmark .name {
+    font-size: 1.06rem;
+    font-weight: 800;
+    letter-spacing: .01em;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 5.6vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.28;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+  }
+
+  h1 .em { color: var(--accent-deep); }
+
+  .standfirst {
+    margin: 20px 0 0;
+    max-width: 62ch;
+    font-size: 1.09rem;
+    color: var(--ink-2);
+  }
+
+  .meta {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .tag {
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-2);
+    color: var(--muted);
+    background: var(--surface);
+    line-height: 1.7;
+  }
+
+  .tag.live { color: var(--accent-deep); border-color: var(--accent); background: var(--accent-wash); }
+
+  /* ---------- table of contents rail ---------- */
+
+  nav.toc {
+    display: none;
+    font-size: .845rem;
+  }
+
+  @media (min-width: 1080px) {
+    nav.toc {
+      display: block;
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding-bottom: 24px;
+    }
+  }
+
+  nav.toc .toc-label {
+    font-family: var(--latin);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  nav.toc ol {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    counter-reset: toc;
+  }
+
+  nav.toc a {
+    display: flex;
+    gap: 9px;
+    padding: 5px 10px 5px 4px;
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    line-height: 1.6;
+    border-inline-start: 2px solid transparent;
+  }
+
+  nav.toc a::before {
+    counter-increment: toc;
+    content: counter(toc);
+    font-family: var(--latin);
+    font-variant-numeric: tabular-nums;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--border-2);
+    padding-top: 2px;
+    flex: none;
+    min-width: 15px;
+  }
+
+  nav.toc a:hover,
+  nav.toc a:focus-visible {
+    color: var(--ink);
+    background: var(--surface);
+    border-inline-start-color: var(--accent);
+    outline: none;
+  }
+
+  nav.toc a:hover::before, nav.toc a:focus-visible::before { color: var(--accent); }
+
+  /* ---------- sections ---------- */
+
+  main { min-width: 0; }
+
+  section {
+    padding-top: 8px;
+    margin-bottom: 68px;
+    scroll-margin-top: 20px;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: baseline;
+    gap: 11px;
+    margin-bottom: 14px;
+  }
+
+  .eyebrow .num {
+    font-family: var(--latin);
+    font-variant-numeric: tabular-nums;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--accent-deep);
+    background: var(--accent-wash);
+    border-radius: 5px;
+    padding: 3px 8px;
+    line-height: 1.5;
+  }
+
+  .eyebrow .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: clamp(1.42rem, 3.3vw, 1.85rem);
+    font-weight: 900;
+    line-height: 1.42;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+
+  h3 {
+    margin: 40px 0 12px;
+    font-size: 1.09rem;
+    font-weight: 800;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  h4 {
+    margin: 0 0 6px;
+    font-size: .96rem;
+    font-weight: 800;
+    line-height: 1.65;
+  }
+
+  p { margin: 0 0 15px; max-width: 70ch; }
+
+  a { color: var(--accent-deep); }
+
+  strong { font-weight: 800; }
+
+  code {
+    font-family: var(--latin);
+    font-size: .84em;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    direction: ltr;
+    display: inline-block;
+    color: var(--ink-2);
+  }
+
+  ul.plain {
+    margin: 0 0 16px;
+    padding-inline-start: 20px;
+    max-width: 70ch;
+  }
+
+  ul.plain li { margin-bottom: 7px; }
+
+  ul.plain li::marker { color: var(--accent); }
+
+  /* ---------- callouts ---------- */
+
+  .callout {
+    border: 1px solid var(--border);
+    border-inline-start: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin: 0 0 26px;
+    box-shadow: var(--shadow);
+  }
+
+  .callout p:last-child { margin-bottom: 0; }
+
+  .callout .kicker {
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    color: var(--accent-deep);
+    margin-bottom: 7px;
+  }
+
+  .callout.danger { border-inline-start-color: var(--stop); background: var(--stop-wash); }
+  .callout.danger .kicker { color: var(--stop); }
+  .callout.warn { border-inline-start-color: var(--warn); background: var(--warn-wash); }
+  .callout.warn .kicker { color: var(--warn); }
+
+  .quote {
+    margin: 0 0 22px;
+    padding: 18px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1.06rem;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+
+  .quote .attrib {
+    display: block;
+    margin-top: 9px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  /* ---------- tables ---------- */
+
+  .scroller {
+    overflow-x: auto;
+    margin: 0 0 26px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .93rem;
+    line-height: 1.8;
+    min-width: 480px;
+  }
+
+  thead th {
+    text-align: right;
+    font-weight: 800;
+    font-size: .8rem;
+    letter-spacing: .02em;
+    color: var(--muted);
+    background: var(--surface-2);
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td.num, th.num {
+    font-family: var(--latin);
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  td.lead { font-weight: 800; color: var(--ink); }
+
+  td.code-cell code { white-space: nowrap; }
+
+  /* ---------- status chips ---------- */
+
+  .chip {
+    display: inline-block;
+    font-size: .76rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1.7;
+  }
+
+  .chip.ok { color: var(--ok); background: var(--ok-wash); }
+  .chip.mid { color: var(--warn); background: var(--warn-wash); }
+  .chip.no { color: var(--stop); background: var(--stop-wash); }
+
+  /* ---------- flow pipeline (centerpiece) ---------- */
+
+  .flow {
+    margin: 0 0 30px;
+    padding: 26px 24px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .flow-chain {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 5px;
+    margin-bottom: 22px;
+  }
+
+  .flow-chain .node {
+    font-size: .84rem;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 7px;
+    background: var(--accent-wash);
+    color: var(--accent-deep);
+    line-height: 1.7;
+  }
+
+  .flow-chain .arrow {
+    color: var(--border-2);
+    font-weight: 700;
+    font-size: .9rem;
+  }
+
+  .steps {
+    list-style: none;
+    margin: 0; padding: 0;
+    counter-reset: step;
+    border-top: 1px solid var(--border);
+  }
+
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 0 15px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .steps li:last-child { border-bottom: 0; }
+
+  .steps li::before {
+    content: counter(step);
+    font-family: var(--latin);
+    font-variant-numeric: tabular-nums;
+    font-size: .82rem;
+    font-weight: 800;
+    color: var(--accent-deep);
+    background: var(--accent-wash);
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    display: grid;
+    place-items: center;
+    margin-top: 3px;
+    grid-row: span 2;
+  }
+
+  .steps li p { margin: 0; font-size: .95rem; color: var(--ink-2); }
+
+  /* ---------- two-column compare ---------- */
+
+  .duo {
+    display: grid;
+    gap: 16px;
+    margin: 0 0 26px;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 720px) { .duo { grid-template-columns: 1fr 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+
+  .panel .head {
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel.yes { border-top: 3px solid var(--ok); }
+  .panel.yes .head { color: var(--ok); }
+  .panel.no { border-top: 3px solid var(--stop); }
+  .panel.no .head { color: var(--stop); }
+
+  .panel ul {
+    margin: 0; padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    font-size: .93rem;
+    line-height: 1.75;
+  }
+
+  .panel ul li {
+    padding-inline-start: 20px;
+    position: relative;
+  }
+
+  .panel ul li::before {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    font-weight: 800;
+  }
+
+  .panel.yes ul li::before { content: "✓"; color: var(--ok); }
+  .panel.no ul li::before { content: "✕"; color: var(--stop); }
+
+  /* ---------- message cards ---------- */
+
+  .cards {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr;
+    margin: 0 0 26px;
+  }
+
+  @media (min-width: 720px) { .cards { grid-template-columns: 1fr 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .card .ix {
+    font-family: var(--latin);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    color: var(--accent-deep);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .card p { margin: 0; font-size: .93rem; color: var(--ink-2); }
+
+  /* ---------- red lines grid ---------- */
+
+  .redlines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 24px;
+  }
+
+  .redlines span {
+    font-size: .87rem;
+    font-weight: 700;
+    padding: 7px 14px;
+    border-radius: 8px;
+    background: var(--stop-wash);
+    color: var(--stop);
+    border: 1px solid transparent;
+    line-height: 1.7;
+  }
+
+  /* ---------- pocket card ---------- */
+
+  .pocket {
+    background: var(--ink);
+    color: #eaf1f7;
+    border-radius: 14px;
+    padding: 34px 30px;
+    margin: 0 0 20px;
+    border: 1px solid var(--ink);
+  }
+
+  :root[data-theme="dark"] .pocket,
+  .pocket { box-shadow: 0 20px 50px -30px rgba(0, 0, 0, .8); }
+
+  @media (prefers-color-scheme: dark) {
+    .pocket { border-color: var(--border-2); }
+  }
+
+  :root[data-theme="dark"] .pocket { border-color: var(--border-2); }
+
+  .pocket h2 { color: #ffffff; margin-bottom: 8px; }
+
+  .pocket .sub {
+    color: #93a5b8;
+    font-size: .93rem;
+    margin: 0 0 26px;
+  }
+
+  .pocket dl {
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .pocket dt {
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    color: #4fd8ce;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, .11);
+  }
+
+  .pocket dd {
+    margin: 4px 0 15px;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #dfe8f1;
+  }
+
+  .pocket dd:last-of-type { margin-bottom: 0; }
+
+  .pocket .zinger {
+    margin-top: 26px;
+    padding: 18px 20px;
+    background: rgba(0, 178, 169, .13);
+    border: 1px solid rgba(79, 216, 206, .3);
+    border-radius: 10px;
+    font-size: 1.04rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  /* ---------- footnote ---------- */
+
+  .footnote {
+    margin-top: 20px;
+    padding-top: 26px;
+    border-top: 1px solid var(--border);
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  .footnote p { max-width: 78ch; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brandmark">
+      <span class="dot"></span>
+      <span class="name">متقن</span>
+    </div>
+    <h1>دليل الشركاء: ما هو متقن، <span class="em">وكيف يعمل، ولماذا يشتريه العميل</span></h1>
+    <p class="standfirst">
+      مرجع تعريفي واحد لكل من يحتاج يفهم المنتج قبل ما يتكلم عنه — تسويق، مبيعات، محتوى، أو شريك تجاري.
+      اقرأ الأقسام من 1 إلى 5 قبل أي اجتماع؛ الباقي مرجع ترجع له عند الحاجة.
+    </p>
+    <div class="meta">
+      <span class="tag live">مرجع داخلي</span>
+      <span class="tag">آخر تحديث: 2026-08-04</span>
+      <span class="tag">18 قسمًا</span>
+      <span class="tag">وقت القراءة: ~25 دقيقة</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="فهرس الأقسام">
+    <div class="toc-label">Contents</div>
+    <ol>
+      <li><a href="#s1">التعريف في 30 ثانية</a></li>
+      <li><a href="#s2">المشكلة التي يحلها</a></li>
+      <li><a href="#s3">ما هو — وما ليس هو</a></li>
+      <li><a href="#s4">لمن نبيع</a></li>
+      <li><a href="#s5">كيف يعمل النظام</a></li>
+      <li><a href="#s6">الأدوار والصلاحيات</a></li>
+      <li><a href="#s7">الموديولات</a></li>
+      <li><a href="#s8">ما يفرقنا عن المنافسين</a></li>
+      <li><a href="#s9">بنية المنصة</a></li>
+      <li><a href="#s10">الاشتراكات والفوترة</a></li>
+      <li><a href="#s11">الأمان وعزل البيانات</a></li>
+      <li><a href="#s12">التسعير ونموذج البيع</a></li>
+      <li><a href="#s13">قصة الديمو</a></li>
+      <li><a href="#s14">الاعتراضات والردود</a></li>
+      <li><a href="#s15">الخطوط الحمراء</a></li>
+      <li><a href="#s16">حالة المنتج اليوم</a></li>
+      <li><a href="#s17">رسائل تسويقية جاهزة</a></li>
+      <li><a href="#s18">قاموس المصطلحات</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <div class="callout">
+      <div class="kicker">القاعدة الذهبية — اقرأها قبل أي شيء</div>
+      <p>
+        لا تبع متقن كـ«نظام تذاكر». متقن يبني <strong>الذاكرة التشغيلية</strong> للمنشأة.
+        الفرق بين التوصيفين هو الفرق بين 15 ألف ريال و 90 ألف ريال في نفس الصفقة.
+      </p>
+    </div>
+
+    <!-- 1 -->
+    <section id="s1">
+      <div class="eyebrow"><span class="num">01</span><span class="rule"></span></div>
+      <h2>التعريف في 30 ثانية</h2>
+      <p>متقن منصة سعودية لإدارة التشغيل والصيانة والمرافق والأصول — ما يُعرف عالميًا بـ CMMS / CAFM.</p>
+
+      <div class="quote">
+        متقن منصة تشغيل وصيانة وإدارة أصول مرنة، تبني <strong>الذاكرة التشغيلية الحية</strong> للمنشأة وتمهّد لقرارات تشغيلية أوضح.
+        <span class="attrib">الصياغة المعتمدة رسميًا في وثيقة العلامة التجارية</span>
+      </div>
+
+      <h3>بلغة أبسط، عندما تجلس أمام العميل</h3>
+      <p>
+        اليوم أعمال الصيانة عندك موزعة: بلاغ في واتساب، متابعة في اتصال، إثبات إنجاز في صورة على جوال فني،
+        وتاريخ الأصل في ذاكرة شخص واحد. متقن يجمع هذا كله في سجل واحد مترابط — البلاغ مربوط بالموقع،
+        والموقع بالأصل، والأصل بأمر العمل، وأمر العمل بالفني وإثبات الإنجاز. وكل هذا يتحول إلى تقرير
+        يقول للإدارة «هذا ما يجب عمله الآن».
+      </p>
+      <p><strong>الشعار التشغيلي:</strong> من البلاغ إلى القرار في خط واحد.</p>
+    </section>
+
+    <!-- 2 -->
+    <section id="s2">
+      <div class="eyebrow"><span class="num">02</span><span class="rule"></span></div>
+      <h2>المشكلة التي يحلها متقن</h2>
+      <p>
+        فرق الصيانة في السعودية <strong>لا تفشل لأنها كسولة</strong>. تفشل لأن التفاصيل تتشتت.
+        هذه هي أعراض الألم التي تبحث عنها في مكالمة الاكتشاف — والجملة التي ستسمعها فعليًا من العميل.
+      </p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>العَرَض</th><th>ما ستسمعه منه حرفيًا</th><th>ما يفعله متقن</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="lead">بلاغات ضائعة</td><td>«أحيانًا البلاغ يجيني على واتساب وينسى»</td><td>البلاغ يدخل مسارًا منظمًا له رقم وحالة ومسؤول</td></tr>
+            <tr><td class="lead">لا يوجد إثبات إنجاز</td><td>«الفني يقول خلصت، وأنا ما عندي دليل»</td><td>ملاحظات وطوابع زمنية وصور وسجل موافقات</td></tr>
+            <tr><td class="lead">تاريخ الأصل ضائع</td><td>«هذا المكيف كم مرة تعطل السنة؟ ما أدري»</td><td>كل عمل مكتمل ينضم لسجل الأصل تلقائيًا</td></tr>
+            <tr><td class="lead">محاسبة المقاول صعبة</td><td>«المقاول يقول أنجزت 40 أمرًا، ما أقدر أتأكد»</td><td>سجل تشغيلي محايد قابل للتصدير والمراجعة</td></tr>
+            <tr><td class="lead">الوقائي على ورق</td><td>«عندنا جدول وقائي في إكسل ما أحد يلتزم فيه»</td><td>جداول تولّد أوامر عمل حقيقية بقوائم فحص</td></tr>
+            <tr><td class="lead">تقارير وصفية لا قرارية</td><td>«التقرير يقول 120 بلاغًا… طيب وبعدين؟»</td><td>مؤشرات المتأخر والتكرار والالتزام ونقص المخزون</td></tr>
+            <tr><td class="lead">الاعتماد على شخص واحد</td><td>«لو مدير الصيانة طلع إجازة، العملية تتوقف»</td><td>المعرفة تسكن في النظام، لا في الرأس</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="kicker">السؤال الذي يفتح الصفقة</div>
+        <p>«لو مدير الصيانة عندك استقال بكرة، كم من المعرفة التشغيلية تطلع معه؟»</p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section id="s3">
+      <div class="eyebrow"><span class="num">03</span><span class="rule"></span></div>
+      <h2>ما هو متقن — وما ليس هو</h2>
+
+      <div class="duo">
+        <div class="panel yes">
+          <div class="head">متقن هو</div>
+          <ul>
+            <li>منصة SaaS سحابية تُستخدم من المتصفح، وقابلة للتثبيت كتطبيق على الجهاز (PWA)</li>
+            <li>ثنائية اللغة بالكامل — عربي وإنجليزي مع دعم RTL أصلي، لا ترجمة ملصوقة</li>
+            <li>مبنية على موديولات: كل منشأة تفعّل ما تحتاجه فقط</li>
+            <li>متعددة المستأجرين مع عزل كامل بين المنشآت على مستوى قاعدة البيانات</li>
+            <li>مصممة لبيئة تشغيل حقيقية: فنيون، مشرفون، مهندسون، مقاولون، بلاغات ميدانية</li>
+          </ul>
+        </div>
+        <div class="panel no">
+          <div class="head">متقن ليس</div>
+          <ul>
+            <li><strong>ليس ERP</strong> — لا رواتب ولا محاسبة عامة. يتعايش مع ERP ولا يستبدله</li>
+            <li><strong>ليس نظام تذاكر</strong> — التذكرة تنتهي عند الإغلاق، ومتقن يبني تاريخًا يُستفاد منه</li>
+            <li><strong>ليس مشروعًا برمجيًا مخصصًا</strong> — نتكيّف بالإعدادات لا بالبرمجة</li>
+            <li><strong>ليس منتج IoT أو BMS أو BIM</strong> اليوم — اتجاهات مستقبلية لا وعود حالية</li>
+            <li><strong>ليس تطبيق جوال أصليًا</strong> بعد — يعمل ممتازًا على متصفح الجوال كـ PWA</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout danger">
+        <div class="kicker">تحذير للمبيعات</div>
+        <p>أي وعد خارج هذه القائمة يحتاج موافقة صريحة من المؤسس قبل ما يُقال للعميل.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="s4">
+      <div class="eyebrow"><span class="num">04</span><span class="rule"></span></div>
+      <h2>لمن نبيع</h2>
+
+      <h3>القطاع المستهدف الأول — القرار الحالي</h3>
+      <p>
+        <strong>شركات إدارة المرافق والمجمعات السكنية والتجارية في السعودية</strong> التي تدير فرق صيانة نشطة
+        وتعتمد اليوم على واتساب أو إكسل أو ورق. الجغرافيا: الرياض أولًا، ثم جدة والمنطقة الشرقية.
+      </p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>لماذا هذا القطاع أولًا</th><th>الأثر على البيع</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">الألم واضح ويومي</td><td>لا تحتاج تقنعه بوجود مشكلة</td></tr>
+            <tr><td class="lead">نطاق التجربة قابل للضبط</td><td>تقدر تبدأ بمجمع أو موقع أو فريق واحد</td></tr>
+            <tr><td class="lead">عوائق الامتثال أقل من المستشفيات</td><td>دورة بيع أقصر وقرار أسرع</td></tr>
+            <tr><td class="lead">عوائق التكامل أقل من المصانع</td><td>لا أحد يطلب IoT أو SCADA في أول اجتماع</td></tr>
+            <tr><td class="lead">قيمة مرجعية عالية</td><td>قصة نجاح واحدة تفتح القطاع كله</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size:.93rem;color:var(--muted)">
+        قطاعات لاحقة وليست أولوية اليوم: مستشفيات وعيادات · مدارس وجامعات · مستودعات ومصانع · مكاتب وأبراج · مشاريع تشغيل حكومية.
+        يوجد مسار «Hospital Lite» مكتمل تقنيًا، لكن القرار التجاري تأجيل القطاع الصحي حتى نبني مراجع أقوى.
+      </p>
+
+      <h3>العميل القوي مقابل العميل الضعيف</h3>
+      <div class="duo">
+        <div class="panel yes">
+          <div class="head">مؤشرات عميل قوي</div>
+          <ul>
+            <li>يدير طلبات صيانة نشطة يوميًا</li>
+            <li>لديه أصول أو مبانٍ أو مواقع متعددة</li>
+            <li>يحتاج إثبات إنجاز ورؤية إدارية</li>
+            <li>لديه مدير صيانة أو مرافق أو عمليات واضح</li>
+            <li>يستطيع تعيين «مالك تجربة»</li>
+            <li>يقبل يبدأ بموقع محدد</li>
+            <li>مستعد يدفع مقابل قيمة</li>
+          </ul>
+        </div>
+        <div class="panel no">
+          <div class="head">مؤشرات عميل ضعيف — أوقف مبكرًا</div>
+          <ul>
+            <li>صيانة عابرة أو موسمية فقط</li>
+            <li>لا يوجد مالك تشغيلي مسؤول</li>
+            <li>يريد أداة مجانية فقط</li>
+            <li>يشترط تكاملات ERP قبل إثبات القيمة</li>
+            <li>يريد تخصيصًا غير محدود أو نسخة منتج خاصة</li>
+            <li>يقارن بالسعر فقط بلا ألم تشغيلي</li>
+            <li>يرفض اتخاذ قرار بعد التجربة</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>من يجلس معك في الاجتماع</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الشخصية</th><th>ما يهمه</th><th>الرسالة المناسبة له</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">المالك / المدير العام</td><td>التكلفة والمخاطر والسمعة</td><td>«توقف تعتمد على ذاكرة الأفراد»</td></tr>
+            <tr><td class="lead">مدير العمليات / المرافق</td><td>الوضوح والسيطرة والتقارير</td><td>«تعرف إيش متأخر وإيش يحتاج تصعيد»</td></tr>
+            <tr><td class="lead">مدير الصيانة</td><td>تنظيم الفرق وتقليل الطوارئ</td><td>«الوقائي يصير التزامًا لا نية»</td></tr>
+            <tr><td class="lead">المهندس / المشرف</td><td>جودة التنفيذ والاعتمادات</td><td>«كل خطوة موثقة ومعتمدة»</td></tr>
+            <tr><td class="lead">الفني</td><td>بساطة الاستخدام</td><td>«شاشة واحدة: وش عليك، وين، وحدّث الحالة»</td></tr>
+            <tr><td class="lead">المالية / المشتريات</td><td>التكاليف والمخزون</td><td>«تكلفة الصيانة لكل أصل ولكل فترة»</td></tr>
+            <tr><td class="lead">تقنية المعلومات</td><td>الأمان والبيانات والتكامل</td><td>«عزل بيانات كامل وصلاحيات مضبوطة»</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section id="s5">
+      <div class="eyebrow"><span class="num">05</span><span class="rule"></span></div>
+      <h2>كيف يعمل النظام — الرحلة الكاملة</h2>
+      <p>هذه هي القصة الوحيدة التي يجب أن يفهمها كل شخص يبيع متقن. <strong>احفظها.</strong></p>
+
+      <div class="flow">
+        <div class="flow-chain" role="list" aria-label="مسار العمل من البلاغ إلى القرار">
+          <span class="node" role="listitem">بلاغ</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">موقع</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">أصل</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">أمر عمل</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">تعيين</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">تنفيذ</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">إثبات إنجاز</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">سجل الأصل</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">تقرير</span><span class="arrow" aria-hidden="true">←</span>
+          <span class="node" role="listitem">قرار</span>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <h4>البلاغ يدخل</h4>
+            <p>
+              من داخل النظام بدور «مُبلِّغ»، أو من <strong>البوابة العامة</strong> عبر رابط أو QR على الحائط بدون حساب،
+              أو من <strong>جولة ميدانية</strong> يسجّلها المشرف، أو من قناة خارجية عبر <strong>الوارد</strong>.
+              البلاغ يحمل: المُبلِّغ، الوقت، الموقع، الوصف، صورة اختيارية، ونوع الصيانة.
+            </p>
+          </li>
+          <li>
+            <h4>النظام يربط البلاغ بمكانه</h4>
+            <p>
+              الموقع ليس نصًا حرًا، بل هيكل تشغيلي مرن: منشأة ← مبنى ← دور ← قسم ← غرفة.
+              كل مستوى اختياري، والعميل يستخدم ما يناسبه — مجمع ← عمارة ← وحدة، أو مشروع ← موقع ← منطقة.
+            </p>
+          </li>
+          <li>
+            <h4>النظام يربط البلاغ بالأصل المتأثر</h4>
+            <p>
+              مثال: مكيف <code>AHU-3A</code> في الدور الثالث. الأصول معروضة بشكل شجري يتبع هيكل المواقع،
+              ولكل أصل رمز QR اختياري يُمسح للوصول السريع لسجله.
+            </p>
+          </li>
+          <li>
+            <h4>البلاغ يتحول إلى أمر عمل</h4>
+            <p>
+              يأخذ رقمًا وحالة وأولوية وتاريخ استحقاق ومسؤولًا. <strong>يُعيَّن الفريق تلقائيًا حسب التخصص</strong>
+              — كهرباء، سباكة، تكييف، مدني، نظافة — مع إمكانية التغيير اليدوي.
+            </p>
+          </li>
+          <li>
+            <h4>الفني ينفذ</h4>
+            <p>
+              الفني يرى أوامره فقط. يقبل أو يرفض مع ملاحظة، يبدأ العمل، يسحب قطع غيار من المخزون إذا احتاج، ثم يكمل.
+            </p>
+          </li>
+          <li>
+            <h4>إثبات الإنجاز — أقوى نقطة بيع في المنتج</h4>
+            <p>
+              كل أمر مكتمل يحمل: ملاحظات التنفيذ، طوابع زمنية لكل انتقال حالة، المستخدم المسؤول عن كل خطوة،
+              المرفقات والصور، وسجل الاعتمادات كاملًا.
+            </p>
+          </li>
+          <li>
+            <h4>سلسلة الاعتمادات</h4>
+            <p>
+              الفني (قبول/رفض) ← المشرف (موافقة) ← المهندس (اعتماد) ← المُبلِّغ (تأكيد الرضا، وإلا إغلاق تلقائي
+              بعد 24 ساعة) ← مدير الصيانة (الاعتماد النهائي). <strong>عدد المراحل قابل للتخصيص</strong> —
+              منشأة صغيرة قد تكتفي بمرحلتين، ومشروع حكومي قد يحتاج الخمس.
+            </p>
+          </li>
+          <li>
+            <h4>العمل المكتمل ينضم لسجل الأصل</h4>
+            <p>
+              هنا يتحول النظام من «تذاكر» إلى «ذاكرة». بعد ستة أشهر يفتح مدير الصيانة صفحة الأصل فيرى:
+              تعطّل 7 مرات، تكلفة الصيانة 18 ألف ريال، وأغلب الأعطال في الضاغط.
+              <strong>القرار: نستبدل، لا نصلح.</strong> هذه اللحظة بالذات هي التي تبيع المنتج.
+            </p>
+          </li>
+          <li>
+            <h4>الصيانة الوقائية تعمل بالتوازي</h4>
+            <p>
+              أصل ← قالب عمل وقائي وقائمة فحص ← جدول شهري أو ربعي أو سنوي ← توليد أوامر عمل تلقائيًا ←
+              تنفيذ القائمة ← قياس التزام الوقائي. الجداول تدعم فترات محظورة وأنماط ربط زمني متقدمة.
+            </p>
+          </li>
+          <li>
+            <h4>التقرير يقول ما يجب عمله</h4>
+            <p>
+              ليس عدّادات، بل مؤشرات قرارية: العمل المتأخر الذي يحتاج تصعيدًا، الأصول والمواقع ذات الطلب المتكرر،
+              فجوات التزام الوقائي، القطع المعرّضة للنفاد، وضغط الحمل على الفرق.
+              وتوجد شاشة <strong>«موجز القرار»</strong> تُختتم بها العروض التوضيحية.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section id="s6">
+      <div class="eyebrow"><span class="num">06</span><span class="rule"></span></div>
+      <h2>الأدوار: من يستخدم النظام وماذا يرى</h2>
+      <p>النظام يعمل على <strong>مستويين منفصلين تمامًا</strong> بواجهتين مختلفتين.</p>
+
+      <h3>داخل المنشأة (العميل) — سبعة أدوار</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الدور</th><th>يقدر يسوي</th><th>ما يقدر يسوي</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">مدير النظام<br><code>tenant_admin</code></td><td>كل شيء داخل منشأته: مستخدمون، إعدادات، موديولات</td><td>يشوف بيانات منشأة ثانية</td></tr>
+            <tr><td class="lead">مدير المرافق<br><code>facility_manager</code></td><td>إدارة المباني والمواقع والفرق</td><td>إعدادات النظام العليا</td></tr>
+            <tr><td class="lead">مدير الصيانة<br><code>maintenance_manager</code></td><td>إدارة أوامر العمل والاعتماد النهائي</td><td>—</td></tr>
+            <tr><td class="lead">مهندس<br><code>engineer</code></td><td>مراجعة العمل واعتماده فنيًا</td><td>الاعتماد النهائي</td></tr>
+            <tr><td class="lead">مشرف<br><code>supervisor</code></td><td>الإشراف على الفنيين، الموافقة الأولى، الجولات</td><td>الاعتماد النهائي</td></tr>
+            <tr><td class="lead">فني<br><code>technician</code></td><td>تنفيذ الأوامر المسندة له فقط</td><td>بدء أمر غير مسند له — مُثبَت بالاختبار</td></tr>
+            <tr><td class="lead">مُبلِّغ<br><code>reporter</code></td><td>رفع بلاغ ومتابعته وتأكيد الإغلاق</td><td>بدء أو تعديل أوامر العمل</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>إدارة منصة متقن (نحن) — خمسة أدوار</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الدور</th><th>المسؤولية</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">مالك المنصة <code>platform_owner</code></td><td>صلاحيات كاملة على كل شيء</td></tr>
+            <tr><td class="lead">مدير النظام <code>platform_admin</code></td><td>إدارة المنشآت والاشتراكات</td></tr>
+            <tr><td class="lead">الدعم الفني <code>platform_support</code></td><td>مساعدة العملاء وحل المشاكل</td></tr>
+            <tr><td class="lead">المالية <code>platform_finance</code></td><td>الفواتير والمدفوعات</td></tr>
+            <tr><td class="lead">الموارد البشرية <code>platform_hr</code></td><td>إدارة موظفي المنصة</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="kicker">نقطة بيع مهمة</div>
+        <p>
+          موظف الدعم عندنا يمكن منحه صلاحية على منشأة معينة دون غيرها، وبمستوى محدد (قراءة فقط مثلًا)،
+          وكل تحركاته مسجلة في سجل تدقيق. هذه إجابة جاهزة عندما يسأل مسؤول تقنية المعلومات «مين يشوف بياناتنا من طرفكم؟».
+        </p>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section id="s7">
+      <div class="eyebrow"><span class="num">07</span><span class="rule"></span></div>
+      <h2>الموديولات بالتفصيل</h2>
+      <p>
+        <strong>المبدأ الأساسي:</strong> كل موديول قابل للتفعيل والتعطيل لكل منشأة على حدة، وبداخله مزايا فرعية
+        قابلة للتحكم أيضًا. <strong>لا يوجد شيء مفروض على الجميع.</strong>
+      </p>
+      <p>
+        عمليًا هذا يعني: تقدر تبيع لمجمع سكني حزمة بسيطة (بلاغات + أصول + تقارير)، وتبيع لشركة تشغيل حزمة كاملة —
+        من نفس المنتج، وبدون سطر برمجة إضافي.
+      </p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الموديول</th><th>ماذا يقدّم للعميل</th><th>مزايا فرعية قابلة للتحكم</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">لوحة التحكم <span class="chip ok">أساسي</span></td><td>نظرة أولى: المؤشرات والنشاط الأخير والرسوم</td><td>إحصائيات سريعة · رسوم بيانية · النشاط الأخير</td></tr>
+            <tr><td class="lead">المنشآت</td><td>هيكل المواقع: مبانٍ ← أدوار ← أقسام ← غرف</td><td>المباني · الأدوار · الأقسام · الغرف</td></tr>
+            <tr><td class="lead">الأصول</td><td>سجل المعدات بعرض شجري وتاريخ تشغيلي لكل أصل</td><td>تتبع الأصول · رموز QR · سجل الأصل · تتبع الضمان</td></tr>
+            <tr><td class="lead">أوامر العمل</td><td>قلب النظام: من البلاغ للإغلاق بسلسلة اعتمادات</td><td>الإنشاء · سير العمل · تعيين الفرق · تتبع القطع</td></tr>
+            <tr><td class="lead">الصيانة الوقائية</td><td>قوالب عمل وقوائم فحص وجداول تولّد أوامر تلقائيًا</td><td>قوالب العمل · جداول الوقائي</td></tr>
+            <tr><td class="lead">المخزون</td><td>قطع الغيار والأرصدة وتنبيه النقص وربط الاستهلاك بالعمل</td><td>تتبع المخزون · تنبيهات النقص · تقارير الاستهلاك</td></tr>
+            <tr><td class="lead">الموظفون <span class="chip ok">أساسي</span></td><td>حسابات المستخدمين والأدوار</td><td>إدارة المستخدمين · تعيين الأدوار</td></tr>
+            <tr><td class="lead">فرق العمل</td><td>فرق متخصصة للتعيين التلقائي حسب نوع العطل</td><td>إنشاء الفرق · تعيين الأعضاء</td></tr>
+            <tr><td class="lead">التقارير</td><td>تقارير تشغيلية وموجز القرار والتصدير</td><td>التقارير التشغيلية · التصدير</td></tr>
+            <tr><td class="lead">البوابة العامة</td><td>رابط أو QR لرفع بلاغ بدون حساب مع صفحة تتبع للمُبلِّغ</td><td>رفع البلاغات · روابط QR</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>قدرات إضافية داخل النظام</h3>
+      <p>ليست موديولات منفصلة في شاشة التفعيل، لكنها موجودة وتُباع كجزء من القيمة:</p>
+      <ul class="plain">
+        <li><strong>سجل العمليات</strong> — كل تغيير وكل إجراء مسجّل بالوقت والمستخدم.</li>
+        <li><strong>العقود</strong> — عقود الصيانة وتتبع الانتهاء والتجديد.</li>
+        <li><strong>التكاليف</strong> — تكاليف مقدّرة وفعلية وبنود مرتبطة بأوامر العمل.</li>
+        <li><strong>SLA</strong> — نماذج اتفاقيات مستوى خدمة قابلة للتخصيص مع قياس الالتزام والاختراق.</li>
+        <li><strong>الجولات الميدانية</strong> — جولات صيانة أو نظافة يسجّلها المشرف، وكل ملاحظة يمكن تحويلها لأمر عمل مباشرة مع توجيه تلقائي للفريق حسب التخصص.</li>
+        <li><strong>الوارد الخارجي</strong> — نقطة استقبال موحّدة للرسائل من قنوات خارجية، مع تصنيف ذكي يقترح مسودة أمر عمل وشاشة مراجعة بشرية قبل الاعتماد. <span class="chip mid">مرحلة أولى — لا يُعرض كجاهز</span></li>
+        <li><strong>الإشعارات</strong> — داخل النظام وعبر البريد الإلكتروني، وهي القناة الرسمية الحالية.</li>
+        <li><strong>تصدير PDF</strong> — أمر العمل يُصدَّر كمستند رسمي بشعار المنشأة وشعار شركة التشغيل.</li>
+      </ul>
+    </section>
+
+    <!-- 8 -->
+    <section id="s8">
+      <div class="eyebrow"><span class="num">08</span><span class="rule"></span></div>
+      <h2>ما يفرقنا عن المنافسين</h2>
+      <p>
+        المنافسون العالميون: MaintainX · UpKeep · Fiix · Limble. كلهم أنظمة قوية، ولا نقلل منهم في اجتماع.
+        هذه نقاط تفوقنا الحقيقية في هذا السوق تحديدًا.
+      </p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الميزة</th><th>لماذا تهم العميل السعودي</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">عربي أصلي بالكامل مع RTL</td><td>المنافسون إما إنجليزي فقط أو ترجمة مشوّهة. الفني في الموقع يحتاج عربيًا حقيقيًا.</td></tr>
+            <tr><td class="lead">مرونة الموديولات لكل منشأة</td><td>العميل يدفع مقابل ما يستخدمه، ولا يُغرق فريقه بشاشات لا تخصه.</td></tr>
+            <tr><td class="lead">سلسلة اعتمادات قابلة للتخصيص</td><td>القطاع الحكومي وشركات التشغيل تحتاج اعتمادات متعددة المستويات فعليًا.</td></tr>
+            <tr><td class="lead">إثبات الإنجاز كمفهوم مركزي</td><td>محاسبة المقاول والمشغّل هي الألم رقم واحد لدى مالك المرفق.</td></tr>
+            <tr><td class="lead">البوابة العامة بـ QR</td><td>المقيم يرفع بلاغًا بدون حساب ويتابعه — يقلل مكالمات إدارة المجمع بشكل ملموس.</td></tr>
+            <tr><td class="lead">الجولات الميدانية</td><td>ثقافة «الجولة» موجودة فعليًا في التشغيل السعودي ونادرًا ما تكون مرقمنة.</td></tr>
+            <tr><td class="lead">فوترة سعودية أصلية</td><td>ضريبة 15٪ مدمجة، والريال السعودي، ودفع إلكتروني عبر Tap.</td></tr>
+            <tr><td class="lead">عزل بيانات في قاعدة البيانات</td><td>ليس شرطًا في الكود فقط — قواعد RLS مُثبتة بفحص حي.</td></tr>
+            <tr><td class="lead">قابل للتثبيت كتطبيق (PWA)</td><td>تجربة قريبة من التطبيق بدون كلفة وانتظار متاجر التطبيقات.</td></tr>
+            <tr><td class="lead">قرب المؤسس والتنفيذ المحلي</td><td>العميل يتعامل مع جهة محلية تفهم بيئته، لا مع دعم في منطقة زمنية أخرى.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="kicker">ورقة تفاوض تعلّمناها من دراسة السوق</div>
+        <p>
+          المنافسون يسعّرون <strong>لكل مستخدم شهريًا</strong> (20 إلى 75 دولارًا). هذا النموذج يكسر بيئة تشغيل فيها
+          50 مُبلِّغًا. نموذجنا مبني على <strong>الموقع أو المنشأة</strong> مع حدود مستخدمين وأصول — استخدم هذه النقطة،
+          فهي تقلب مقارنة السعر لصالحنا.
+        </p>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section id="s9">
+      <div class="eyebrow"><span class="num">09</span><span class="rule"></span></div>
+      <h2>بنية المنصة: مستويان</h2>
+      <p>فهم هذا يخلّيك تتكلم بثقة عن «كيف يُدار النظام» عندما يسأل العميل.</p>
+
+      <div class="duo">
+        <div class="panel">
+          <div class="head" style="color:var(--accent-deep)">لوحة منصة متقن — لنا نحن</div>
+          <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px">تصميم داكن مميز مع شارة «Platform Admin Mode» حتى لا يختلط الأمر أبدًا.</p>
+          <ul class="plain" style="font-size:.92rem;margin-bottom:0">
+            <li><strong>المنشآت</strong> — إنشاء عميل، تفعيل موديولاته، تحديد حدوده، الدخول لحسابه للدعم</li>
+            <li><strong>الاشتراكات</strong> — الخطط والتفعيل والتجديد</li>
+            <li><strong>عروض الأسعار</strong> — بناء عرض ← اعتماد ← تفعيل اشتراك تلقائي</li>
+            <li><strong>المالية</strong> — الفواتير والمدفوعات</li>
+            <li><strong>موظفو المنصة</strong> — أدوار وصلاحيات فريقنا</li>
+            <li><strong>سجلات التدقيق</strong> — كل حركة إدارية موثقة</li>
+            <li><strong>التعاميم</strong> — إشعارات لكل المنشآت أو لمجموعة محددة</li>
+            <li><strong>تقارير المنصة</strong> — أداء المنصة ككل</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <div class="head" style="color:var(--accent-deep)">لوحة المنشأة — للعميل</div>
+          <p style="font-size:.92rem;margin-bottom:14px">
+            واجهة مستقلة تمامًا، بألوان وهوية المنشأة (لون أساسي وثانوي قابلان للتخصيص)،
+            تعرض فقط الموديولات المفعّلة في باقتها.
+            <strong>العميل لا يرى وجود منشآت أخرى إطلاقًا.</strong>
+          </p>
+          <h4>حدود الاشتراك</h4>
+          <p style="font-size:.92rem;color:var(--ink-2);margin:0">
+            لكل منشأة سقوف: عدد المستخدمين · عدد الأصول · عدد أوامر العمل شهريًا · مساحة التخزين.
+            تُستخدم في التسعير التصاعدي وفي محادثات التوسع لاحقًا.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="s10">
+      <div class="eyebrow"><span class="num">10</span><span class="rule"></span></div>
+      <h2>الاشتراكات والفوترة</h2>
+      <p>
+        محرك الفوترة موحّد وخلفي بالكامل — لا يوجد أي منطق تسعير في الواجهة،
+        وهذا يعني أن الأسعار لا يمكن التلاعب بها من المتصفح.
+      </p>
+
+      <h3>قواعد ثابتة</h3>
+      <ul class="plain">
+        <li>العملة: <strong>الريال السعودي</strong> دائمًا.</li>
+        <li>الضريبة: <strong>15٪</strong> دائمًا، وفق النظام السعودي.</li>
+        <li>الفواتير <strong>تُنشأ تلقائيًا</strong> عند التفعيل، لا يدويًا.</li>
+        <li>كل عملية مسجّلة في سجل أحداث غير قابل للتعديل.</li>
+      </ul>
+
+      <h3>أربعة مسارات لتفعيل الاشتراك</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>المسار</th><th>متى يُستخدم</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">تفعيل إداري</td><td>نحن نفعّل مباشرة من لوحة المنصة</td></tr>
+            <tr><td class="lead">عبر عرض سعر</td><td>إنشاء عرض ← اعتماد ← تفعيل تلقائي</td></tr>
+            <tr><td class="lead">دفع ذاتي</td><td>العميل يختار خطة ويدفع عبر Tap ويُفعَّل تلقائيًا</td></tr>
+            <tr><td class="lead">فترة تجريبية</td><td>تفعيل بحالة «تجريبي» لعدد أيام محدد</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        <strong>حالات الاشتراك:</strong> تجريبي · نشط · متأخر السداد (مهلة) · منتهٍ (قراءة فقط) · ملغى (قراءة فقط).
+      </p>
+
+      <div class="callout">
+        <div class="kicker">جاهزية مُثبتة بالفحص الحي</div>
+        <p>
+          تم التحقق حيًا من أن الدفع يفعّل الاشتراك، وأن تكرار الدفع أو تكرار إشعار البنك
+          <strong>لا يُنشئ فاتورة مكررة</strong>، وأن الطلبات غير المصرّح بها تُرفض. هذه إجابة جاهزة لأي سؤال مالي.
+        </p>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="s11">
+      <div class="eyebrow"><span class="num">11</span><span class="rule"></span></div>
+      <h2>الأمان وعزل البيانات</h2>
+      <p>استخدم هذا القسم عند وجود شخص من تقنية المعلومات في الاجتماع.</p>
+
+      <ul class="plain">
+        <li><strong>عزل على مستوى قاعدة البيانات</strong> — سياسات أمان على مستوى الصف (RLS) مطبّقة على كل الجداول. الحماية في قلب قاعدة البيانات، لا في الواجهة.</li>
+        <li><strong>مُثبت بالفحص الحي لا بالادعاء</strong> — آخر تحقق شامل أعطى <strong>118 فحصًا ناجحًا</strong>، شمل مدير منشأة ومديرًا ومشرفًا وفنيًا ومُبلِّغًا ومستخدمًا من منشأة أخرى ومدير منصة.</li>
+        <li>ثبت عمليًا أن مستخدم المنشأة (أ) <strong>لا يستطيع</strong> قراءة أي بيانات للمنشأة (ب)، والعكس.</li>
+        <li>ثبت أن الفني <strong>يستطيع</strong> بدء أمر مسند له، و<strong>لا يستطيع</strong> بدء أمر غير مسند له، وأن المُبلِّغ لا يستطيع بدء أوامر عمل إطلاقًا.</li>
+        <li><strong>مصادقة</strong> عبر Supabase Auth، وفصل كامل بين طبقة المنصة وطبقة المنشأة.</li>
+        <li><strong>سجل تدقيق تفصيلي</strong> لكل الإجراءات الإدارية.</li>
+        <li><strong>حماية في الإنتاج</strong> — لا تُطبع أي بيانات مستخدمين في المتصفح في نسخة الإنتاج.</li>
+      </ul>
+
+      <h3>التقنيات المستخدمة — عند السؤال فقط</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>المكوّن</th><th>التقنية</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">الواجهة</td><td class="code-cell">React 18 + TypeScript + Vite</td></tr>
+            <tr><td class="lead">التصميم</td><td class="code-cell">Tailwind CSS</td></tr>
+            <tr><td class="lead">قاعدة البيانات</td><td class="code-cell">PostgreSQL (Supabase)</td></tr>
+            <tr><td class="lead">المصادقة</td><td class="code-cell">Supabase Auth</td></tr>
+            <tr><td class="lead">الاستضافة</td><td class="code-cell">Vercel</td></tr>
+            <tr><td class="lead">المدفوعات</td><td class="code-cell">Tap</td></tr>
+            <tr><td class="lead">التطبيق</td><td class="code-cell">PWA قابل للتثبيت</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section id="s12">
+      <div class="eyebrow"><span class="num">12</span><span class="rule"></span></div>
+      <h2>التسعير ونموذج البيع</h2>
+
+      <div class="callout warn">
+        <div class="kicker">تنبيه إلزامي</div>
+        <p>
+          الأرقام أدناه <strong>حدود تفاوض داخلية غير معتمدة نهائيًا</strong>. لا تُرسل كقائمة أسعار للعميل قبل موافقة المؤسس.
+          ولا توجد صفحة أسعار عامة حاليًا — وهذا قرار مقصود.
+        </p>
+      </div>
+
+      <h3>المبدأ: لا توجد تجربة مجانية مفتوحة</h3>
+      <p>
+        نبيع <strong>تجربة تشغيلية مدفوعة ومضبوطة</strong>، ثم نحوّلها لاشتراك سنوي.
+        السبب: التجربة المجانية تجذب الفضوليين، وتحرق وقت التنفيذ والدعم، وتعطي انطباعًا أن المنتج رخيص.
+      </p>
+
+      <h3>المرحلة الأولى: التجربة المدفوعة — 8 أسابيع، تمتد إلى 12</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>النوع</th><th>مناسبة لـ</th><th class="num">السعر المقترح</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">تجربة قياسية</td><td>موقع واحد أو مجموعة أصول محددة</td><td class="num">25,000 ر.س</td></tr>
+            <tr><td class="lead">تجربة متقدمة</td><td>مستخدمون أكثر مع وقائي ومخزون</td><td class="num">40,000 ر.س</td></tr>
+            <tr><td class="lead">تجربة استراتيجية</td><td>منظمة أعقد مع تقارير تنفيذية</td><td class="num">60,000+ ر.س</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>شروط الدفع:</strong> 50٪ عند بدء الإعداد، و50٪ قبل التشغيل الحي.<br>
+        <strong>مراحل التجربة:</strong> تأهيل (أسبوع) ← إعداد (1–2 أسبوع) ← تمكين وتدريب (أسبوع) ← تشغيل حي (4–6 أسابيع) ← مراجعة وتحويل (أسبوع).
+      </p>
+
+      <h3>المرحلة الثانية: الاشتراك السنوي</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الفئة</th><th>الحدود الأولية</th><th class="num">النطاق السنوي</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">موقع واحد</td><td>حتى 10 مستخدمين، 500 أصل</td><td class="num">36,000 – 60,000</td></tr>
+            <tr><td class="lead">تشغيل أساسي <span class="chip ok">المستهدفة</span></td><td>حتى 25 مستخدمًا، 2,000 أصل، وقائي وتقارير</td><td class="num">60,000 – 90,000</td></tr>
+            <tr><td class="lead">تشغيل متقدم</td><td>عدة مواقع وفرق، مخزون، وقائي متقدم</td><td class="num">100,000 – 180,000</td></tr>
+            <tr><td class="lead">مؤسسي</td><td>عدة مواقع، صلاحيات متقدمة، SLA، دعم أعلى</td><td class="num">200,000+</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>رسوم خارج الباقة الأساسية</h3>
+      <p style="color:var(--ink-2)">
+        تهيئة وتنظيف بيانات ضخمة · تكاملات ERP · تقارير خاصة بنموذج العميل · تدريب حضوري خارج المدينة ·
+        رسائل واتساب رسمية عند اعتماد مزوّد · تطبيق جوال أصلي عند دخوله الخطة.
+      </p>
+
+      <h3>سياسة الخصم — الخصم مقابل قيمة، لا مقابل تردد</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>مقابل ماذا</th><th class="num">الحد</th></tr></thead>
+          <tbody>
+            <tr><td>قرار سريع أو دفع سنوي مقدم</td><td class="num">حتى 15٪</td></tr>
+            <tr><td>عميل مرجعي أول بشرط مكتوب (شهادة أو دراسة حالة)</td><td class="num">حتى 25٪</td></tr>
+            <tr><td>الأعمال المخصصة</td><td class="num">لا خصم</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.92rem;color:var(--muted)">في الأعمال المخصصة نقلّل النطاق بدلًا من تخفيض السعر.</p>
+    </section>
+
+    <!-- 13 -->
+    <section id="s13">
+      <div class="eyebrow"><span class="num">13</span><span class="rule"></span></div>
+      <h2>قصة العرض التوضيحي</h2>
+      <p><strong>لا تعرض كل الشاشات.</strong> اعرض قصة واحدة مقنعة. حساب الديمو: مجمع نورة جاردنز — بيانات تجريبية، ولا بيانات عملاء حقيقية إطلاقًا.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>النسخة</th><th class="num">المدة</th><th>مناسبة لـ</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">تنفيذية</td><td class="num">15 دقيقة</td><td>مالك أو صاحب قرار</td></tr>
+            <tr><td class="lead">قياسية <span class="chip ok">الافتراضية</span></td><td class="num">30 دقيقة</td><td>جمهور مبيعات مختلط</td></tr>
+            <tr><td class="lead">تفصيلية</td><td class="num">45 دقيقة</td><td>فرق العمليات والتنفيذ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>تسلسل الشاشات في النسخة القياسية</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th class="num">#</th><th>الشاشة</th><th class="num">الوقت</th><th>الرسالة</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td class="lead">تأطير المشكلة</td><td class="num">3 د</td><td>«ذاكرة الصيانة عندكم متفرقة»</td></tr>
+            <tr><td class="num">2</td><td class="lead">لوحة التحكم</td><td class="num">2 د</td><td>«يوجد نشاط تشغيلي حقيقي في مكان واحد»</td></tr>
+            <tr><td class="num">3</td><td class="lead">قائمة أوامر العمل</td><td class="num">10 د</td><td>«الطلب غير المنظم يتحول لعمل منضبط»</td></tr>
+            <tr><td class="num">4</td><td class="lead">أمر مُسند ثم أمر مكتمل</td><td class="num">↑</td><td>«كل أمر له سياق ومسؤول ودليل»</td></tr>
+            <tr><td class="num">5</td><td class="lead">أمر ملغى — عند الحاجة</td><td class="num">↑</td><td>«الإلغاء يُوثَّق ولا يُحذف»</td></tr>
+            <tr><td class="num">6</td><td class="lead">صفحة الأصل AHU-3A</td><td class="num">5 د</td><td>«العمل المكتمل صار تاريخ الأصل»</td></tr>
+            <tr><td class="num">7</td><td class="lead">أمر عمل وقائي</td><td class="num">5 د</td><td>«الوقائي متصل بالأصل والتنفيذ»</td></tr>
+            <tr><td class="num">8</td><td class="lead">موجز القرار</td><td class="num">5 د</td><td>«نختم بقرار، لا بأرقام»</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>الرسائل الست التي تكررها طول العرض</h3>
+      <div class="cards">
+        <div class="card"><span class="ix">01</span><p>لا مزيد من ذاكرة صيانة متفرقة.</p></div>
+        <div class="card"><span class="ix">02</span><p>كل أمر عمل له سياق.</p></div>
+        <div class="card"><span class="ix">03</span><p>العمل المكتمل يصبح تاريخ الأصل.</p></div>
+        <div class="card"><span class="ix">04</span><p>الوقائي متصل بالأصول وأوامر العمل.</p></div>
+        <div class="card"><span class="ix">05</span><p>التقرير ينتهي بإجراء.</p></div>
+        <div class="card"><span class="ix">06</span><p>الإلغاء يُوثَّق ولا يُحذف.</p></div>
+      </div>
+
+      <h3>الإغلاق المقترح — احفظه</h3>
+      <div class="quote">
+        «اللي شفناه اليوم هو النطاق الصحيح لتجربة مضبوطة. ما نحتاج نغيّر التشغيل كله من أول يوم.
+        نختار موقعًا أو مبنى أو مجموعة أصول أو فريقًا واحدًا، نحمّل الحد الأدنى من البيانات المفيدة،
+        ونثبت أن متقن يقدر يوثّق العمل، ويربطه بالأصول والمواقع، ويحفظ إثبات الإنجاز، ويعطي الإدارة
+        إشارات قرار مفيدة. والأهم أننا نتفق على معايير النجاح <strong>قبل</strong> ما نبدأ.»
+      </div>
+
+      <div class="callout danger">
+        <div class="kicker">إذا تعطل شيء أثناء العرض</div>
+        <p>
+          <strong>لا تصلّح أمام العميل.</strong> انتقل لسجل بديل، أو أكمل بالسرد، أو استخدم لقطات شاشة محفوظة.
+          استمرار القصة أهم من الشاشة.
+        </p>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section id="s14">
+      <div class="eyebrow"><span class="num">14</span><span class="rule"></span></div>
+      <h2>الاعتراضات الشائعة والردود</h2>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>الاعتراض</th><th>الرد</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">«نقدر نخصص النظام لنا؟»</td><td>«نعم بالإعدادات المدعومة: الأدوار والتسميات والمواقع والتصنيفات وجداول الوقائي ومراحل سير العمل. لكن التجربة ليست مشروع برمجة مخصصة ولا نسخة كود خاصة بكم.»</td></tr>
+            <tr><td class="lead">«نقدر نغيّر مسميات المباني؟»</td><td>«نعم. متقن يمثّل هيكلكم التشغيلي كما هو: مجمع، مبنى، دور، وحدة، موقع، منطقة، أو مجموعة أصول.»</td></tr>
+            <tr><td class="lead">«يدعم العربي؟»</td><td>«عربي وإنجليزي بالكامل مع دعم RTL أصلي، وهذه من أقوى نقاطنا مقارنة بالأنظمة العالمية.»</td></tr>
+            <tr><td class="lead">«هل هو للمستشفيات فقط؟»</td><td>«لا. متقن مبني لعمليات الصيانة والمرافق في أي بيئة كثيفة الأصول. الديمو الحالي على مجمع سكني.»</td></tr>
+            <tr><td class="lead">«يتكامل مع IoT أو BMS أو BIM؟»</td><td>«هذه اتجاهات مستقبلية أو مشاريع تكامل تُسعَّر منفصلة. التجربة تركّز على إثبات الأساس التشغيلي أولًا.»</td></tr>
+            <tr><td class="lead">«هذا ERP؟»</td><td>«لا. متقن أساس للتشغيل والصيانة وإدارة الأصول، ويتعايش مع ERP أو النظام المالي لاحقًا عند الحاجة.»</td></tr>
+            <tr><td class="lead">«في تطبيق جوال؟»</td><td>«يعمل على متصفح الجوال ويمكن تثبيته كتطبيق على الجهاز. لا نعد بتطبيق أصلي في متاجر التطبيقات في هذه المرحلة.»</td></tr>
+            <tr><td class="lead">«نبي أوامر العمل فقط.»</td><td>«نقطة بداية ممتازة. لكن نوصي نربطها بالمواقع والأصول ولو بحدها الأدنى، لأن هذا بالضبط اللي يحوّل التذاكر إلى ذاكرة تشغيلية.»</td></tr>
+            <tr><td class="lead">«كم يستغرق التنفيذ؟»</td><td>«يعتمد على جاهزية بياناتكم والنطاق. إثبات ضيّق ممكن في 2 إلى 4 أسابيع، وتجربة تشغيلية واقعية عادة 8 أسابيع.»</td></tr>
+            <tr><td class="lead">«بياناتنا معزولة؟»</td><td>«نعم، عزل على مستوى قاعدة البيانات نفسها لا على مستوى الواجهة فقط، ومُثبت بفحوصات حية. وفي التجربة نقتصر على البيانات التشغيلية اللازمة فقط.»</td></tr>
+            <tr><td class="lead">«الفنيين بيقدرون يستخدمونه؟»</td><td>«شاشة الفني مركّزة: يشوف المسند له، يحدّث الحالة، يضيف ملاحظة أو صورة، ويكمل. ونثبت السهولة على مجموعة صغيرة قبل التوسع.»</td></tr>
+            <tr><td class="lead">«مرتفع السعر.»</td><td>«قارن بالتكلفة الحالية: بلاغ ضائع، تعطل متكرر لأصل كان يمكن إنقاذه، ومقاول تدفع له بدون إثبات. وأيضًا المنافسون العالميون يسعّرون لكل مستخدم شهريًا، ونحن نسعّر بالموقع.»</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 15 -->
+    <section id="s15">
+      <div class="eyebrow"><span class="num">15</span><span class="rule"></span></div>
+      <h2>الخطوط الحمراء: ما لا نعد به</h2>
+      <p>لا يُذكر أي بند من هذه القائمة كأنه متاح اليوم — لا في اجتماع، ولا في عرض، ولا في منشور تسويقي.</p>
+
+      <div class="redlines">
+        <span>ربط أجهزة IoT</span>
+        <span>تكامل BMS</span>
+        <span>تكامل أو عارض BIM</span>
+        <span>مساعد ذكاء اصطناعي</span>
+        <span>ذكاء تنبؤي وتوصيات آلية</span>
+        <span>تطبيق iOS أو Android أصلي</span>
+        <span>عمل كامل دون اتصال</span>
+        <span>تكامل ERP أو مالية أو HR</span>
+        <span>تكامل SSO أو التحكم بالوصول</span>
+        <span>واجهات API مخصصة لعميل</span>
+        <span>تغييرات قاعدة بيانات لعميل</span>
+        <span>ترحيل بيانات تاريخية كاملة</span>
+        <span>امتثال أو اعتماد تنظيمي كامل</span>
+        <span>إدارة عقود متقدمة</span>
+        <span>مشتريات أو تقييم مخزون متقدم</span>
+        <span>إعادة تصميم واجهة لعميل</span>
+        <span>دعم 24/7 أو طوارئ ميدانية</span>
+        <span>تخصيص غير محدود</span>
+      </div>
+
+      <h3>الصياغة الآمنة عند السؤال عن أي منها</h3>
+      <div class="quote">
+        «متقن مبني ليدعم مستقبلًا طريقًا نحو التكاملات والذكاء التشغيلي، لكن هذه المرحلة تركّز على
+        الأساس التشغيلي الذي يجعل تلك القدرات المستقبلية قابلة للتصديق أصلًا.»
+      </div>
+
+      <p>ثم <strong>صنّف الطلب فورًا</strong> كواحد من أربعة: مرشح لخارطة المنتج · بند توسّع في الاشتراك السنوي · خدمة مهنية تُسعَّر منفصلة · خارج النطاق.</p>
+    </section>
+
+    <!-- 16 -->
+    <section id="s16">
+      <div class="eyebrow"><span class="num">16</span><span class="rule"></span></div>
+      <h2>حالة المنتج اليوم بصراحة</h2>
+
+      <div class="callout danger">
+        <div class="kicker">داخلي — لا يُرسل للعميل</div>
+        <p>معرفة هذا الجدول تمنعك من الوعد بما لا نملك. هذه أهم صفحة في الدليل بالنسبة للمبيعات.</p>
+      </div>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>المجال</th><th>الحالة</th><th>ملاحظة</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">أوامر العمل وسير الاعتمادات</td><td><span class="chip ok">جاهز</span></td><td>قلب المنتج ومُختبر</td></tr>
+            <tr><td class="lead">الأصول والمواقع</td><td><span class="chip ok">جاهز</span></td><td>عرض شجري مع QR</td></tr>
+            <tr><td class="lead">الصيانة الوقائية</td><td><span class="chip ok">جاهز</span></td><td>قوالب وجداول وتوليد أوامر</td></tr>
+            <tr><td class="lead">المخزون</td><td><span class="chip ok">جاهز</span></td><td>مع إصلاح عزل مطبّق</td></tr>
+            <tr><td class="lead">الأدوار والصلاحيات</td><td><span class="chip ok">جاهز ومُثبت</span></td><td>118 فحصًا ناجحًا</td></tr>
+            <tr><td class="lead">عزل البيانات (RLS)</td><td><span class="chip ok">جاهز ومُثبت</span></td><td>تحقق حي على بيئة الاختبار</td></tr>
+            <tr><td class="lead">الاشتراكات والفوترة والدفع</td><td><span class="chip ok">جاهز ومُثبت</span></td><td>Tap مع منع تكرار الفواتير</td></tr>
+            <tr><td class="lead">لوحة المنصة</td><td><span class="chip ok">جاهز</span></td><td>عشر شاشات</td></tr>
+            <tr><td class="lead">البوابة العامة والتتبع</td><td><span class="chip ok">جاهز</span></td><td>يُفعَّل عند الطلب</td></tr>
+            <tr><td class="lead">التقارير وموجز القرار</td><td><span class="chip mid">يعمل ويتحسّن</span></td><td>تعميق المؤشرات القرارية جارٍ</td></tr>
+            <tr><td class="lead">الجولات الميدانية</td><td><span class="chip mid">حديث</span></td><td>يُعرض بحذر</td></tr>
+            <tr><td class="lead">الوارد والتصنيف الذكي</td><td><span class="chip mid">مرحلة أولى</span></td><td>لا يُعرض كجاهز</td></tr>
+            <tr><td class="lead">إشعارات واتساب الرسمية</td><td><span class="chip no">غير مفعّل</span></td><td>يحتاج عقد مزوّد معتمد — لا تعد به</td></tr>
+            <tr><td class="lead">تطبيق جوال أصلي</td><td><span class="chip no">غير موجود</span></td><td>PWA فقط</td></tr>
+            <tr><td class="lead">تكاملات IoT / BMS / BIM / ERP</td><td><span class="chip no">غير موجود</span></td><td>اتجاه مستقبلي</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="kicker">الخلاصة الصادقة</div>
+        <p>
+          المنتج <strong>جاهز لتجربة مضبوطة مع عميل حقيقي</strong>، وليس جاهزًا لعقد مؤسسي ضخم يشترط تكاملات.
+          بِع ما نملك — وهو كثير.
+        </p>
+      </div>
+    </section>
+
+    <!-- 17 -->
+    <section id="s17">
+      <div class="eyebrow"><span class="num">17</span><span class="rule"></span></div>
+      <h2>رسائل تسويقية جاهزة</h2>
+
+      <h3>العناوين الرئيسية المعتمدة</h3>
+      <ul class="plain">
+        <li><strong>«حوّل أعمال الصيانة إلى وضوح تشغيلي وقرارات أدق.»</strong></li>
+        <li>«من البلاغ الأول حتى القرار التشغيلي، تبقى التفاصيل منظمة في نظام واحد.»</li>
+        <li>«عندما تتشتت التفاصيل، يضعف وضوح التشغيل.»</li>
+      </ul>
+
+      <h3>زوايا المحتوى الأربع — للتواصل البارد والسوشال</h3>
+      <div class="cards">
+        <div class="card">
+          <span class="ix">الزاوية الأولى</span>
+          <h4>ذاكرة الصيانة المتفرقة</h4>
+          <p>إذا كان تاريخ الصيانة عندكم موزعًا بين واتساب واتصالات وإكسل وذاكرة الأفراد، متقن يحوّله إلى سجل تشغيلي مربوط بالموقع والأصل والمسؤول والدليل والتقرير.</p>
+        </div>
+        <div class="card">
+          <span class="ix">الزاوية الثانية</span>
+          <h4>إثبات الإنجاز</h4>
+          <p>متقن يوضّح ما الذي أُنجز، ومن عمل عليه، ومتى تحرّك، وما الدليل المُلتقط. مهم لرؤية الإدارة ومحاسبة المقاولين.</p>
+        </div>
+        <div class="card">
+          <span class="ix">الزاوية الثالثة</span>
+          <h4>الأعطال المتكررة</h4>
+          <p>يربط متقن أوامر العمل بالأصول حتى ترى الأعطال المتكررة والأعمال المتأخرة قبل ما تتحول لأزمة، بدل التعامل مع كل بلاغ كحالة منفصلة.</p>
+        </div>
+        <div class="card">
+          <span class="ix">الزاوية الرابعة</span>
+          <h4>تجربة محددة لا تحوّل ضخم</h4>
+          <p>ما نبدأ بمشروع كبير. نختار موقعًا أو فريقًا، نشغّل عملًا حقيقيًا في متقن، نقيس القيمة، ثم نقرر التوسع بناءً على دليل.</p>
+        </div>
+      </div>
+
+      <h3>قالب رسالة التواصل الأولى</h3>
+      <div class="quote">
+        السلام عليكم [الاسم]،<br><br>
+        أنا [الاسم] من متقن. نبني منصة تساعد فرق الصيانة والمرافق على تحويل البلاغات وأوامر العمل من واتساب
+        وإكسل والمتابعات المتفرقة إلى سجل تشغيلي واضح مربوط بالموقع والأصل والفني وإثبات الإنجاز والتقارير.<br><br>
+        ما نبدأ بمشروع كبير. نقترح تجربة تشغيلية مدفوعة ومحددة على موقع أو فريق واحد، ونقيس خلالها
+        هل متقن فعلًا يحسّن وضوح العمل وإثبات الإنجاز واتخاذ القرار.<br><br>
+        هل يناسبك نرتب مكالمة قصيرة 20 دقيقة هذا الأسبوع نعرف إذا فيه توافق؟
+      </div>
+
+      <h3>نبرة العلامة التجارية</h3>
+      <p>
+        متقن يجب أن يبدو كـ <strong>«مستشار تشغيلي هادئ»</strong> — احترافي، منظم، واثق بلا مبالغة.
+      </p>
+      <p style="color:var(--muted)">
+        <strong>نتجنب:</strong> الزخرفة البرّاقة · وعود الذكاء الاصطناعي الفارغة · صور المرافق النمطية ·
+        تقديمه كقائمة مهام · تقديمه كسلة موديولات مفكّكة.
+      </p>
+
+      <h3>الهوية البصرية</h3>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>العنصر</th><th class="num">القيمة</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">اللون الأساسي</td><td class="num">#0b1320 — كحلي داكن</td></tr>
+            <tr><td class="lead">لون التمييز</td><td class="num">#00b2a9 — تركوازي</td></tr>
+            <tr><td class="lead">الخلفية</td><td class="num">#f5f7f9</td></tr>
+            <tr><td class="lead">الخط العربي</td><td class="num">Cairo</td></tr>
+            <tr><td class="lead">الخط الإنجليزي والأرقام</td><td class="num">Inter</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 18 -->
+    <section id="s18">
+      <div class="eyebrow"><span class="num">18</span><span class="rule"></span></div>
+      <h2>قاموس المصطلحات</h2>
+      <p>إذا سمعت مصطلحًا في اجتماع داخلي ولم تفهمه، هو غالبًا هنا.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>المصطلح</th><th>المعنى بلغة بسيطة</th></tr></thead>
+          <tbody>
+            <tr><td class="lead">CMMS / CAFM</td><td>نظام إدارة الصيانة المحوسب ونظام إدارة المرافق — تصنيف منتجنا في السوق العالمي</td></tr>
+            <tr><td class="lead">Tenant — منشأة</td><td>العميل داخل النظام. كل عميل = منشأة معزولة تمامًا</td></tr>
+            <tr><td class="lead">Multi-tenant</td><td>منصة واحدة تخدم عملاء كثيرين بعزل كامل بينهم</td></tr>
+            <tr><td class="lead">RLS</td><td>أمان على مستوى الصف في قاعدة البيانات — العزل مطبّق في القلب لا في الواجهة</td></tr>
+            <tr><td class="lead">Work Order — أمر عمل</td><td>وحدة العمل الأساسية: مهمة لها رقم وحالة ومسؤول وموعد</td></tr>
+            <tr><td class="lead">PM — الصيانة الوقائية</td><td>صيانة مجدولة قبل حدوث العطل</td></tr>
+            <tr><td class="lead">Job Plan — قالب عمل</td><td>قالب قابل لإعادة الاستخدام يحوي خطوات وقائمة فحص</td></tr>
+            <tr><td class="lead">PM Compliance</td><td>نسبة الالتزام بتنفيذ الوقائي في وقته — مؤشر إداري مهم</td></tr>
+            <tr><td class="lead">Proof of Work</td><td>مجموعة الأدلة: ملاحظات ووقت ومسؤول وصور واعتمادات</td></tr>
+            <tr><td class="lead">SLA</td><td>اتفاقية مستوى الخدمة — الوقت المتفق عليه للاستجابة والإنجاز</td></tr>
+            <tr><td class="lead">Decision Brief — موجز القرار</td><td>شاشة تحوّل الأرقام إلى إجراءات مقترحة</td></tr>
+            <tr><td class="lead">Backlog</td><td>تراكم العمل المفتوح غير المنجز</td></tr>
+            <tr><td class="lead">Corrective vs Preventive</td><td>تصحيحي (رد فعل على عطل) مقابل وقائي (مخطط مسبقًا). نسبة الاثنين مؤشر نضج تشغيلي</td></tr>
+            <tr><td class="lead">PWA</td><td>تطبيق ويب قابل للتثبيت على الجوال بأيقونة، بلا متجر تطبيقات</td></tr>
+            <tr><td class="lead">RTL</td><td>دعم الاتجاه من اليمين لليسار للواجهة العربية</td></tr>
+            <tr><td class="lead">Idempotency</td><td>ضمان أن تكرار العملية لا يُنتج نتيجة مكررة — مهم في الدفع</td></tr>
+            <tr><td class="lead">Tap</td><td>مزوّد الدفع الإلكتروني المستخدم في المنصة</td></tr>
+            <tr><td class="lead">Intake — الوارد</td><td>نقطة استقبال موحّدة للبلاغات من قنوات خارجية</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- pocket -->
+    <section id="pocket">
+      <div class="pocket">
+        <h2>بطاقة الجيب</h2>
+        <p class="sub">إذا ما قرأت شيئًا غير هذا، فاحفظ هذه.</p>
+        <dl>
+          <dt>ما هو؟</dt>
+          <dd>منصة سعودية لإدارة التشغيل والصيانة والأصول، عربية بالكامل، بموديولات مرنة.</dd>
+
+          <dt>ما المشكلة؟</dt>
+          <dd>ذاكرة الصيانة متفرقة بين واتساب وإكسل ورؤوس الأفراد.</dd>
+
+          <dt>كيف يعمل؟</dt>
+          <dd>بلاغ ← موقع ← أصل ← أمر عمل ← تنفيذ ← إثبات إنجاز ← سجل الأصل ← تقرير ← قرار.</dd>
+
+          <dt>لمن؟</dt>
+          <dd>شركات إدارة المرافق والمجمعات السكنية والتجارية في الرياض أولًا.</dd>
+
+          <dt>كيف نبيع؟</dt>
+          <dd>تجربة مدفوعة مضبوطة 8 أسابيع (25–60 ألف ريال) ← اشتراك سنوي (60–180 ألف ريال).</dd>
+
+          <dt>أقوى ثلاث نقاط بيع؟</dt>
+          <dd>عربي أصلي · إثبات الإنجاز · مرونة الموديولات لكل عميل.</dd>
+
+          <dt>ما لا نعد به أبدًا؟</dt>
+          <dd>IoT · BMS · BIM · ذكاء اصطناعي · تطبيق جوال أصلي · تكاملات ERP · تخصيص غير محدود.</dd>
+        </dl>
+
+        <div class="zinger">
+          أقوى سؤال تفتح فيه: «لو مدير الصيانة عندك استقال بكرة، كم من المعرفة التشغيلية تطلع معه؟»
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footnote">
+    <p>
+      <strong>مصادر هذا الدليل داخل المستودع:</strong>
+      دستور النظام <code>docs/CONSTITUTION.md</code> ·
+      الوثيقة الشاملة <code>docs/BiDoc.md</code> ·
+      نطاق التجربة <code>docs/strategy/pilot-v1-scope.md</code> ·
+      دليل العرض <code>docs/demo/sales-demo-playbook.md</code> ·
+      عرض التجربة المدفوعة <code>docs/sales/paid-controlled-pilot-offer.md</code> ·
+      إطار التسعير <code>docs/sales/pricing-framework-and-market-study.md</code> ·
+      القطاع المستهدف <code>docs/sales/first-target-segment-and-30-account-plan.md</code> ·
+      مبادئ العلامة <code>docs/brand/brand-principles.md</code> ·
+      محرك الفوترة <code>BILLING_ENGINE.md</code> ·
+      سجل الموديولات <code>src/config/modules.ts</code>
+    </p>
+    <p>
+      النسخة النصية من هذا الدليل محفوظة في <code>docs/marketing/mutqan-product-profile-ar.md</code>.
+      عند تغيّر المنتج، حدّث الملف النصي أولًا ثم أعد نشر هذه الصفحة.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>
