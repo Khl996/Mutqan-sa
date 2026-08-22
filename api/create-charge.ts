@@ -32,6 +32,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({ error: 'Method not allowed' })
     }
 
+    if (process.env.SELF_SERVICE_BILLING_ENABLED !== 'true') {
+        return res.status(403).json({ error: 'Self-service billing is disabled' })
+    }
+
     try {
         const baseUrl = getBaseUrl(req)
         const {

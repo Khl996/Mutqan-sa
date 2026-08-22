@@ -14,7 +14,8 @@ export type ManagedUserRole =
     | 'reporter'
 
 export interface UpsertManagedUserInput {
-    email: string
+    userId?: string
+    email?: string
     password?: string
     fullName?: string
     role: ManagedUserRole
@@ -57,6 +58,10 @@ async function getAccessToken() {
 }
 
 export async function upsertManagedUser(input: UpsertManagedUserInput): Promise<UpsertManagedUserResult> {
+    if (!input.userId && !input.email) {
+        throw new Error('userId or email is required')
+    }
+
     const accessToken = await getAccessToken()
 
     const response = await fetch('/api/admin-manage-user', {

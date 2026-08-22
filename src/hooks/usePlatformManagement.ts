@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { revokeManagedUser } from '@/lib/adminUserApi'
+import { revokeManagedUser, upsertManagedUser, type ManagedUserRole } from '@/lib/adminUserApi'
 
 // Types
 export interface PlatformStaff {
@@ -201,28 +201,38 @@ export function useUpdatePlatformStaff() {
 
             if (!accessToken) throw new Error('Not authenticated')
 
-            const updateData: any = {
-                updated_at: new Date().toISOString()
-            }
-
-            if (updates.role) updateData.role = updates.role
-            if (updates.status) updateData.is_active = updates.status === 'active'
-
-            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${id}`, {
-                method: 'PATCH',
+            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=id,email,full_name,role,is_active`, {
                 headers: {
                     'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
                     'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify(updateData)
+                }
             })
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}))
                 throw new Error(errorData.message || `HTTP ${response.status}`)
             }
+
+            const [target] = await response.json() as Array<{
+                id: string
+                email: string | null
+                full_name: string | null
+                role: ManagedUserRole
+                is_active: boolean
+            }>
+
+            if (!target) throw new Error('Platform staff profile not found')
+
+            await upsertManagedUser({
+                userId: target.id,
+                email: target.email ?? undefined,
+                fullName: target.full_name ?? undefined,
+                role: (updates.role ?? target.role) as ManagedUserRole,
+                tenantId: null,
+                status: updates.status
+                    ? (updates.status === 'active' ? 'active' : 'inactive')
+                    : (target.is_active ? 'active' : 'inactive'),
+            })
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: platformKeys.staff })

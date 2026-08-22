@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             session,
             profile,
             isLoading,
-            isAuthenticated: !!user,
+            isAuthenticated: !!user && profile?.is_active === true,
             signIn,
             signOut,
             refreshProfile,

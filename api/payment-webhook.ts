@@ -151,30 +151,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server configuration error' })
         }
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-            auth: { autoRefreshToken: false, persistSession: false },
-        })
-
-        const { data: existingInvoice } = await supabase
-            .from('billing_invoices')
-            .select('id, tenant_id, total, status')
-            .eq('payment_reference', chargeId)
-            .maybeSingle()
-
-        if (existingInvoice) {
-            logWebhook('log', 'already_processed', {
-                chargeId,
-                invoiceId: existingInvoice.id,
-                tenantId: existingInvoice.tenant_id,
-                status: existingInvoice.status,
-            })
-            return res.status(200).json({ received: true, processed: false, reason: 'already_processed' })
-        }
-
         if (!hasValidSharedSecret(req)) {
             logWebhook('warn', 'shared_secret_rejected', { chargeId, ip: getClientIp(req) })
             return res.status(401).json({ error: 'Unauthorized webhook' })
         }
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+            auth: { autoRefreshToken: false, persistSession: false },
+        })
 
         if (!TAP_SECRET_KEY) {
             logWebhook('error', 'missing_configuration', {

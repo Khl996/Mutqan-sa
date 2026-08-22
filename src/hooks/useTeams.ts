@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { upsertManagedUser } from '@/lib/adminUserApi'
+import { upsertManagedUser, type ManagedUserRole } from '@/lib/adminUserApi'
 import { useTenant } from '@/contexts/TenantContext'
 
 export interface TeamMember {
@@ -198,6 +198,61 @@ export function useUpdateTeamMember() {
 
             if (!accessToken) throw new Error('Not authenticated')
 
+            const hasProtectedAuthorityUpdate = updates.role !== undefined || updates.is_active !== undefined
+            let managedResult: Awaited<ReturnType<typeof upsertManagedUser>> | null = null
+
+            if (hasProtectedAuthorityUpdate) {
+                const targetResponse = await fetch(
+                    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=id,email,full_name,role,tenant_id,is_active,department,job_title`,
+                    {
+                        headers: {
+                            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    },
+                )
+
+                if (!targetResponse.ok) {
+                    const error = await targetResponse.json().catch(() => ({}))
+                    throw new Error(error.message || 'Failed to load managed member authority')
+                }
+
+                const [target] = await targetResponse.json() as Array<{
+                    id: string
+                    email: string | null
+                    full_name: string | null
+                    role: ManagedUserRole
+                    tenant_id: string | null
+                    is_active: boolean
+                    department: string | null
+                    job_title: string | null
+                }>
+
+                if (!target) throw new Error('Managed member not found')
+
+                managedResult = await upsertManagedUser({
+                    userId: target.id,
+                    email: target.email ?? undefined,
+                    fullName: target.full_name ?? undefined,
+                    role: (updates.role ?? target.role) as ManagedUserRole,
+                    tenantId: target.tenant_id,
+                    status: (updates.is_active ?? target.is_active) ? 'active' : 'inactive',
+                    department: updates.department ?? target.department,
+                    jobTitle: updates.job_title ?? target.job_title,
+                })
+            }
+
+            const directUpdates: Record<string, unknown> = {}
+            if (!hasProtectedAuthorityUpdate) {
+                if (updates.department !== undefined) directUpdates.department = updates.department
+                if (updates.job_title !== undefined) directUpdates.job_title = updates.job_title
+            }
+            if (updates.supervisor_id !== undefined) directUpdates.supervisor_id = updates.supervisor_id
+
+            if (Object.keys(directUpdates).length === 0) {
+                return managedResult
+            }
+
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${id}`, {
                 method: 'PATCH',
                 headers: {
@@ -206,7 +261,7 @@ export function useUpdateTeamMember() {
                     Authorization: `Bearer ${accessToken}`,
                     Prefer: 'return=representation',
                 },
-                body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() }),
+                body: JSON.stringify({ ...directUpdates, updated_at: new Date().toISOString() }),
             })
 
             if (!response.ok) {
@@ -215,7 +270,7 @@ export function useUpdateTeamMember() {
             }
 
             const data = await response.json()
-            return data && data.length > 0 ? data[0] : null
+            return data && data.length > 0 ? data[0] : managedResult
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: teamKeys.list() })

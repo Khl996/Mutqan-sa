@@ -144,21 +144,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             auth: { autoRefreshToken: false, persistSession: false },
         })
 
-        const { data: existingInvoice } = await supabase
-            .from('billing_invoices')
-            .select('id, status, total')
-            .eq('payment_reference', charge.id)
-            .maybeSingle()
-
-        if (existingInvoice) {
-            return res.status(200).json({
-                success: true,
-                status: 'CAPTURED',
-                message: 'Payment already processed',
-                invoice_id: existingInvoice.id,
-            })
-        }
-
         let expectedAmount: number
 
         if (verifiedAmount) {

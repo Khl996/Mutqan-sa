@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const SUSPENSION_BAN_DURATION = '876000h'
 
 type PlatformManagedRole =
     | 'platform_admin'
@@ -251,12 +252,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const { data: callerProfile, error: callerProfileError } = await userSupabase
             .from('profiles')
-            .select('id, role, tenant_id')
+            .select('id, role, tenant_id, is_active')
             .eq('id', authData.user.id)
             .maybeSingle()
 
         if (callerProfileError || !callerProfile) {
             return res.status(403).json({ error: 'Caller profile not found' })
+        }
+
+        if (callerProfile.is_active !== true) {
+            return res.status(403).json({ error: 'Active caller profile required' })
         }
 
         if (resolvedOperation === 'revoke') {
@@ -433,6 +438,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const isActive = status !== 'inactive'
         const targetTenantId = isTenantManagedRole(requestedRole) ? tenantId : null
+        const previousIsActive = existingProfile?.is_active !== false
+
+        // The profile flag is the immediate database authority. The Auth ban
+        // also prevents new sessions/refreshes; an already-issued access token
+        // remains harmless because every privileged database path requires an
+        // active profile after the P0 authority migration.
+        const { error: authStatusError } = await adminSupabase.auth.admin.updateUserById(userId, {
+            ban_duration: isActive ? 'none' : SUSPENSION_BAN_DURATION,
+        })
+
+        if (authStatusError) {
+            return res.status(500).json({ error: `Failed to update Auth suspension: ${authStatusError.message}` })
+        }
+
         const profileUpdates: Record<string, unknown> = {
             email: resolvedEmail,
             full_name: resolvedName,
@@ -461,6 +480,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .eq('id', userId)
 
         if (updateProfileError) {
+            await adminSupabase.auth.admin.updateUserById(userId, {
+                ban_duration: previousIsActive ? 'none' : SUSPENSION_BAN_DURATION,
+            })
             return res.status(500).json({ error: updateProfileError.message })
         }
 
