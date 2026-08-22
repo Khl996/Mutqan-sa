@@ -4,289 +4,333 @@
 
 **STAGING NO-GO**
 
-The accepted 39-artifact foundation was frozen successfully, but the mandatory
-Preview Branch creation gate failed before the first remote SQL statement.
-Supabase returned HTTP `402` with `entitlement_required` / `branching_limit`:
-Branching is available only on Pro or above for the current organization. No
-Preview Branch was allocated and no Supabase database, Auth user, migration
-ledger, secret, function, Storage object or application deployment was changed.
+The frozen 39-artifact candidate replayed successfully on the isolated
+`Mutqan Staging` project and passed the mandatory tenant, suspension,
+provisioning, work-order, PM, payment, public-token and application fixtures.
+It is not ready for production deployment review because the hosted acceptance
+found two remaining blockers:
 
-## B. Staging identity
+1. an anonymous `SECURITY DEFINER` surface is broader than the intended public
+   capability-token allowlist; a real anonymous request successfully read
+   tenant PM compliance metrics and could probe tenant feature and
+   asset/location facts by caller-supplied `tenant_id`/object IDs;
+2. the real public signup endpoint is blocked by the staging Auth email-send
+   limit (`429`, `over_email_send_rate_limit`), so the email/OTP signup path
+   cannot yet be accepted end to end.
 
-No controlled staging branch could be created or proven.
+Production project `mzpohntjotgeeaukwnbz` was never linked, queried, changed,
+merged into or deployed.
 
-| Evidence | Result |
+## B. Immutable candidate and staging identity
+
+| Evidence | Accepted result |
 | --- | --- |
-| Parent Supabase project | `mzpohntjotgeeaukwnbz` (`Mutqan A`); management-plane use only during this attempt; production SQL remained forbidden |
-| Local application environment | Same ref; `VERCEL_ENV=production`, `VERCEL_TARGET_ENV=production`, `VITE_APP_URL=https://mutqan-sa.com` |
-| Vercel production environment file | Same Supabase ref |
-| Requested Preview Branch name | `controlled-staging-acceptance-20260822-1045163` |
-| Requested branch mode | Persistent; `--with-data` was omitted, so the request did not authorize or request production-data cloning |
-| Branch creation result | Rejected before allocation: HTTP `402`, `entitlement_required`, feature `branching_limit`; Pro or above required |
-| Preview branches after the attempt | Exactly one: default `main`, project ref `mzpohntjotgeeaukwnbz`; no additional branch exists |
-| Preview branch project/ref | Not allocated |
-| Branch-specific credentials | Not allocated |
-| Customer-data isolation | No branch exists to inspect; production data was neither cloned nor queried |
-| Hosted PostgreSQL/runtime inventory | Not queried because no staging target passed identity classification |
-| Starting migration ledger | Not queried because no staging target passed identity classification |
-| CLI | Supabase CLI `2.95.3`; it reported `2.98.2` available. No upgrade was performed. |
-| Frozen Git commit | `10451638642fe4c17c2bf5cb7ea3c7f39823de0b` (`Freeze controlled staging replay acceptance`) |
-| Frozen Git branch | `codex/controlled-staging-acceptance-20260822` |
-| Immutable review tag | `mutqan-2.0-controlled-staging-acceptance-20260822` → the frozen commit |
-| Isolation from unrelated local work | The freeze was committed with only reviewed migration, test, verification, architecture and dependent P0 paths; 79 unrelated worktree entries remained unstaged and outside the commit |
-| Clean replay checkout | Detached clean worktree at the frozen commit; no local production link or credentials were copied into it |
+| Frozen commit | `10451638642fe4c17c2bf5cb7ea3c7f39823de0b` |
+| Frozen tag | `mutqan-2.0-controlled-staging-acceptance-20260822` |
+| Freeze branch | `codex/controlled-staging-acceptance-20260822` |
+| Source checkout used for replay | exact detached clone with `core.autocrlf=false`; `HEAD` remained the frozen commit |
+| Artifact audit | `39` checked, `0` missing, `0` checksum mismatches |
+| Staging ref | `eaawunoqdxguzlpvlxrv` |
+| Staging name | `Mutqan Staging` |
+| Region | `ap-southeast-1` |
+| Project status | `ACTIVE_HEALTHY` |
+| Created at | `2026-08-22T10:57:17.283684Z` |
+| Database host | `db.eaawunoqdxguzlpvlxrv.supabase.co` |
+| PostgreSQL | hosted `17.6.1.155`; SQL `server_version=17.6` |
+| Credentials | project-specific staging keys; never copied to source or committed |
+| Production deny target | `mzpohntjotgeeaukwnbz`; not used for SQL, Auth, Storage, Functions or application smoke |
 
-Older repository documents call `mzpohntjotgeeaukwnbz` an approved
-staging/demo target. Current environment evidence conflicts with that label: the
-same project is now bound to the production application environment and
-`mutqan-sa.com`. The older label is therefore insufficient authority for a
-schema replay.
+Before the first SQL statement, the management plane and an independent
+project lookup agreed on the staging ref, name, region, database host, version,
+creation time and healthy status. Project-specific API checks then reported:
 
-After explicit user approval, the management plane was used only to request the
-named data-less Preview Branch and to list branches after the failure. The
-request was rejected by the plan entitlement before resource allocation. The
-checkout was not relinked to production, no second project was substituted, and
-no plan purchase or upgrade was attempted because that would require separate
-commercial authority.
+- `0` Auth users;
+- `0` Storage buckets;
+- `0` exposed Data API paths;
+- `0` Edge Functions;
+- no Supabase migration ledger;
+- no public relations.
 
-## C. Applied manifest
+The first SQL statement was catalog-only and independently confirmed `0` Auth
+users, `0` buckets, `0` public relations and no migration ledger. The target was
+therefore a newly created, non-production project containing no customer data.
 
-Nothing was applied to hosted Supabase. The isolated replay audit was reopened
-read-only and every one of its 39 source files was rehashed: `39 checked`,
-`0 missing`, `0 mismatched`. The temporary PostgreSQL 17 evidence server was
-then stopped.
+## C. Hosted replay result
 
-| Version | Name | SHA-256 | Accepted disposition | Hosted result |
+Replay order:
+
+1. non-ledger bootstrap for `internal.runtime_secrets`;
+2. historical baseline `00000000000000`;
+3. the 24 June migrations;
+4. the evidence-backed business prerequisite fixture for migration 139;
+5. actual intake migration `20260706100734` exactly once;
+6. ledger-only historical alias `146`, pointing to the same recovered bytes;
+7. recovered `147`, `148`, and timestamped `149`;
+8. Wave 0;
+9. the three P0 migrations.
+
+All executed source files matched their frozen SHA-256 values. Client-only
+`\set ON_ERROR_STOP` lines were removed only by an in-memory execution adapter;
+the accepted files were not edited. The five recovered ledger artifacts retained
+their recorded provenance and checksums from the frozen recovery manifest.
+
+Final migration ledger: `34` rows.
+
+| Version class | Result |
+| --- | --- |
+| Baseline | applied and ledgered |
+| June history | all applied and ledgered in timestamp order |
+| Intake actual `20260706100734` | executed once and ledgered |
+| Intake alias `146` | ledger-only reconciliation; not executed twice |
+| Recovered `147`, `148`, timestamped `149` | applied and ledgered |
+| Wave 0 | applied and ledgered |
+| P0 central authority/provisioning | applied and ledgered |
+| P0 runtime-secret reconciliation | applied and ledgered |
+| P0 PM explicit authority | applied and ledgered |
+
+The hosted exact-file assertions all passed:
+
+- `wave0_rpc_surface.sql`;
+- `p0_runtime_secret_reconciliation.sql`;
+- `p0_pm_snapshot_authority.sql`;
+- `p0_authority_adversarial.sql`;
+- payment concurrency setup/call/assert fixtures.
+
+## D. Runtime-secret and PM trust boundaries
+
+`internal.runtime_secrets` was bootstrapped before the historical baseline,
+then reconciled by the forward P0 migration. Final state:
+
+- owner `postgres`;
+- RLS enabled;
+- zero rows;
+- zero permissive policies;
+- no table `SELECT` for `anon`, `authenticated` or `service_role`;
+- no need to edit an already-applied baseline.
+
+The Supabase linter reports the table as “RLS enabled, no policy” at `INFO`.
+That is intentional fail-closed behavior, not a missing-access defect.
+
+The PM snapshot authority change also passed on hosted PostgreSQL:
+
+- the implementation is `internal.pm_build_task_execution_snapshot(uuid)`;
+- only `postgres` can execute the implementation;
+- the public wrapper has explicit authenticated/service routing;
+- neither implementation nor wrapper trusts `pg_trigger_depth()`;
+- trigger synchronization calls the internal builder explicitly;
+- the retired `asset_groups` dependency was not revived.
+
+## E. Real adversarial actor fixtures
+
+All fixtures were synthetic and staging-only.
+
+| Actor/path | Hosted result |
+| --- | --- |
+| Anonymous table access | denied/empty as designed |
+| Normal tenant A user | saw only tenant A rows |
+| Tenant A user targeting tenant B | denied or empty; no cross-tenant state change |
+| Tenant B user | saw only tenant B rows |
+| Tenant admin | tenant-scoped management and governed approvals passed |
+| Platform admin | explicit cross-tenant platform access passed |
+| Service role | explicit service routes passed |
+| Inactive user with an existing JWT | central active check became false; assets/work orders became empty; protected RPC denied |
+| Inactive user password login | Auth returned `user_banned` |
+| Tenant-admin profile reactivation attempt | rejected; protected fields require the managed-user service |
+| Authorized reactivation/unban | new session restored only after both profile and Auth state were reconciled |
+
+### Provisioning
+
+- anonymous provisioning: denied;
+- normal unapproved user: denied; one-time approval required;
+- caller-controlled `p_trial_days=99`: denied for normal and service callers;
+- caller-controlled `p_assign_caller_as_admin=true`: denied for service caller;
+- approved signup-style caller: provisioned Tenant A, consumed the approval,
+  received `tenant_admin`, and used the plan-derived seven-day trial;
+- service provisioning: provisioned Tenant B with plan-derived seven-day trial;
+- the approval was single-use.
+
+### Work orders and governance
+
+- anonymous start: denied at runtime;
+- tenant A user against tenant B work order: denied;
+- standard start without governance: failed closed;
+- caller-set workflow GUC/direct sensitive-field patch: denied;
+- explicit tenant-admin governance authority limit: required before approval;
+- approved direct lifecycle: start → technician complete → supervisor →
+  engineer → reporter closure → completed;
+- rejection, cancellation and governance-rejection branches: passed and were
+  state preserving;
+- emergency override: start → post-action completion → approval passed;
+- governance action tokens: no token, wrong token, wrong actor, expired token
+  and replay were denied; the intended actor succeeded once.
+
+### PM direct and work-order-triggered paths
+
+Using real hosted JWTs:
+
+- anonymous wrapper/start: denied;
+- tenant B against tenant A task: denied;
+- tenant A assignee built the snapshot, started and completed the direct task;
+- service role reached only the checked public wrapper;
+- `wo_start` and `wo_complete` on a preventive work order moved its related PM
+  task to `completed`;
+- both direct and work-order-triggered tasks retained a persisted
+  `snapshot_type=pm_execution` snapshot.
+
+### Payment activation
+
+Two overlapping activation calls with the same payment reference both
+succeeded idempotently and persisted exactly one invoice and one subscription.
+Two subsequent service-role replays returned the same IDs with
+`idempotent_replay=true`. A conflicting amount for the same reference was
+rejected and did not create competing state.
+
+## F. Public capability-token acceptance
+
+| Surface | Valid case | Invalid/revoked/no token | Cross-tenant/object | Reuse |
 | --- | --- | --- | --- | --- |
-| `fixture-local-stubs` | recovered Supabase schema stub | `37c6cd8c8ca1d4395b7e8d95dda78b89c92645e6f7559426d25dfd3174bc4c15` | local compatibility fixture only | not run |
-| `fixture-local-runtime` | Supabase runtime compatibility | `a71f4f6f01f295db2334322ec09ab72910db4340ec759b01017d10d6d42e8be3` | local compatibility fixture only | not run |
-| `bootstrap-runtime-secrets` | baseline prerequisite | `23370da8d777d680889617cf0339e034b0bbb52a7942284ce4bd8a7896511676` | non-ledger bootstrap | not run |
-| `00000000000000-source` | baseline | `18e862e39faaef5ca0cc88124b324a923c71b2f23e89a846c9765561fed5f541` | historical source | not applied |
-| `00000000000000-executed` | generated PostgreSQL-only baseline | `a1356a93d9ca48a64bdfba07e76ff991dd59b2a34b4d83303d16d7e048962eef` | local proof only; never a hosted migration | not run |
-| `20260602213839` | hospital lite report foundation | `87f9bb0e54b12776c062d4f298f53688963294d873627111c284cbc605bfb5c2` | migration | not applied |
-| `20260602220332` | 132 hospital lite set modules | `0eefe4d4f092c69c4ee6c06f0f4792191cec30b9c3b5f7bfb5b2b63c674b0bd7` | migration | not applied |
-| `20260603052554` | 133 hospital lite public portal phase 3 | `48fc35e58c65397500fd78cc8868e7bb2cbfd03c04862c51db595125326a828b` | migration | not applied |
-| `20260603072505` | 134 hospital lite technician RLS | `1ab707e2f0f8acc7c45f1f890077490dea92bb33fa89ade9dc724e50657cf792` | migration | not applied |
-| `20260603101927` | 135 hospital lite PDF phase 6 | `8e9e5a691625a5436f7592cb42fde6d7e68c05290a1cd91e648b2a9da92f3682` | migration | not applied |
-| `20260603105715` | 136 RLS fix A1 work-order costs | `236f930aadf9ababd5fce9eea02bf6d73a468d1c49fa68309873c20c98b995f1` | migration | not applied |
-| `20260603105732` | 136 RLS fix A2 custom roles | `97a966bf451b5735c897f4d7866cea19e3a650aa0688c340c626626314bb32bb` | migration | not applied |
-| `20260603105742` | 136 RLS fix A3 work-order parts | `bd294e93102712af670210a50984bfdb8eb901b4e7b754fb944d9112a2b48b16` | migration | not applied |
-| `20260603111244` | 137 RLS fix A4 work orders | `8d1369b8f8671cb50f39d202208b8aa85fb263c5aaa3b3d53b6bc8340d845140` | migration | not applied |
-| `20260603111253` | 138 demo cleanup | `63718e909cae045c597372d9b1c10fa73632efd11f41280347355cef0ef8bb60` | migration | not applied |
-| `fixture-20260603203027` | external hospital tenant prerequisite | `a9d66d4493e9eb8c03c47720d4fb662aca89793a1b3ad404e94bd8f4b8081af3` | staging fixture, not history | not run |
-| `20260603203027` | 139 hospital lite mode | `dfb1563114ece0b6a92006ecb11e491586677ca7e13e1f2f3b2c492f5d82d8a5` | migration | not applied |
-| `20260620193211` | public report photo RLS fix | `e91d97b85cad5575a9e49bf7c0a92e57303ce4f4ba2c0e246e1eace332223593` | migration | not applied |
-| `20260620200930` | definer view/dead function fix | `778443fdd82ba4cffefcf724da0f33cb5b981de54a230087d4a49c70f8f40362` | migration | not applied |
-| `20260621094216` | 142 PM engine foundation | `c6e04f9fe844444158d0aa49f53b45abdcc1f958d5309f3578a49c515ab09cfa` | migration | not applied |
-| `20260621094238` | 143 blackout seed | `8e2336721f109584c9af3cf76c2636a4644b2826b7e5aa7d942e17e5addc614c` | migration | not applied |
-| `20260622064857` | 144 PM generator rewrite | `9d23c8c1e889d8bfeab42ae6a7c914cc4789fc54baa4f2df164d308b77375310` | migration | not applied |
-| `20260622072258` | 145 blackout label fix | `f6f83eb48c9f68a61822e29197c4bc940c37554763740c62b1f45720e657fef8` | migration | not applied |
-| `20260627113236` | field governance wave 1 | `0540859f6fa3f4137137a79178c2a9c19bf9df9be0c8471c7e8e4072e24d68ea` | migration | not applied |
-| `20260627142423` | field governance approval matrix | `94b40a695ca606a79e3829cffc2951cd16eb9623108f27be4973313cc42d7675` | migration | not applied |
-| `20260627144744` | field governance SLA pause | `eaf072cd42695d6f57b9738d2ca726cf8124cabcb1b31e68186faa187fb83710` | migration | not applied |
-| `20260627194156` | field governance decision queue | `93281d5b8f6e467c6910bf946742ebce14bf24a34859d1594186f6762df7f31c` | migration | not applied |
-| `20260627202142` | field governance delegation | `46ef2158dd38dfc2550374366f19529a39c6d467fed63ad44790e1ad69551412` | migration | not applied |
-| `20260628181326` | field governance WhatsApp approvals | `08f20163c572196ec6995d2a2e340ac2dc59ca17d918cc574dc7f2cae06d98d5` | migration | not applied |
-| `20260628182408` | governance token pgcrypto fix | `0cbd5344c50f6f70c2de9c7c11369ed75044294a83c9a5ca4635a0472cbdcff7` | migration | not applied |
-| `20260706100734` | intake foundation | `47d035ae20445379ddfaf258ff6d75472fa397a6c150665f75a5c1094b947822` | actual historical execution | not applied |
-| `146` | intake foundation | `47d035ae20445379ddfaf258ff6d75472fa397a6c150665f75a5c1094b947822` | ledger alias only; never execute twice | not recorded |
-| `147` | rounds v0 | `acc450cf9d6df5886419f68ec19f7e059a623313d3e2ea90f6395ba00b796f1d` | recovered migration | not applied |
-| `148` | post-demo print and round routing | `f3a8ae95dc4816174b1c3d2e599cba62700955e0689dc69494ed30143a805871` | recovered migration | not applied |
-| `20260707085234` | 149 facilities/locations | `530ee417f06e0e7504bf95f95d0f36d909c93bbe3ae90d79f6f2315638386467` | recovered migration | not applied |
-| `20260820234813` | Wave 0 RPC/PM hardening | `25d519df50c81ba7331b9f823d0cbf535e3f1c3dbd22de236b2eb8129601a7d3` | new forward migration | not applied |
-| `20260821013641` | P0 central authority/provisioning | `5ab552080198f073a5fc30b49cc05dcee9cfe350942a3b355daaae17dbbb86e9` | new forward migration | not applied |
-| `20260821014202` | P0 runtime-secret reconciliation | `a7e556b225ae1dc6867b67f42d2c9a35008b929eda99ed5ed8ffdd55d23f6d1c` | new forward migration | not applied |
-| `20260821014205` | P0 PM explicit authority | `9bde9a93cb2804a1500287b37207ae253c0394b3a612a6f73d838583db997dc2` | new forward migration | not applied |
+| `get_public_tenant_data` | returned Tenant A context | returned no row | tenant derived from token | reusable portal token by design |
+| `submit_public_work_order` | created scoped public work order | rejected | Tenant B asset rejected | reusable portal token created a second distinct report by design |
+| `get_public_work_order_status` | returned minimal status | returned `null` | bound to high-entropy tracking token | read-only |
+| `create_intake_report_from_public_token` | created collecting report | rejected | tenant derived from token | creates a new report by design |
+| `submit_intake_report` | created one review draft | wrong report token rejected | Tenant B asset rejected | replay returned the same draft with `already_exists=true` |
+| governance decision action token | intended actor succeeded | blank, wrong, expired and wrong-actor rejected | bound to governance/work order/actor | second use rejected |
 
-Accepted test artifacts, all not run against hosted Supabase:
+The public portal UI also loaded Tenant A through the token and created a real
+synthetic report in a browser.
 
-| Test | SHA-256 |
-| --- | --- |
-| `wave0_rpc_surface.sql` | `8e5d8a94a8b7c3fc64bb230346ed05e304f5cfa33b07a9084fc3891565800317` |
-| `p0_authority_adversarial.sql` | `1cab44153242c90fddad1f431c95a1a71ed2e65438ca84c6c1bbc321a6503d43` |
-| `p0_runtime_secret_reconciliation.sql` | `6d362be8509e7881d8d34093cf464a55a3e7f7709e7f5685fc986847eba65209` |
-| `p0_pm_snapshot_authority.sql` | `83cb654a072af7a1af608c53c2be13b84cd32dfee864dd3ef4ac51ff2cb63cff` |
-| `p0_payment_concurrency_setup.sql` | `c8f00c605de579963c548cb7c808ad6f9475d7de08338548a15ed5e858bbc441` |
-| `p0_payment_activation_call.sql` | `2ea2a6606e2845dd83f032952e7c0a26fab02c1680fc6ed0c71cb4e7ee9295ef` |
-| `p0_payment_concurrency_assert.sql` | `66edfa98df38daa719c7d30a28b19097560f68614194df75004e0640c9d15702` |
+## G. Application smoke
 
-## D. Hosted compatibility findings
+The frozen source was built locally with staging-only public environment values;
+no `.env` file was written and no application was deployed.
 
-No hosted authority graph was inspected or changed because the target failed
-classification. Therefore the following required differences remain unproven:
+- production build: passed (`3812` modules; PWA service worker generated);
+- Arabic landing and login pages: rendered;
+- real password login for tenant A technician: passed;
+- dashboard: loaded Tenant A and staging fixture counts;
+- work-order list: loaded Tenant A work orders only;
+- public portal: loaded token-scoped tenant context and submitted a report;
+- browser console: no application error in the accepted flows;
+- existing chunk-size and Browserslist-age warnings remain non-blocking debt.
 
-- real `auth`, `storage`, `vault`, `extensions`, `realtime` and managed runtime
-  ownership/placement versus the local compatibility fixtures;
-- Data API grants as a separate layer from RLS;
-- permissive/restrictive policy interaction under PostgREST sessions;
-- hosted `anon`, authenticated and service-role JWT behavior;
-- Auth signup trigger execution and ban/session behavior;
-- runtime-secret access through the hosted Vault/runtime boundary.
+## H. Signup acceptance
 
-The current Supabase changelog adds two relevant guardrails: extension version
-pinning is no longer authoritative, and the hosted `realtime` schema is locked
-against modification. The accepted manifest contains no explicit extension
-version pin and no `realtime.*` mutation, but hosted verification is still
-required.
+The application calls `supabase.auth.signUp`, then email/OTP verification, then
+`complete_pending_registration`. The database half is fail-closed and requires
+a bound one-time provisioning approval. Direct approval/provisioning tests
+passed.
 
-## E. Security acceptance
+The hosted public `/auth/v1/signup` request did not pass acceptance. A fresh
+synthetic address returned:
 
-| Actor | Hosted result |
-| --- | --- |
-| anon | not run |
-| active authenticated | not run |
-| inactive authenticated | not run |
-| tenant A / tenant B | not run |
-| tenant admin | not run |
-| platform admin | not run |
-| service role | not run |
+- HTTP `429`;
+- `over_email_send_rate_limit`;
+- Auth log action `user_confirmation_requested`;
+- no accepted signup session and no new persistent Auth user.
 
-No positive or negative hosted security claim is made.
+Admin-created confirmed users prove login and database authority, but they do
+not substitute for the mandatory public email/OTP signup path.
 
-## F. Public-by-design acceptance
+## I. Final hosted authority graph
 
-The source review identified these current token/public surfaces. Their intended
-contracts are preserved; no global active-user policy was weakened.
+| Item | Final staging state |
+| --- | ---: |
+| Public tables | `74` |
+| Public tables with RLS | `74` |
+| Public tables without RLS | `0` |
+| Public views | `3` |
+| Public policies | `269` |
+| Public functions | `193` |
+| Public `SECURITY DEFINER` functions | `169` |
+| Anonymous-executable `SECURITY DEFINER` functions | `49` |
+| `CREATE` on public schema for PUBLIC/anon/authenticated/service | all `false` |
+| Migration rows | `34` |
+| Runtime-secret rows | `0` |
 
-| Surface | Intended authority | Valid token | Invalid/expired | Wrong tenant/object | No token/reuse |
-| --- | --- | --- | --- | --- | --- |
-| `get_public_tenant_data` | anon portal token; tenant derived server-side | not run | not run | not run | not run |
-| `submit_public_work_order` | anon portal token; scoped submission | not run | not run | not run | not run |
-| `get_public_work_order_status` | anon high-entropy tracking token; minimal response | not run | not run | not run | not run |
-| `create_intake_report_from_public_token` | anon intake/portal token | not run | not run | not run | not run |
-| `submit_intake_report` | report ID plus report-specific public access token | not run | not run | not run | not run |
-| `public-report-photos` | no anon Storage read; upload is intended through a service-owned function; authenticated tenant read only | not run | not run | not run | not run |
-| `consume_governance_decision_action_token` | authenticated intended actor plus single-use token | not run | not run | not run | not run |
+Installed extensions: `pg_net 0.20.4` in `public`, `pg_stat_statements 1.11`
+and `pgcrypto 1.3` in `extensions`, `supabase_vault 0.3.1` in `vault`, and
+`uuid-ossp 1.1` in `extensions`. The historical baseline installed `pg_net` in
+`public`; the linter warns about that placement. It was not moved during
+acceptance because historical extension relocation is outside this immutable
+candidate and is not the demonstrated P0 failure.
 
-The source tree references an `upload-report-photo` Edge Function, but no such
-function source exists under the current repository's `supabase/functions` or
-`api` paths. This must be reconciled as a P1 hosted-surface gap before claiming
-photo-upload acceptance; it was not patched during this blocked run.
+Supabase advisor summary:
 
-## G. Auth lifecycle
+- security: `202` notices (`201 WARN`, `1 INFO`), including `49` anonymous
+  definer grants, `129` authenticated definer grants, `21` mutable search paths,
+  the historical `pg_net` placement and disabled leaked-password protection;
+- performance: `471` notices, dominated by unused indexes, unindexed foreign
+  keys, multiple permissive policies and RLS init-plan optimization.
 
-Signup, approved provisioning, suspension, existing-session denial,
-reactivation, Auth ban/unban and JWT refresh behavior were not run. No hosted
-Auth users were created or changed.
+Authenticated execution of a deliberately designed checked RPC is not itself
+a defect. The anonymous findings required runtime classification rather than
+blanket acceptance.
 
-## H. Work-order acceptance
+## J. Demonstrated anonymous authority escape
 
-Create, assign, start, technician complete, supervisor/engineer approvals,
-reporter closure, rejection, cancellation, governance, emergency, SLA and
-legacy-compatible paths were not run against hosted staging.
+The anonymous advisor surface is not only metadata noise. Real unauthenticated
+Data API requests returned `200` for:
 
-## I. PM acceptance
+- `pm_calculate_compliance_stats(p_tenant_id)` — tenant PM totals, overdue,
+  due-soon and compliance-rate metrics;
+- `check_subscription_limits(p_tenant_id, resource_type)`;
+- `is_tenant_feature_enabled(p_tenant_id, module, feature)`;
+- `facility_location_is_valid(...)` for a known tenant/building;
+- `work_order_asset_location_is_valid(...)` for a known tenant/asset.
 
-Direct and work-order-triggered PM routes were not run against hosted staging.
-The local proof remains intact, including the postgres-only internal builder,
-checked wrapper, absence of `pg_trigger_depth()` authority and no retired
-`asset_groups` dependency.
+These helper functions accept caller-controlled tenant/object IDs and execute as
+their owner. They do not belong in the direct anonymous API. Runtime checks in
+other workflow RPCs do not repair this read/probe authority leak.
 
-## J. Payment acceptance
+The smallest safe correction is one new forward migration that:
 
-No payment handler or database authority was deployed. Hosted normal,
-idempotent, overlapping and conflict cases were not run. Historical duplicate
-production references were not touched.
+1. revokes `EXECUTE` from `PUBLIC` and `anon` on every exposed
+   `SECURITY DEFINER` function by default;
+2. explicitly re-grants only the reviewed public capability endpoints
+   (`get_public_tenant_data`, `submit_public_work_order`,
+   `get_public_work_order_status`, `create_intake_report_from_public_token`,
+   `submit_intake_report`) plus any separately justified public pricing surface;
+3. revokes direct execution of trigger/internal/derived-stat helper functions;
+4. pins safe search paths for the remaining 21 mutable-path functions;
+5. reruns the anonymous negative matrix and the valid public-token flows.
 
-## K. Application smoke results
+This must be reviewed and frozen as a new candidate. The accepted 39-artifact
+tag was not silently changed during staging acceptance.
 
-The application was not repointed. No hosted browser smoke, Arabic/English,
-RTL/LTR, suspension/reactivation or public-token flow was run. The production
-domain and environment files were left unchanged.
-
-## L. Final hosted authority graph
-
-Unavailable because no staging target passed the pre-deployment gate. No hosted
-ledger, table, RLS, policy, function, owner, ACL, search-path, extension or
-public-RPC count is reported as staging evidence.
-
-## M. Changes made during the staging mission
-
-- Frozen the reviewed foundation in commit
-  `10451638642fe4c17c2bf5cb7ea3c7f39823de0b`, branch
-  `codex/controlled-staging-acceptance-20260822`, and tag
-  `mutqan-2.0-controlled-staging-acceptance-20260822`.
-- Created a separate clean detached worktree at that commit for staging-only
-  operations; unrelated local work was not included.
-- Requested the persistent, data-less Preview Branch
-  `controlled-staging-acceptance-20260822-1045163`; Supabase rejected the
-  request before allocation because Branching is not entitled on the current
-  plan.
-- Re-listed branches and confirmed that only `main` exists after the failed
-  request.
-- No migration, application code, dependency or test was changed.
-- No remote branch, project, database object, Auth user, secret, Storage object
-  or deployment was created, resumed, linked or mutated.
-- Previous replay evidence was not invalidated; all 39 accepted source hashes
-  still match the isolated replay audit.
-
-## N. Residual risks
-
-### P0 blockers
-
-1. The parent organization lacks the Supabase Branching entitlement required
-   to create the approved isolated Preview Branch. Consequently there is no
-   preview project/ref or branch-specific credential set, and customer-data
-   isolation cannot be proven empirically.
-2. Consequently, none of the mandatory hosted Auth, RLS, public-token,
-   tenant-isolation, workflow, PM, payment or application acceptance evidence
-   exists yet.
+## K. P1/P2 findings
 
 ### P1
 
-- The repository references a service-owned `upload-report-photo` function but
-  does not contain its deployable source.
-- Hosted Auth/session and runtime-secret behavior remains unknown until a real
-  staging project is available.
+- `upload-report-photo` remains referenced by the database/storage design but
+  its deployable function source is absent. It did not block the mandatory P0
+  paths and was not expanded during this mission.
+- Enable leaked-password protection and deliberately configure staging SMTP/
+  email rate limits before the next signup run.
+- Classify the `pg_net` public-schema placement and the remaining definer grants
+  as an explicit allowlist, not by inherited defaults.
 
 ### P2
 
-- CLI `2.95.3` is behind the available `2.98.2`; no upgrade was made because
-  the mission forbids unrelated dependency/tool upgrades. The exact accepted
-  CLI version should be selected deliberately for the later controlled run.
-- Existing application bundle-size and Browserslist-age warnings remain
-  non-blocking engineering debt.
+- Resolve performance-advisor findings in measured batches; they are not the
+  cause of this verdict.
+- Deliberately select/upgrade the Supabase CLI after candidate acceptance; the
+  replay used `2.95.3` and did not perform an unrelated tool upgrade.
+- Address bundle splitting and refresh Browserslist data separately.
 
-### Production-data debt
+## L. Production boundary and next acceptance
 
-- The previously observed duplicate payment-reference groups remain a separate
-  production reconciliation decision. This mission did not query, clean or
-  mutate them.
+No production SQL, Auth, Storage, Edge Function, migration repair, merge,
+deployment or data cleanup was performed. The staging fixtures remain synthetic
+and contain no customer data.
 
-## O. Proposed production rollout plan — draft only
+The next controlled staging candidate needs only:
 
-This plan must not begin until a complete hosted staging run is accepted.
+1. the reviewed anonymous-definer allowlist/search-path forward migration;
+2. branch-specific Auth email capacity or SMTP configuration;
+3. a fresh replay/forward-apply of that new candidate;
+4. rerun of the anonymous public surface, valid public-token paths, and full
+   signup → OTP → approved provisioning flow;
+5. a clean advisor diff proving that any remaining grants are intentional.
 
-1. Freeze the accepted files in a reviewed immutable Git commit/tag and recheck
-   all manifest hashes.
-2. Record the production project ref, current ledger, PostgreSQL/runtime graph,
-   named operators, maintenance window and stop authority.
-3. Create and verify a current backup/recovery point before any schema action.
-4. Confirm all recovered historical ledger versions already exist with the
-   expected semantics. Do not execute intake twice and do not repair history
-   blindly.
-5. Apply database changes first and only in order:
-   `20260820234813` → `20260821013641` → `20260821014202` →
-   `20260821014205`.
-6. Stop immediately on checksum drift, unexpected ledger entries, lock/timeout,
-   extension-placement difference, privilege expansion, signup-trigger failure,
-   cross-tenant access, public-token scope escape, PM mismatch or payment-binding
-   discrepancy.
-7. Run the post-P0 catalog/ACL/RLS graph comparison and the complete actor,
-   public-token, Auth, work-order, PM and payment fixtures.
-8. Only after database verification, deploy the dependent payment/admin server
-   handlers; then deploy the application bundle. Never deploy API first.
-9. Run Arabic/English application smokes, suspension/reactivation, PM and public
-   token flows against production-safe fixtures.
-10. If availability or correctness fails, restore through the approved recovery
-    point where necessary and use a reviewed compensating forward migration.
-    Never edit or delete applied historical migration content as rollback.
-
-## Smallest action needed to resume
-
-Enable Supabase Branching for the organization that owns
-`mzpohntjotgeeaukwnbz` (Pro or above), then rerun creation of the already named
-persistent branch without `--with-data`. No further Git-freeze approval is
-needed: the accepted foundation is already pinned by commit and tag. The next
-checkpoint remains branch ref and branch-specific credential capture, followed
-by isolation proof, before any SQL.
+Production deployment remains a separate reviewed decision. Nothing in this
+report authorizes a production migration or merge.
