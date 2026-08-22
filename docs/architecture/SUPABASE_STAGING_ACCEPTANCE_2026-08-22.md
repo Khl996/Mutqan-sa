@@ -4,28 +4,37 @@
 
 **STAGING NO-GO**
 
-The mandatory environment-identity gate failed before the first remote SQL
-statement. No Supabase database, Auth user, migration ledger, secret, function,
-Storage object or application deployment was changed.
+The accepted 39-artifact foundation was frozen successfully, but the mandatory
+Preview Branch creation gate failed before the first remote SQL statement.
+Supabase returned HTTP `402` with `entitlement_required` / `branching_limit`:
+Branching is available only on Pro or above for the current organization. No
+Preview Branch was allocated and no Supabase database, Auth user, migration
+ledger, secret, function, Storage object or application deployment was changed.
 
 ## B. Staging identity
 
-No controlled staging project could be proven.
+No controlled staging branch could be created or proven.
 
 | Evidence | Result |
 | --- | --- |
-| Current local Supabase link | `mzpohntjotgeeaukwnbz` (`Mutqan A`, `ap-southeast-1`, `ACTIVE_HEALTHY`) |
+| Parent Supabase project | `mzpohntjotgeeaukwnbz` (`Mutqan A`); management-plane use only during this attempt; production SQL remained forbidden |
 | Local application environment | Same ref; `VERCEL_ENV=production`, `VERCEL_TARGET_ENV=production`, `VITE_APP_URL=https://mutqan-sa.com` |
 | Vercel production environment file | Same Supabase ref |
-| Preview branches for `mzpohntjotgeeaukwnbz` | Only `main`, same project ref; no isolated preview branch |
-| Other accessible Supabase project | `siyirdaucrdjqqdeglpf` (`Mutqan ai office`, `ap-northeast-1`, `INACTIVE`) |
-| Evidence that the other project is staging | None in the repository, local environments, Git history or project name/status |
-| Evidence that either candidate contains no customer production data | Not established |
+| Requested Preview Branch name | `controlled-staging-acceptance-20260822-1045163` |
+| Requested branch mode | Persistent; `--with-data` was omitted, so the request did not authorize or request production-data cloning |
+| Branch creation result | Rejected before allocation: HTTP `402`, `entitlement_required`, feature `branching_limit`; Pro or above required |
+| Preview branches after the attempt | Exactly one: default `main`, project ref `mzpohntjotgeeaukwnbz`; no additional branch exists |
+| Preview branch project/ref | Not allocated |
+| Branch-specific credentials | Not allocated |
+| Customer-data isolation | No branch exists to inspect; production data was neither cloned nor queried |
 | Hosted PostgreSQL/runtime inventory | Not queried because no staging target passed identity classification |
 | Starting migration ledger | Not queried because no staging target passed identity classification |
-| CLI | Supabase CLI `2.95.3`; it reported `2.115.0` available. No upgrade was performed. |
-| Git HEAD | `0b9c7ff1c46fe4829ea5d4319d0a0c7d54cbcbf6` on `codex/pilot-sales-ops-snapshot` |
-| Reviewed artifact state in Git | Not frozen: the accepted migration, test, verification and architecture paths are untracked at this HEAD |
+| CLI | Supabase CLI `2.95.3`; it reported `2.98.2` available. No upgrade was performed. |
+| Frozen Git commit | `10451638642fe4c17c2bf5cb7ea3c7f39823de0b` (`Freeze controlled staging replay acceptance`) |
+| Frozen Git branch | `codex/controlled-staging-acceptance-20260822` |
+| Immutable review tag | `mutqan-2.0-controlled-staging-acceptance-20260822` → the frozen commit |
+| Isolation from unrelated local work | The freeze was committed with only reviewed migration, test, verification, architecture and dependent P0 paths; 79 unrelated worktree entries remained unstaged and outside the commit |
+| Clean replay checkout | Detached clean worktree at the frozen commit; no local production link or credentials were copied into it |
 
 Older repository documents call `mzpohntjotgeeaukwnbz` an approved
 staging/demo target. Current environment evidence conflicts with that label: the
@@ -33,9 +42,12 @@ same project is now bound to the production application environment and
 `mutqan-sa.com`. The older label is therefore insufficient authority for a
 schema replay.
 
-No attempt was made to relink the checkout, unpause the second project, create
-a paid project, or create a Supabase Preview Branch. Any of those actions needs
-an explicit staging designation and, where applicable, cost/resource approval.
+After explicit user approval, the management plane was used only to request the
+named data-less Preview Branch and to list branches after the failure. The
+request was rejected by the plan entitlement before resource allocation. The
+checkout was not relinked to production, no second project was substituted, and
+no plan purchase or upgrade was attempted because that would require separate
+commercial authority.
 
 ## C. Applied manifest
 
@@ -190,23 +202,33 @@ public-RPC count is reported as staging evidence.
 
 ## M. Changes made during the staging mission
 
+- Frozen the reviewed foundation in commit
+  `10451638642fe4c17c2bf5cb7ea3c7f39823de0b`, branch
+  `codex/controlled-staging-acceptance-20260822`, and tag
+  `mutqan-2.0-controlled-staging-acceptance-20260822`.
+- Created a separate clean detached worktree at that commit for staging-only
+  operations; unrelated local work was not included.
+- Requested the persistent, data-less Preview Branch
+  `controlled-staging-acceptance-20260822-1045163`; Supabase rejected the
+  request before allocation because Branching is not entitled on the current
+  plan.
+- Re-listed branches and confirmed that only `main` exists after the failed
+  request.
 - No migration, application code, dependency or test was changed.
-- No remote resource was created, resumed, linked, mutated or deployed.
-- This evidence report was added locally.
-- Previous evidence was not invalidated; all 39 accepted source hashes still
-  match the isolated replay audit.
+- No remote branch, project, database object, Auth user, secret, Storage object
+  or deployment was created, resumed, linked or mutated.
+- Previous replay evidence was not invalidated; all 39 accepted source hashes
+  still match the isolated replay audit.
 
 ## N. Residual risks
 
 ### P0 blockers
 
-1. No Supabase project/ref is explicitly designated and provable as staging
-   with no customer production data.
-2. The production-bound ref is the current link; there is no isolated Preview
-   Branch. Using it would violate the mission boundary.
-3. The reviewed chain is checksum-stable but not frozen in Git: the accepted
-   migration/test/verification paths are untracked at the reported HEAD.
-4. Consequently, none of the mandatory hosted Auth, RLS, public-token,
+1. The parent organization lacks the Supabase Branching entitlement required
+   to create the approved isolated Preview Branch. Consequently there is no
+   preview project/ref or branch-specific credential set, and customer-data
+   isolation cannot be proven empirically.
+2. Consequently, none of the mandatory hosted Auth, RLS, public-token,
    tenant-isolation, workflow, PM, payment or application acceptance evidence
    exists yet.
 
@@ -219,7 +241,7 @@ public-RPC count is reported as staging evidence.
 
 ### P2
 
-- CLI `2.95.3` is behind the available `2.115.0`; no upgrade was made because
+- CLI `2.95.3` is behind the available `2.98.2`; no upgrade was made because
   the mission forbids unrelated dependency/tool upgrades. The exact accepted
   CLI version should be selected deliberately for the later controlled run.
 - Existing application bundle-size and Browserslist-age warnings remain
@@ -262,13 +284,9 @@ This plan must not begin until a complete hosted staging run is accepted.
 
 ## Smallest action needed to resume
 
-Provide one of the following with explicit confirmation that it contains no
-customer production data:
-
-1. an existing Supabase staging project ref and its intended staging app URL;
-   or
-2. authorization to create a dedicated Supabase Preview Branch/project,
-   including acceptance of any resource cost.
-
-Then approve freezing the accepted artifact set into a dedicated reviewed Git
-commit/ref before the first hosted migration.
+Enable Supabase Branching for the organization that owns
+`mzpohntjotgeeaukwnbz` (Pro or above), then rerun creation of the already named
+persistent branch without `--with-data`. No further Git-freeze approval is
+needed: the accepted foundation is already pinned by commit and tag. The next
+checkpoint remains branch ref and branch-specific credential capture, followed
+by isolation proof, before any SQL.
