@@ -8,16 +8,16 @@ import {
 } from 'lucide-react'
 
 const typeConfig = {
-    auth: { label: { ar: 'مصادقة', en: 'Auth' }, color: 'bg-blue-500/10 text-blue-500', icon: Shield },
-    create: { label: { ar: 'إنشاء', en: 'Create' }, color: 'bg-green-500/10 text-green-500', icon: CheckCircle2 },
-    update: { label: { ar: 'تحديث', en: 'Update' }, color: 'bg-amber-500/10 text-amber-500', icon: Settings },
-    delete: { label: { ar: 'حذف', en: 'Delete' }, color: 'bg-red-500/10 text-red-500', icon: AlertTriangle },
-    read: { label: { ar: 'قراءة', en: 'Read' }, color: 'bg-purple-500/10 text-purple-500', icon: Eye },
-    export: { label: { ar: 'تصدير', en: 'Export' }, color: 'bg-cyan-500/10 text-cyan-500', icon: FileText },
-    import: { label: { ar: 'استيراد', en: 'Import' }, color: 'bg-teal-500/10 text-teal-500', icon: FileText },
-    config: { label: { ar: 'إعدادات', en: 'Config' }, color: 'bg-indigo-500/10 text-indigo-500', icon: Settings },
-    warning: { label: { ar: 'تحذير', en: 'Warning' }, color: 'bg-orange-500/10 text-orange-500', icon: AlertTriangle },
-    error: { label: { ar: 'خطأ', en: 'Error' }, color: 'bg-red-500/10 text-red-500', icon: AlertTriangle },
+    auth: { label: { ar: 'مصادقة', en: 'Auth' }, color: 'bg-info/10 text-info', icon: Shield },
+    create: { label: { ar: 'إنشاء', en: 'Create' }, color: 'bg-success/10 text-success', icon: CheckCircle2 },
+    update: { label: { ar: 'تحديث', en: 'Update' }, color: 'bg-warning/10 text-warning', icon: Settings },
+    delete: { label: { ar: 'حذف', en: 'Delete' }, color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
+    read: { label: { ar: 'قراءة', en: 'Read' }, color: 'bg-muted/20 text-muted-foreground', icon: Eye },
+    export: { label: { ar: 'تصدير', en: 'Export' }, color: 'bg-secondary/10 text-secondary', icon: FileText },
+    import: { label: { ar: 'استيراد', en: 'Import' }, color: 'bg-secondary/10 text-secondary', icon: FileText },
+    config: { label: { ar: 'إعدادات', en: 'Config' }, color: 'bg-info/10 text-info', icon: Settings },
+    warning: { label: { ar: 'تحذير', en: 'Warning' }, color: 'bg-warning/10 text-warning', icon: AlertTriangle },
+    error: { label: { ar: 'خطأ', en: 'Error' }, color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
 }
 
 export default function AuditLogsPage() {

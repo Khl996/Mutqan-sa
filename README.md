@@ -50,6 +50,20 @@ The following has been proven on staging:
 
 The latest successful RLS runtime verification produced 118 pass checks.
 
+## Unit Tests
+
+Fast, dependency-free unit tests run with Vitest and cover the authorization
+core (role → permission matrix, role normalization) and the WhatsApp message
+utilities. They run on any platform (no PowerShell or staging secrets needed):
+
+```bash
+npm run test:unit    # run once
+npm run test:watch   # watch mode
+npm test             # unit tests + Arabic-text (mojibake) check
+```
+
+Add new tests as `*.test.ts` next to the code they cover under `src/`.
+
 ## Runtime Verification Commands
 
 Run the launch-gate prerequisite check:

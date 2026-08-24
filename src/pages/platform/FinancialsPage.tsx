@@ -285,7 +285,7 @@ export default function FinancialsPage() {
                                     <span className="font-mono">{formatSAR(viewInvoice.subtotal)}</span>
                                 </div>
                                 {viewInvoice.discount_amount > 0 && (
-                                    <div className="flex justify-between text-green-600">
+                                    <div className="flex justify-between text-success">
                                         <span>{t('billing.financials.discount')}</span>
                                         <span className="font-mono">-{formatSAR(viewInvoice.discount_amount)}</span>
                                     </div>

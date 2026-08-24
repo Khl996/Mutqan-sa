@@ -306,7 +306,7 @@ export default function MaintenancePage() {
         return (
             <Card>
                 <CardContent className="py-12 text-center">
-                    <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-amber-600" />
+                    <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-warning" />
                     <p className="font-cairo text-muted-foreground">{copy.moduleDisabled}</p>
                 </CardContent>
             </Card>
@@ -563,7 +563,7 @@ function Metric({
     icon: React.ElementType
     tone?: 'default' | 'success' | 'warning' | 'danger'
 }) {
-    const toneClass = tone === 'success' ? 'bg-emerald-500/10 text-emerald-700' : tone === 'warning' ? 'bg-amber-500/10 text-amber-700' : tone === 'danger' ? 'bg-rose-500/10 text-rose-700' : 'bg-primary/10 text-primary'
+    const toneClass = tone === 'success' ? 'bg-success/10 text-success' : tone === 'warning' ? 'bg-warning/10 text-warning' : tone === 'danger' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
     return (
         <Card className="overflow-hidden shadow-card">
             <CardContent className="flex min-h-[132px] items-start justify-between gap-4 p-5">

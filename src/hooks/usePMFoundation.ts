@@ -7,6 +7,7 @@ export type PMJobPlanStatus = 'draft' | 'active' | 'archived'
 export type PMItemType = 'yes_no' | 'pass_fail' | 'numeric' | 'text' | 'photo' | 'signature' | 'select' | 'multi_select' | 'header'
 export type PMGenerationMode = 'per_asset' | 'batch_route'
 export type PMTriggerType = 'calendar' | 'meter' | 'condition'
+export type PMAnchorMode = 'fixed' | 'floating'
 export type PMFrequencyType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'semi_annual' | 'annual' | 'custom'
 export type PMScheduleStatus = 'draft' | 'active' | 'paused' | 'completed' | 'archived'
 export type PMPriority = 'low' | 'medium' | 'high' | 'critical'
@@ -166,6 +167,8 @@ export interface PMSchedule {
     default_priority: PMPriority
     status: PMScheduleStatus
     generation_mode: PMGenerationMode
+    anchor_mode?: PMAnchorMode
+    master_template_id?: string | null
     total_generated: number
     total_completed: number
     total_overdue: number
@@ -175,6 +178,14 @@ export interface PMSchedule {
     updated_at: string
     job_plan?: Pick<PMJobPlan, 'id' | 'code' | 'name' | 'name_ar' | 'estimated_duration_minutes' | 'total_items'> | null
     assets?: PMScheduleAsset[]
+    master_template?: { id: string; name: string; name_ar: string | null } | null
+}
+
+export interface PMScheduleForecastRow {
+    occurrence_number: number
+    due_date: string
+    deferred_by_blackout: boolean
+    blackout_label: string | null
 }
 
 export interface PMScheduleInput {
@@ -184,6 +195,7 @@ export interface PMScheduleInput {
     description?: string | null
     job_plan_id: string
     generation_mode: PMGenerationMode
+    anchor_mode?: PMAnchorMode
     trigger_type: PMTriggerType
     frequency_type: PMFrequencyType
     frequency_interval: number
@@ -406,6 +418,7 @@ function schedulePayload(input: PMScheduleInput, tenantId?: string) {
         job_plan_id: input.job_plan_id,
         primary_asset_id: input.asset_ids[0] ?? null,
         generation_mode: input.generation_mode,
+        anchor_mode: input.anchor_mode ?? 'fixed',
         trigger_type: input.trigger_type,
         frequency_type: input.frequency_type,
         frequency_interval: input.frequency_interval || 1,
@@ -699,6 +712,7 @@ export function usePMScheduleDetail(scheduleId: string | null) {
                 .select(`
                     *,
                     job_plan:job_plans(id, code, name, name_ar, estimated_duration_minutes, total_items),
+                    master_template:pm_master_templates(id, name, name_ar),
                     assets:pm_schedule_assets(
                         id,
                         schedule_id,
@@ -751,6 +765,32 @@ export function usePMGenerateWorkOrders() {
     return {
         generateDueWorkOrders: generateDueWorkOrders.mutateAsync,
         isGenerating: generateDueWorkOrders.isPending,
+    }
+}
+
+export function usePMScheduleForecast() {
+    const forecast = useMutation({
+        mutationFn: async ({ scheduleId, occurrences = 6 }: { scheduleId: string; occurrences?: number }) => {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.access_token) {
+                throw new Error('Not authenticated')
+            }
+
+            const { data, error } = await (supabase.rpc('pm_schedule_forecast', {
+                p_schedule_id: scheduleId,
+                p_occurrences: occurrences,
+            }) as any)
+            if (error) throw error
+            return (data ?? []) as PMScheduleForecastRow[]
+        },
+    })
+
+    return {
+        getForecast: forecast.mutateAsync,
+        forecastRows: forecast.data ?? [],
+        isForecasting: forecast.isPending,
+        forecastError: forecast.error instanceof Error ? forecast.error.message : null,
+        resetForecast: forecast.reset,
     }
 }
 

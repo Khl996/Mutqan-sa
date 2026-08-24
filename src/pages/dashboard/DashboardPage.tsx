@@ -229,7 +229,7 @@ export default function DashboardPage() {
                                         activity.status === 'new' && 'bg-info',
                                         activity.status === 'completed' && 'bg-success',
                                         activity.status === 'in_progress' && 'bg-warning',
-                                        activity.status === 'pending' && 'bg-amber-400',
+                                        activity.status === 'pending' && 'bg-warning',
                                         activity.status === 'cancelled' && 'bg-destructive'
                                     )} />
                                     <div className="flex-1 min-w-0">

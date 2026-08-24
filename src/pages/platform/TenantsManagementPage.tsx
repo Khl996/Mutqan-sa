@@ -771,7 +771,7 @@ function ManageSubscriptionModal({
                 ].filter(r => !r.hide).map((row, i) => (
                     <div key={i} className="flex justify-between text-muted-foreground">
                         <span>{row.label}</span>
-                        <span className={row.green ? 'text-green-600' : ''}>{formatSAR(Math.abs(row.val))}</span>
+                        <span className={row.green ? 'text-success' : ''}>{formatSAR(Math.abs(row.val))}</span>
                     </div>
                 ))}
                 <div className="border-t pt-2 flex justify-between font-bold text-base">
@@ -1029,7 +1029,7 @@ function ManageSubscriptionModal({
                                         type="button"
                                         onClick={() => handleActivate('trial')}
                                         disabled={isPending || !selectedPlanId}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-cairo font-bold transition-colors disabled:opacity-50"
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-cairo font-bold transition-colors disabled:opacity-50"
                                     >
                                         {engineActivate.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Timer className="w-4 h-4" />}
                                         {isRTL ? 'بدء التجربة' : 'Start Trial'}
@@ -1106,7 +1106,7 @@ function ManageSubscriptionModal({
                                         type="button"
                                         onClick={handleExtendTrial}
                                         disabled={isPending}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-cairo font-bold transition-colors disabled:opacity-50"
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg text-sm font-cairo font-bold transition-colors disabled:opacity-50"
                                     >
                                         {engineExtend.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                                         {t('billing.subscription.extend_trial')}
@@ -1195,7 +1195,7 @@ function SummaryItem({ icon, label, value, highlight }: {
                 {icon}
                 <span className="text-xs font-cairo">{label}</span>
             </div>
-            <p className={cn('text-sm font-bold font-cairo truncate', highlight ? 'text-red-600' : 'text-primary')}>
+            <p className={cn('text-sm font-bold font-cairo truncate', highlight ? 'text-destructive' : 'text-primary')}>
                 {value}
             </p>
         </div>

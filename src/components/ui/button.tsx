@@ -8,7 +8,7 @@ const buttonVariants = cva(
     {
         variants: {
             variant: {
-                default: "bg-mutqan-primary text-white hover:opacity-90",
+                default: "bg-[#0B1320] text-white hover:opacity-90 dark:bg-[#0B1320] dark:text-white",
                 destructive:
                     "bg-mutqan-danger text-white hover:opacity-90",
                 outline:

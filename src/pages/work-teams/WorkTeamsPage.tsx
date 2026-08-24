@@ -55,15 +55,15 @@ const specIcons: Record<string, React.ElementType> = {
 
 // Specialization Colors
 const specColors: Record<string, string> = {
-    electrical: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-    mechanical: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-    plumbing: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
-    hvac: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-    civil: 'bg-gray-500/10 text-gray-600 border-gray-500/20',
-    medical_equipment: 'bg-red-500/10 text-red-600 border-red-500/20',
-    it: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
-    cleaning: 'bg-pink-500/10 text-pink-600 border-pink-500/20',
-    safety: 'bg-rose-600/10 text-rose-600 border-rose-600/20',
+    electrical: 'bg-warning/10 text-warning border-warning/20',
+    mechanical: 'bg-info/10 text-info border-info/20',
+    plumbing: 'bg-secondary/10 text-secondary border-secondary/20',
+    hvac: 'bg-success/10 text-success border-success/20',
+    civil: 'bg-muted/10 text-muted-foreground border-muted/20',
+    medical_equipment: 'bg-destructive/10 text-destructive border-destructive/20',
+    it: 'bg-primary/10 text-primary border-primary/20',
+    cleaning: 'bg-secondary/10 text-secondary border-secondary/20',
+    safety: 'bg-destructive/10 text-destructive border-destructive/20',
     general: 'bg-muted/10 text-muted-foreground border-muted/20',
 }
 

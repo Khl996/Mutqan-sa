@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
     useTenantSettings,
     useUpdateSetting,
     useResetCategorySettings,
-    SETTINGS_CATEGORIES
+    SETTINGS_CATEGORIES,
+    DEFAULT_TENANT_SETTINGS,
 } from '@/hooks/useTenantSettings'
+import { useCurrentTenantId } from '@/hooks/useTenantQuery'
 import { SettingsCategory, SettingDefinition, TenantSettings } from '@/config/tenantSettings'
+import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import {
     Settings2,
@@ -16,9 +19,12 @@ import {
     Bell,
     Globe,
     QrCode,
+    FileText,
     RotateCcw,
     Loader2,
-    Info
+    Info,
+    Upload,
+    X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -30,6 +36,7 @@ const iconMap: Record<string, React.ElementType> = {
     Bell,
     Globe,
     QrCode,
+    FileText,
     Settings2,
 }
 
@@ -40,9 +47,12 @@ export default function TenantSettingsPage() {
     const { data: settings, isLoading } = useTenantSettings()
     const updateSetting = useUpdateSetting()
     const resetCategory = useResetCategorySettings()
+    const tenantId = useCurrentTenantId()
 
     const [activeCategory, setActiveCategory] = useState<SettingsCategory>('work_orders')
     const [isResetting, setIsResetting] = useState(false)
+    const [logoUploading, setLogoUploading] = useState(false)
+    const logoInputRef = useRef<HTMLInputElement>(null)
 
     const handleSettingChange = async (category: SettingsCategory, key: string, value: unknown) => {
         try {
@@ -65,6 +75,30 @@ export default function TenantSettingsPage() {
         }
     }
 
+    const handleLogoUpload = async (file: File) => {
+        if (!tenantId) return
+        setLogoUploading(true)
+        try {
+            const ext = file.name.split('.').pop() ?? 'png'
+            const path = `${tenantId}/logo.${ext}`
+            const { error } = await supabase.storage
+                .from('tenant-assets')
+                .upload(path, file, { contentType: file.type, upsert: true })
+            if (error) throw error
+            await updateSetting.mutateAsync({ category: 'pdf_identity', key: 'logo_path', value: path })
+            toast.success(isRTL ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully')
+        } catch {
+            toast.error(isRTL ? 'فشل رفع الشعار' : 'Logo upload failed')
+        } finally {
+            setLogoUploading(false)
+        }
+    }
+
+    const handleLogoRemove = async () => {
+        await updateSetting.mutateAsync({ category: 'pdf_identity', key: 'logo_path', value: null })
+        toast.success(isRTL ? 'تم حذف الشعار' : 'Logo removed')
+    }
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -77,45 +111,7 @@ export default function TenantSettingsPage() {
     }
 
     // If settings is null/undefined, show with defaults
-    const currentSettings = settings || {
-        work_orders: {
-            require_supervisor_approval: true,
-            require_engineer_review: true,
-            auto_close_after_days: 7,
-            allow_technician_reject: true,
-            max_response_time_hours: 24,
-            priority_escalation_enabled: true
-        },
-        maintenance: {
-            auto_generate_work_orders: false,
-            advance_notice_days: 0,
-            allow_postpone: false
-        },
-        inventory: {
-            low_stock_threshold_percent: 20,
-            require_approval_for_consumption: false,
-            track_consumption_by_technician: true
-        },
-        notifications: {
-            notify_on_new_work_order: true,
-            notify_on_status_change: true,
-            notify_admins_on_escalation: true,
-            daily_summary_enabled: false
-        },
-        display: {
-            default_language: 'ar' as const,
-            date_format: 'DD/MM/YYYY',
-            time_format: '12h' as const,
-            timezone: 'Asia/Riyadh'
-        },
-        portal: {
-            require_phone: false,
-            auto_assign_to_team: true,
-            show_estimated_time: false,
-            welcome_message: null,
-            thank_you_message: null
-        }
-    }
+    const currentSettings = settings || DEFAULT_TENANT_SETTINGS
 
     const activeCategoryDef = SETTINGS_CATEGORIES.find(c => c.code === activeCategory)
     const isMaintenanceSoftLaunchCategory = activeCategoryDef?.code === 'maintenance'
@@ -219,6 +215,19 @@ export default function TenantSettingsPage() {
 
                             {/* Settings List */}
                             <div className="p-4 space-y-4">
+                                {/* Logo upload — pdf_identity only */}
+                                {activeCategory === 'pdf_identity' && (
+                                    <LogoUploadRow
+                                        logoPath={getNestedValue(currentSettings, 'pdf_identity', 'logo_path') as string | null}
+                                        tenantId={tenantId}
+                                        isRTL={isRTL}
+                                        uploading={logoUploading}
+                                        inputRef={logoInputRef}
+                                        onUpload={handleLogoUpload}
+                                        onRemove={handleLogoRemove}
+                                    />
+                                )}
+
                                 {categorySettings.map(setting => (
                                     <SettingItem
                                         key={setting.key}
@@ -230,11 +239,11 @@ export default function TenantSettingsPage() {
                                     />
                                 ))}
                                 {categorySettings.length === 0 && (
-                                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                                        <p className="font-bold font-cairo text-blue-700">
+                                    <div className="rounded-xl border border-info/20 bg-info/10 p-4">
+                                        <p className="font-bold font-cairo text-info">
                                             {isRTL ? 'الإطلاق المبكر للصيانة الوقائية يدوي فقط' : 'Preventive maintenance is manual-only in soft launch'}
                                         </p>
-                                        <p className="mt-1 text-sm text-blue-700/80 font-cairo">
+                                        <p className="mt-1 text-sm text-info/80 font-cairo">
                                             {isRTL
                                                 ? 'في هذه النسخة: الخطط اليدوية، المهام اليدوية، وإنشاء أمر عمل اختياري من المهمة فقط. التكرار، التوليد التلقائي، والتأجيل غير متاحة بعد.'
                                                 : 'This release supports manual plans, manual tasks, and optional work order creation from a task only. Recurrence, auto-generation, and postpone flows are not available yet.'}
@@ -245,6 +254,85 @@ export default function TenantSettingsPage() {
                         </div>
                     )}
                 </div>
+            </div>
+        </div>
+    )
+}
+
+// Logo Upload Row — pdf_identity only
+function LogoUploadRow({
+    logoPath,
+    tenantId,
+    isRTL,
+    uploading,
+    inputRef,
+    onUpload,
+    onRemove,
+}: {
+    logoPath: string | null
+    tenantId: string | null
+    isRTL: boolean
+    uploading: boolean
+    inputRef: React.RefObject<HTMLInputElement>
+    onUpload: (file: File) => void
+    onRemove: () => void
+}) {
+    const logoPublicUrl = logoPath
+        ? supabase.storage.from('tenant-assets').getPublicUrl(logoPath).data.publicUrl
+        : null
+
+    return (
+        <div className="flex items-start justify-between p-4 bg-muted/5 rounded-xl border border-border/50">
+            <div className="flex-1">
+                <h3 className="font-medium font-cairo text-primary">
+                    {isRTL ? 'شعار المنشأة' : 'Organization Logo'}
+                </h3>
+                <p className="text-sm text-muted-foreground font-cairo mt-0.5">
+                    {isRTL
+                        ? 'يظهر في أعلى تقارير الـ PDF (PNG أو JPG، بحد أقصى 2 ميجابايت)'
+                        : 'Shown at the top of PDF reports (PNG or JPG, max 2 MB)'}
+                </p>
+            </div>
+            <div className={cn('flex-shrink-0 flex items-center gap-3', isRTL ? 'mr-4' : 'ml-4')}>
+                {logoPublicUrl && (
+                    <>
+                        <img
+                            src={logoPublicUrl}
+                            alt="logo"
+                            className="h-10 w-auto max-w-[80px] object-contain rounded border"
+                        />
+                        <button
+                            onClick={onRemove}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                            title={isRTL ? 'حذف' : 'Remove'}
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </>
+                )}
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) onUpload(file)
+                        e.target.value = ''
+                    }}
+                />
+                <button
+                    onClick={() => inputRef.current?.click()}
+                    disabled={uploading || !tenantId}
+                    className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                        'bg-secondary/10 hover:bg-secondary/20 text-secondary',
+                        (uploading || !tenantId) && 'opacity-50 cursor-not-allowed'
+                    )}
+                >
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {isRTL ? 'رفع شعار' : 'Upload Logo'}
+                </button>
             </div>
         </div>
     )

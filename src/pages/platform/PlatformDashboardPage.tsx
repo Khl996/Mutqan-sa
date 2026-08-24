@@ -303,8 +303,8 @@ function StatCard({ title, value, change, icon: Icon, color, isCurrency = false 
     const colorClasses = {
         primary: 'bg-primary/10 border-primary/20 text-primary',
         secondary: 'bg-secondary/10 border-secondary/20 text-secondary',
-        success: 'bg-green-500/10 border-green-500/20 text-green-600',
-        warning: 'bg-amber-500/10 border-amber-500/20 text-amber-600',
+        success: 'bg-success/10 border-success/20 text-success',
+        warning: 'bg-warning/10 border-warning/20 text-warning',
     }
 
     const isPositive = change >= 0
@@ -318,7 +318,7 @@ function StatCard({ title, value, change, icon: Icon, color, isCurrency = false 
                 {change !== 0 && (
                     <div className={cn(
                         "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-                        isPositive ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'
+                        isPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
                     )}>
                         {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                         {isPositive ? '+' : ''}{change}%

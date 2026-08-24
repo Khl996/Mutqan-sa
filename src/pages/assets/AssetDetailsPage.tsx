@@ -54,17 +54,17 @@ const STATUS_OPTIONS: Array<{
     colorClass: string
     labelKey: string
 }> = [
-    { value: 'operational', icon: CheckCircle2, colorClass: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/20', labelKey: 'assets.operational' },
-    { value: 'under_maintenance', icon: Wrench, colorClass: 'bg-amber-500/15 text-amber-700 border-amber-500/20', labelKey: 'assets.underMaintenance' },
-    { value: 'out_of_service', icon: AlertTriangle, colorClass: 'bg-rose-500/15 text-rose-700 border-rose-500/20', labelKey: 'assets.outOfService' },
-    { value: 'retired', icon: XCircle, colorClass: 'bg-slate-200/70 text-slate-700 border-slate-300', labelKey: 'assets.retired' },
+    { value: 'operational', icon: CheckCircle2, colorClass: 'bg-success/15 text-success border-success/20', labelKey: 'assets.operational' },
+    { value: 'under_maintenance', icon: Wrench, colorClass: 'bg-warning/15 text-warning border-warning/20', labelKey: 'assets.underMaintenance' },
+    { value: 'out_of_service', icon: AlertTriangle, colorClass: 'bg-destructive/15 text-destructive border-destructive/20', labelKey: 'assets.outOfService' },
+    { value: 'retired', icon: XCircle, colorClass: 'bg-muted/20 text-muted-foreground border-border', labelKey: 'assets.retired' },
 ]
 
 const CRITICALITY_CONFIG: Record<string, { colorClass: string; labelKey: string }> = {
-    critical: { colorClass: 'bg-rose-500/15 text-rose-700 border-rose-500/20', labelKey: 'assets.critical' },
-    high:     { colorClass: 'bg-orange-500/15 text-orange-700 border-orange-500/20', labelKey: 'assets.high' },
-    medium:   { colorClass: 'bg-amber-500/15 text-amber-700 border-amber-500/20', labelKey: 'assets.medium' },
-    low:      { colorClass: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/20', labelKey: 'assets.low' },
+    critical: { colorClass: 'bg-destructive/15 text-destructive border-destructive/20', labelKey: 'assets.critical' },
+    high:     { colorClass: 'bg-warning/15 text-warning border-warning/20', labelKey: 'assets.high' },
+    medium:   { colorClass: 'bg-info/15 text-info border-info/20', labelKey: 'assets.medium' },
+    low:      { colorClass: 'bg-success/15 text-success border-success/20', labelKey: 'assets.low' },
 }
 
 const FREQUENCY_LABEL: Record<string, { en: string; ar: string }> = {

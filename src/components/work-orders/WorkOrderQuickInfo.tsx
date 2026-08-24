@@ -1,7 +1,5 @@
-import { useTranslation } from 'react-i18next'
 import { WorkOrder } from '@/hooks/useWorkOrders'
-import { User, Shield, Wrench } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { User, Shield, Wrench, type LucideIcon } from 'lucide-react'
 
 interface WorkOrderQuickInfoProps {
     workOrder: WorkOrder
@@ -9,9 +7,7 @@ interface WorkOrderQuickInfoProps {
 }
 
 export default function WorkOrderQuickInfo({ workOrder, isRTL }: WorkOrderQuickInfoProps) {
-    const { t } = useTranslation()
-
-    const PersonRow = ({ icon: Icon, label, name, role }: { icon: any, label: string, name?: string | null, role?: string }) => (
+    const PersonRow = ({ icon: Icon, label, name, role }: { icon: LucideIcon, label: string, name?: string | null, role?: string }) => (
         <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
             <div className="p-2 bg-muted/10 rounded-full text-muted-foreground">
                 <Icon className="w-4 h-4" />
@@ -43,7 +39,11 @@ export default function WorkOrderQuickInfo({ workOrder, isRTL }: WorkOrderQuickI
                     icon={Wrench}
                     label={isRTL ? 'الفني المسؤول' : 'Technician'}
                     name={isRTL ? workOrder.assignee?.full_name_ar || workOrder.assignee?.full_name : workOrder.assignee?.full_name}
-                    role={workOrder.assigned_team ? (isRTL ? 'فريق الصيانة' : 'Maintenance Team') : undefined}
+                    role={
+                        workOrder.assignedTeam
+                            ? (isRTL ? workOrder.assignedTeam.name_ar || workOrder.assignedTeam.name : workOrder.assignedTeam.name)
+                            : undefined
+                    }
                 />
 
                 {/* Supervisor (if approved) */}

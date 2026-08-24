@@ -192,12 +192,12 @@ export default function PortalSettingsPage() {
             </div>
 
             {!token ? (
-                <div className="bg-white p-12 rounded-xl border-2 border-dashed border-gray-300 text-center space-y-4">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Power className="w-8 h-8 text-gray-400" />
+                <div className="bg-white p-12 rounded-xl border-2 border-dashed border-border text-center space-y-4">
+                    <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Power className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h2 className="text-xl font-bold">{isRTL ? 'البوابة غير مفعلة' : 'Portal Not Active'}</h2>
-                    <p className="text-gray-500 max-w-md mx-auto">
+                    <p className="text-muted-foreground max-w-md mx-auto">
                         {isRTL
                             ? 'قم بتوليد رابط جديد للبدء في استقبال البلاغات من خارج النظام.'
                             : 'Generate a new link to start receiving reports from outside the system.'}
@@ -222,12 +222,12 @@ export default function PortalSettingsPage() {
                             />
                         </div>
                         <div className="text-center space-y-2">
-                            <p className="text-sm font-mono bg-gray-50 p-2 rounded border border-gray-200 break-all select-all">
+                            <p className="text-sm font-mono bg-muted/10 p-2 rounded border border-border break-all select-all">
                                 {portalUrl}
                             </p>
                         </div>
                         <div className="flex gap-3 w-full">
-                            <button onClick={handleCopy} className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <button onClick={handleCopy} className="flex-1 flex items-center justify-center gap-2 py-2 border border-border rounded-lg hover:bg-muted/10 transition-colors">
                                 <Copy className="w-4 h-4" />
                                 {isRTL ? 'نسخ' : 'Copy'}
                             </button>
@@ -243,10 +243,10 @@ export default function PortalSettingsPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm space-y-6 self-start">
+                    <div className="bg-card p-8 rounded-xl border border-border shadow-sm space-y-6 self-start">
                         <div>
                             <h3 className="text-lg font-bold mb-2">{isRTL ? 'إعدادات البوابة' : 'Portal Settings'}</h3>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                                 {isRTL
                                     ? 'التحكم في صلاحية الوصول وإعادة تعيين الرابط.'
                                     : 'Control access and reset link.'}
@@ -270,17 +270,17 @@ export default function PortalSettingsPage() {
                                 </button>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100">
+                            <div className="flex items-center justify-between p-4 bg-destructive/10 rounded-lg border border-destructive/20">
                                 <div className="flex items-center gap-3">
-                                    <Power className="w-5 h-5 text-red-600" />
+                                    <Power className="w-5 h-5 text-destructive" />
                                     <div className="text-sm">
-                                        <p className="font-bold text-red-800">{isRTL ? 'إيقاف البوابة' : 'Deactivate Portal'}</p>
-                                        <p className="text-red-600 text-xs">{isRTL ? 'منع استقبال أي بلاغات جديدة' : 'Stop receiving new reports'}</p>
+                                        <p className="font-bold text-destructive">{isRTL ? 'إيقاف البوابة' : 'Deactivate Portal'}</p>
+                                        <p className="text-destructive text-xs">{isRTL ? 'منع استقبال أي بلاغات جديدة' : 'Stop receiving new reports'}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setPortalConfirm('deactivate')}
-                                    className="px-3 py-1 text-xs bg-white border border-red-200 text-red-700 rounded hover:bg-red-100"
+                                    className="px-3 py-1 text-xs bg-card border border-destructive/20 text-destructive rounded hover:bg-destructive/10"
                                 >
                                     {isRTL ? 'إيقاف' : 'Turn Off'}
                                 </button>

@@ -7,17 +7,20 @@ import {
     ArrowLeft,
     ArrowRight,
     CalendarClock,
+    CalendarRange,
     ClipboardList,
     FileText,
     Loader2,
     MapPin,
     Pencil,
+    Settings2,
     Timer,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import ScheduleDialog from '@/components/maintenance/ScheduleDialog'
 import { Info, ModeBadge } from '@/components/maintenance/FoundationPMPanels'
 import { ar, daysLabel, displayName, durationLabel, en, frequencyLabel, percentLabel, PMCopy, priorityLabel, statusClass, statusLabel } from '@/components/maintenance/foundationPmUtils'
@@ -25,7 +28,7 @@ import { useAssets } from '@/hooks/useAssets'
 import { useModuleAccess, useTenantModules } from '@/hooks/useTenantModules'
 import { usePermission } from '@/hooks/usePermission'
 import type { PMSchedule, PMScheduleInput } from '@/hooks/usePMFoundation'
-import { usePMJobPlans, usePMScheduleDetail, usePMSchedules } from '@/hooks/usePMFoundation'
+import { usePMJobPlans, usePMScheduleDetail, usePMScheduleForecast, usePMSchedules } from '@/hooks/usePMFoundation'
 import { cn, formatDate, formatDateTime } from '@/lib/utils'
 
 export default function PMScheduleDetailsPage() {
@@ -45,6 +48,18 @@ export default function PMScheduleDetailsPage() {
     const { jobPlans } = usePMJobPlans()
     const { updateSchedule, isSaving } = usePMSchedules()
     const { data: assets = [] } = useAssets()
+    const { getForecast, forecastRows, isForecasting, forecastError } = usePMScheduleForecast()
+    const [forecastRequested, setForecastRequested] = useState(false)
+
+    const handleViewForecast = async () => {
+        if (!schedule) return
+        setForecastRequested(true)
+        try {
+            await getForecast({ scheduleId: schedule.id, occurrences: 6 })
+        } catch {
+            toast.error(copy.forecastFailed)
+        }
+    }
 
     const scheduleJobPlans = useMemo(() => {
         if (!schedule) return jobPlans.filter((plan) => plan.status === 'active')
@@ -101,7 +116,7 @@ export default function PMScheduleDetailsPage() {
                             <div className="mb-2 flex flex-wrap gap-2">
                                 <Badge className={cn('border', statusClass(schedule.status))}>{statusLabel(schedule.status, copy)}</Badge>
                                 <ModeBadge mode={schedule.generation_mode} copy={copy} />
-                                <Badge className={cn('border', eligible ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/20' : 'bg-slate-500/10 text-slate-700 border-slate-500/20')}>
+                                <Badge className={cn('border', eligible ? 'bg-success/15 text-success border-success/20' : 'bg-muted/10 text-muted-foreground border-muted/20')}>
                                     {eligible ? copy.dueNow : copy.notDueYet}
                                 </Badge>
                             </div>
@@ -172,9 +187,94 @@ export default function PMScheduleDetailsPage() {
                                 <p className="py-8 text-center text-sm text-muted-foreground font-cairo">{copy.noAssets}</p>
                             )}
                         </Section>
+
+                        <Section title={copy.forecastTitle} icon={CalendarRange}>
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <p className="text-sm text-muted-foreground font-cairo">{copy.forecastDisclaimer}</p>
+                                    <Button variant="outline" onClick={handleViewForecast} disabled={isForecasting}>
+                                        {isForecasting ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <CalendarRange className="me-2 h-4 w-4" />}
+                                        {copy.viewForecast}
+                                    </Button>
+                                </div>
+
+                                {forecastRequested ? (
+                                    forecastError ? (
+                                        <p className="py-4 text-center text-sm text-destructive font-cairo">{copy.forecastFailed}</p>
+                                    ) : isForecasting ? (
+                                        <p className="py-4 text-center text-sm text-muted-foreground font-cairo">{copy.forecastLoading}</p>
+                                    ) : forecastRows.length === 0 ? (
+                                        <p className="py-4 text-center text-sm text-muted-foreground font-cairo">{copy.forecastEmpty}</p>
+                                    ) : (
+                                        <div className="overflow-x-auto rounded-md border">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>{copy.forecastOccurrence}</TableHead>
+                                                        <TableHead>{copy.dueDate}</TableHead>
+                                                        <TableHead>{copy.forecastDeferred}</TableHead>
+                                                        <TableHead>{copy.forecastBlackoutLabel}</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {forecastRows.map((row) => (
+                                                        <TableRow key={row.occurrence_number}>
+                                                            <TableCell dir="ltr">{row.occurrence_number}</TableCell>
+                                                            <TableCell>{formatDate(row.due_date, locale)}</TableCell>
+                                                            <TableCell>
+                                                                {row.deferred_by_blackout ? (
+                                                                    <Badge className="border border-amber-500/20 bg-amber-500/15 text-amber-700">
+                                                                        {copy.deferredBadge}
+                                                                    </Badge>
+                                                                ) : (
+                                                                    '-'
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="font-cairo">{row.blackout_label ?? '-'}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    )
+                                ) : null}
+                            </div>
+                        </Section>
                     </main>
 
                     <aside className="space-y-6">
+                        <Section title={copy.generationEngineSettings} icon={Settings2}>
+                            <div className="space-y-4">
+                                <Badge variant="outline" className="font-cairo">{copy.engineEnabledBadge}</Badge>
+                                {schedule.master_template_id ? (
+                                    <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 font-cairo">
+                                        {copy.masterTemplateLinkedWarning}
+                                    </div>
+                                ) : null}
+                                <div className="grid gap-4">
+                                    <div
+                                        className="space-y-1"
+                                        title={schedule.anchor_mode ? (schedule.anchor_mode === 'fixed' ? copy.anchorFixedHint : copy.anchorFloatingHint) : undefined}
+                                    >
+                                        <p className="text-xs text-muted-foreground font-cairo">{copy.anchorMode}</p>
+                                        <p className="text-sm font-medium font-cairo">
+                                            {schedule.anchor_mode ? (schedule.anchor_mode === 'fixed' ? copy.anchorFixed : copy.anchorFloating) : copy.notSpecified}
+                                        </p>
+                                    </div>
+                                    <Info
+                                        label={copy.generationMode}
+                                        value={schedule.generation_mode ? (schedule.generation_mode === 'per_asset' ? copy.modePerAsset : copy.modeBatch) : copy.notSpecified}
+                                    />
+                                    <Info label={copy.trigger} value={schedule.trigger_type ?? copy.notSpecified} />
+                                    <Info label={copy.nextDue} value={schedule.next_due_date ? formatDate(schedule.next_due_date, locale) : copy.notSpecified} />
+                                    <Info
+                                        label={copy.masterTemplate}
+                                        value={schedule.master_template ? displayName(schedule.master_template, isAr) : copy.notSpecified}
+                                    />
+                                </div>
+                            </div>
+                        </Section>
+
                         <Section title={copy.frequency} icon={Timer}>
                             <div className="grid gap-4">
                                 <Info label={copy.trigger} value={schedule.trigger_type} />

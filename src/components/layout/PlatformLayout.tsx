@@ -88,30 +88,23 @@ export default function PlatformLayout() {
         let cancelled = false
 
         const checkAccess = async () => {
-            console.log('🔐 PlatformLayout: Checking access...')
-
             // Step 1: Get session from localStorage
             const storedSession = getSessionFromStorage()
 
             if (!storedSession) {
-                console.log('No session in localStorage')
                 if (!cancelled) setAccessState('not-logged-in')
                 return
             }
-
-            console.log('✅ Found session for:', storedSession.email)
 
             // Step 2: Fetch profile using native fetch
             const profile = await fetchProfileDirect(storedSession.userId, storedSession.accessToken)
 
             if (!profile) {
-                console.log('❌ Could not load profile')
                 if (!cancelled) setAccessState('denied')
                 return
             }
 
             const hasPlatformAccess = (PLATFORM_ROLES as readonly string[]).includes(profile.role) || profile.is_super_admin
-            console.log('✅ Profile:', profile.role, 'Platform access:', hasPlatformAccess)
 
             if (!cancelled) {
                 setAccessState(hasPlatformAccess ? 'authenticated' : 'denied')

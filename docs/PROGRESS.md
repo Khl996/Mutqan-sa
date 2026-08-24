@@ -1,6 +1,6 @@
 # 📊 تقدم المشروع | Project Progress
 
-> آخر تحديث: 2026-01-15
+> آخر تحديث: 2026-06-20
 
 ---
 
@@ -59,10 +59,11 @@
 - [x] **PlatformDashboardPage** - نظرة عامة + إحصائيات + اختصارات
 - [x] **TenantsManagementPage** - إدارة المنشآت (CRUD + Enter)
 - [x] **SubscriptionPage** - خطط الاشتراك
-- [ ] Platform Staff - موظفي المنصة
-- [ ] Financials - الإدارة المالية
-- [ ] Audit Logs - سجلات النظام
-- [ ] Platform Reports - تقارير المنصة
+- [x] Platform Staff - موظفي المنصة
+- [x] Financials - الإدارة المالية
+- [x] Audit Logs - سجلات النظام
+- [x] Platform Reports - تقارير المنصة
+- [x] Quotes / Announcements / Platform Settings
 
 ### 8. قاعدة البيانات ✅
 - [x] 001_core_tables.sql - الجداول الأساسية

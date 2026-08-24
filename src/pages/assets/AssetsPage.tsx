@@ -418,8 +418,8 @@ function TreeNode({
 
     let Icon = Box
     let colorClass = 'text-primary'
-    if (node.type === 'building') { Icon = Building2; colorClass = 'text-blue-500' }
-    else if (node.type === 'floor') { Icon = Layers; colorClass = 'text-indigo-500' }
+    if (node.type === 'building') { Icon = Building2; colorClass = 'text-info' }
+    else if (node.type === 'floor') { Icon = Layers; colorClass = 'text-primary' }
     else if (node.type === 'asset') {
         const status = node.data?.status || 'operational'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -634,16 +634,15 @@ function TreeNode({
 
 function EmptyState({ isRTL }: { isRTL: boolean }) {
     return (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Box className="w-16 h-16 text-muted/50 mb-4" />
-            <h3 className="text-lg font-bold text-primary font-cairo mb-2">
-                {isRTL ? 'لا توجد أصول' : 'No assets found'}
+        <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+            <Box className="mb-4 h-16 w-16 text-muted-foreground/50" />
+            <h3 className="mb-2 max-w-md font-cairo text-lg font-bold text-primary">
+                {isRTL ? 'لم تُبنَ ذاكرة الأصول بعد' : 'Asset memory has not been built yet'}
             </h3>
-            <p className="text-muted font-cairo">
+            <p className="max-w-xl font-cairo text-sm leading-7 text-muted-foreground">
                 {isRTL
-                    ? 'قم بإضافة أصل جديد للبدء'
-                    : 'Add a new asset to get started'
-                }
+                    ? 'الأصول هي نقطة الارتباط بين البلاغات، الصيانة، التكاليف، والتقارير. أضف أول أصل ليبدأ متقن في بناء سجل تشغيلي قابل للتتبع.'
+                    : 'Assets connect work orders, maintenance, costs, and reports. Add the first asset so Mutqan can start building a traceable operational record.'}
             </p>
         </div>
     )

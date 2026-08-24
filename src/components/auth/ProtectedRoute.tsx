@@ -1,8 +1,6 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { usePermission } from '@/hooks/usePermission'
 import { Permission } from '@/config/permissions'
-import { toast } from 'sonner'
-import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
 import { normalizeRole } from '@/config/roles'
@@ -15,27 +13,32 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ permission, allowedRoles, redirectPath = '/dashboard' }: ProtectedRouteProps) {
     const { can } = usePermission()
-    const { profile } = useAuth()
+    const { profile, isLoading, isAuthenticated } = useAuth()
     const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const normalizedRole = normalizeRole(profile?.role)
+    const location = useLocation()
 
-    // Check Permission
+    void isRTL  // consumed by child components via context; suppress lint
+
+    // Wait for auth to initialise — prevents cold-load redirect glitch
+    if (isLoading) return null
+
+    // Not authenticated: save the intended path so LoginPage can redirect back.
+    // Only save internal paths (not /login, /register — avoids redirect loops).
+    if (!isAuthenticated) {
+        const intended = location.pathname + location.search
+        if (!intended.startsWith('/login') && !intended.startsWith('/register')) {
+            sessionStorage.setItem('redirectAfterLogin', intended)
+        }
+        return <Navigate to="/login" replace />
+    }
+
+    // Authenticated but missing required permission or role
     const hasPermission = permission ? can(permission) : true
-
-    // Check Role
     const hasRole = allowedRoles ? (!!normalizedRole && allowedRoles.includes(normalizedRole)) : true
 
-    const hasAccess = hasPermission && hasRole
-
-    useEffect(() => {
-        if (!hasAccess) {
-            // Only show toast if it's a permission denial, not just a redirect
-            // toast.error(isRTL ? 'ليس لديك صلاحية للوصول إلى هذه الصفحة' : 'You do not have permission to access this page')
-        }
-    }, [hasAccess, isRTL])
-
-    if (!hasAccess) {
+    if (!hasPermission || !hasRole) {
         return <Navigate to={redirectPath} replace />
     }
 

@@ -131,8 +131,8 @@ export default function PMJobPlanDetailsPage() {
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">
                                                     <Badge variant="outline">{itemTypeLabel(item.item_type, copy)}</Badge>
-                                                    {item.is_required ? <Badge className="bg-amber-500/15 text-amber-700">{copy.required}</Badge> : null}
-                                                    {item.is_critical ? <Badge className="bg-rose-500/15 text-rose-700">{copy.critical}</Badge> : null}
+                                                    {item.is_required ? <Badge className="bg-warning/15 text-warning">{copy.required}</Badge> : null}
+                                                    {item.is_critical ? <Badge className="bg-destructive/15 text-destructive">{copy.critical}</Badge> : null}
                                                 </div>
                                             </div>
                                             <div className="mt-4 grid gap-3 md:grid-cols-4">
