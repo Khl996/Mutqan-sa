@@ -31,6 +31,7 @@
     "test": "vitest run && npm run check:mojibake"
   },
   "dependencies": {
+    "@expo-google-fonts/amiri": "0.4.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",

@@ -68,6 +68,7 @@ export interface WorkOrder {
     supervisor_notes?: string | null
     engineer_notes?: string | null
     reporter_notes?: string | null
+    reporter_image_url?: string | null
 
     technician_completed_at?: string | null
     supervisor_approved_by?: string | null
@@ -85,7 +86,9 @@ export interface WorkOrder {
 }
 
 export interface WorkOrderPdfSnapshot {
+    contract_version: 2
     code: string
+    title: string
     description: string | null
     priority: string
     created_at: string
@@ -102,6 +105,12 @@ export interface WorkOrderPdfSnapshot {
     assignee: { id: string; full_name: string } | null
     reporter: { id: string; full_name: string } | null
     closed_by: { id: string; full_name: string }
+    asset: {
+        id: string
+        code: string
+        name: string
+        name_ar: string | null
+    } | null
 }
 
 export function isPreventiveWorkOrder(wo: Pick<WorkOrder, 'work_type' | 'source_schedule_id'>): boolean {
@@ -221,7 +230,7 @@ export interface OperationLog {
     id: string
     tenant_id: string
     code: string
-    type: 'maintenance' | 'repair' | 'inspection' | 'emergency' | 'routine' | 'installation' | 'calibration' | 'status_change' | 'comment' | 'assignment' | 'create' | 'update' | 'cancellation' | 'other'
+    type: 'maintenance' | 'repair' | 'inspection' | 'emergency' | 'routine' | 'installation' | 'calibration' | 'status_change' | 'comment' | 'assignment' | 'create' | 'update' | 'cancellation' | 'pm_generate' | 'pm_master_propagate' | 'pm_blackout_defer' | 'governance' | 'other'
     asset_id: string | null
     work_order_id: string | null
     description: string

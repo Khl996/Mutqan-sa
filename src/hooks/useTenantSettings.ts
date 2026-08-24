@@ -12,6 +12,57 @@ import {
 // Query key
 const TENANT_SETTINGS_KEY = 'tenant-settings'
 
+export interface ProofTenantContext {
+    id: string
+    name: string
+    name_ar: string | null
+    settings: TenantSettings
+}
+
+interface ProofTenantRow {
+    id: string
+    name: string
+    name_ar: string | null
+    settings: unknown
+}
+
+// Proof documents must derive identity from the work order's tenant, never
+// from whichever tenant happens to be selected in ambient application state.
+export function useProofTenantContext(tenantId: string | null | undefined) {
+    return useQuery({
+        queryKey: [TENANT_SETTINGS_KEY, 'proof-context', tenantId],
+        queryFn: async (): Promise<ProofTenantContext> => {
+            if (!tenantId) throw new Error('A work-order tenant is required for proof identity.')
+
+            // The repository's generated Database type intentionally lags the
+            // live settings column. Keep the exception local and retain an
+            // explicit result shape instead of weakening the shared client.
+            const query = supabase
+                .from('tenants')
+                .select('id, name, name_ar, settings')
+                .eq('id', tenantId)
+                .single()
+            const { data, error } = await (query as unknown as PromiseLike<{
+                data: ProofTenantRow | null
+                error: unknown
+            }>)
+
+            if (error) throw error
+            if (!data || data.id !== tenantId) {
+                throw new Error('Proof tenant identity could not be verified.')
+            }
+
+            return {
+                id: data.id,
+                name: data.name,
+                name_ar: data.name_ar,
+                settings: mergeWithDefaults(data.settings as Partial<TenantSettings> | null),
+            }
+        },
+        enabled: !!tenantId,
+    })
+}
+
 // Fetch tenant settings
 export function useTenantSettings() {
     const { currentTenant } = useTenant()

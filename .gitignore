@@ -36,6 +36,9 @@ dev-server*.log
 # Local tool runtimes and browser profiles
 .tools/
 screenshots/chrome-profile*/
+.playwright-cli/
+tmp/
+output/
 
 # TypeScript cache
 *.tsbuildinfo

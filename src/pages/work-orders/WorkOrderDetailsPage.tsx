@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { flushSync } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
@@ -6,8 +7,6 @@ import { useWorkOrder, useWorkOrderLogs, isPreventiveWorkOrder } from '@/hooks/u
 import { useIntakeDraftForWorkOrder } from '@/hooks/useIntake'
 import { useRoundObservationForWorkOrder } from '@/hooks/useRounds'
 import type { PMWorkOrder } from '@/hooks/usePMFoundation'
-import { useQueryClient } from '@tanstack/react-query'
-import { ErrorBoundary } from '@/components/ErrorBoundary' // Assuming we have one or will create simple wrapper
 import { toast } from 'sonner'
 
 // Import Components
@@ -26,6 +25,8 @@ import { en as pmEn, ar as pmAr } from '@/components/maintenance/foundationPmUti
 import { AlertTriangle, ClipboardCheck, Inbox } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
+import { hasClosureProofSnapshot } from '@/lib/proofOfWork'
+import { useProofTenantContext } from '@/hooks/useTenantSettings'
 
 // Simple Skeleton Loader
 const WorkOrderDetailsSkeleton = () => (
@@ -48,17 +49,21 @@ const WorkOrderDetailsSkeleton = () => (
 export default function WorkOrderDetailsPage() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
-    const { t, i18n } = useTranslation()
-    const isRTL = i18n.language === 'ar'
+    const { i18n } = useTranslation()
+    const isRTL = (i18n.resolvedLanguage ?? i18n.language).toLowerCase().startsWith('ar')
     const locale = isRTL ? 'ar-SA' : 'en-US'
     const pmCopy = isRTL ? pmAr : pmEn
-    const queryClient = useQueryClient()
-
     // PM execution dialog state
     const [pmExecutionWorkOrder, setPmExecutionWorkOrder] = useState<PMWorkOrder | null>(null)
+    const [proofGeneratedAt, setProofGeneratedAt] = useState(() => new Date().toISOString())
 
     // 1. Fetch Work Order Data
     const { data: workOrder, isLoading: wLoading, error: wError, refetch: refetchWO } = useWorkOrder(id!)
+    const {
+        data: proofTenant,
+        isLoading: proofTenantLoading,
+        error: proofTenantError,
+    } = useProofTenantContext(workOrder?.tenant_id)
 
     // 2. Fetch Logs
     const { data: logs, isLoading: lLoading, refetch: refetchLogs } = useWorkOrderLogs(id!)
@@ -117,6 +122,10 @@ export default function WorkOrderDetailsPage() {
         contentRef: componentRef,
         documentTitle: `WorkOrder-${workOrder?.code || 'Draft'}`,
     })
+    const handleProofPrint = () => {
+        flushSync(() => setProofGeneratedAt(new Date().toISOString()))
+        handlePrint()
+    }
 
     // Loading State
     if (wLoading || lLoading) return <WorkOrderDetailsSkeleton />
@@ -140,9 +149,18 @@ export default function WorkOrderDetailsPage() {
         )
     }
 
+    const hasProofSnapshot = hasClosureProofSnapshot(workOrder)
+    const canGenerateProof = workOrder.status === 'completed'
+        && hasProofSnapshot
+        && proofTenant?.id === workOrder.tenant_id
+
     return (
         <div className="max-w-7xl mx-auto pb-20 space-y-6">
-            <WorkOrderHeader workOrder={workOrder} isRTL={isRTL} onPrint={handlePrint} />
+            <WorkOrderHeader
+                workOrder={workOrder}
+                isRTL={isRTL}
+                onPrint={canGenerateProof ? handleProofPrint : undefined}
+            />
 
             {/* Intake source banner (وارد واتساب) */}
             {intakeDraft && (
@@ -204,7 +222,7 @@ export default function WorkOrderDetailsPage() {
                     )}
 
                     {/* Operations Log */}
-                    <WorkOrderOperationsLog logs={logs as any || []} isRTL={isRTL} />
+                    <WorkOrderOperationsLog logs={logs || []} isRTL={isRTL} />
                 </div>
 
                 {/* Sidebar Column */}
@@ -227,20 +245,52 @@ export default function WorkOrderDetailsPage() {
                     />
 
                     {/* PDF Report — only for completed orders */}
-                    {workOrder.status === 'completed' && (
-                        <WorkOrderPdfButton workOrder={workOrder} isRTL={isRTL} />
+                    {canGenerateProof && (
+                        <WorkOrderPdfButton
+                            workOrder={workOrder}
+                            logs={logs || []}
+                            isRTL={isRTL}
+                            proofTenant={proofTenant}
+                        />
+                    )}
+                    {workOrder.status === 'completed' && !hasProofSnapshot && (
+                        <div
+                            className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-foreground"
+                            role="status"
+                            aria-live="polite"
+                        >
+                            <div className="flex items-start gap-3">
+                                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
+                                <p className="font-cairo leading-6">{i18n.t('workOrders.proof.unavailableNoSnapshot')}</p>
+                            </div>
+                        </div>
+                    )}
+                    {workOrder.status === 'completed' && hasProofSnapshot && proofTenantLoading && (
+                        <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground" role="status">
+                            {i18n.t('workOrders.proof.verifyingTenantIdentity')}
+                        </div>
+                    )}
+                    {workOrder.status === 'completed' && hasProofSnapshot && proofTenantError && (
+                        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-foreground" role="alert">
+                            {i18n.t('workOrders.proof.unavailableTenantIdentity')}
+                        </div>
                     )}
                 </div>
             </div>
 
-            {/* Hidden Print Component */}
-            <div style={{ display: 'none' }}>
-                <WorkOrderPrintView
-                    ref={componentRef}
-                    workOrder={workOrder}
-                    logs={logs || []}
-                />
-            </div>
+            {/* A final proof is available only after the work order is completed. */}
+            {canGenerateProof && (
+                <div style={{ display: 'none' }}>
+                    <WorkOrderPrintView
+                        ref={componentRef}
+                        workOrder={workOrder}
+                        logs={logs || []}
+                        language={isRTL ? 'ar' : 'en'}
+                        generatedAt={proofGeneratedAt}
+                        proofTenant={proofTenant}
+                    />
+                </div>
+            )}
 
             {/* PM Execution Dialog — opened via WorkOrderPMContext "Open PM Execution" button */}
             <ExecutionDialog

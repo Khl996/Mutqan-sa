@@ -7,10 +7,10 @@ export interface OperationLog {
     id: string
     type: string
     description: string
-    reason?: string
+    reason?: string | null
     timestamp: string
-    technician_name?: string
-    performed_by?: string
+    technician_name?: string | null
+    performed_by?: string | null
     // Add other fields as needed
 }
 
@@ -20,7 +20,7 @@ interface WorkOrderOperationsLogProps {
 }
 
 export default function WorkOrderOperationsLog({ logs, isRTL }: WorkOrderOperationsLogProps) {
-    useTranslation()
+    const { t } = useTranslation()
 
     if (!logs || logs.length === 0) {
         return (
@@ -62,7 +62,9 @@ export default function WorkOrderOperationsLog({ logs, isRTL }: WorkOrderOperati
                             )}>
                                 <div className="flex justify-between items-start gap-4">
                                     <span className="font-bold text-sm text-primary font-cairo">
-                                        {formatLogType(log.type, isRTL)}
+                                        {t(`workOrders.proof.operationTypes.${log.type}`, {
+                                            defaultValue: t('workOrders.proof.operationTypes.other'),
+                                        })}
                                     </span>
                                     <span className="text-xs text-muted font-mono whitespace-nowrap">
                                         {formatRelativeTime(log.timestamp)}
@@ -92,19 +94,4 @@ export default function WorkOrderOperationsLog({ logs, isRTL }: WorkOrderOperati
             </div>
         </div>
     )
-}
-
-function formatLogType(type: string, isRTL: boolean) {
-    const types: Record<string, string> = {
-        'status_change': isRTL ? 'تغيير حالة' : 'Status Change',
-        'update': isRTL ? 'تحديث بيانات' : 'Update',
-        'comment': isRTL ? 'تعليق جديد' : 'Comment',
-        'assignment': isRTL ? 'تغيير المسؤول' : 'Assignment',
-        'maintenance': isRTL ? 'عملية صيانة' : 'Maintenance',
-        'inspection': isRTL ? 'فحص دوري' : 'Inspection',
-        'created': isRTL ? 'تم الإنشاء' : 'Created',
-        'create': isRTL ? 'إنشاء بلاغ' : 'Work Order Created',
-        // Add more mapping
-    }
-    return types[type] || type
 }

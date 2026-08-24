@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowLeft, Printer, Share2 } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Printer } from 'lucide-react'
 import { WorkOrder, isPreventiveWorkOrder } from '@/hooks/useWorkOrders'
 import { cn } from '@/lib/utils'
 import { STATUS_DISPLAY } from '@/config/workOrderStatus'
@@ -32,8 +32,10 @@ export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrder
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
             <div className="flex items-start gap-4">
                 <button
+                    type="button"
                     onClick={() => navigate(-1)}
-                    className="p-2 hover:bg-muted rounded-full transition-colors mt-1"
+                    aria-label={isRTL ? 'العودة' : 'Go back'}
+                    className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     {isRTL ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
                 </button>
@@ -65,19 +67,19 @@ export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrder
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 self-end md:self-center">
-                <button
-                    onClick={onPrint}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-lg transition-colors font-cairo"
-                >
-                    <Printer className="w-4 h-4" />
-                    <span className="hidden sm:inline">{isRTL ? 'طباعة' : 'Print'}</span>
-                </button>
-                <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-lg transition-colors font-cairo">
-                    <Share2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">{isRTL ? 'مشاركة' : 'Share'}</span>
-                </button>
-            </div>
+            {workOrder.status === 'completed' && onPrint && (
+                <div className="flex items-center gap-2 self-end md:self-center">
+                    <button
+                        type="button"
+                        onClick={onPrint}
+                        aria-label={t('workOrders.proof.print')}
+                        className="flex min-h-11 items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary font-cairo"
+                    >
+                        <Printer className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <span>{t('workOrders.proof.print')}</span>
+                    </button>
+                </div>
+            )}
         </div>
     )
 }

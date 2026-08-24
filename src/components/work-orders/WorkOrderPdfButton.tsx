@@ -1,44 +1,32 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FileDown, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { supabase } from '@/lib/supabase'
-import { useTenantSettings } from '@/hooks/useTenantSettings'
-import { mergeWithDefaults } from '@/config/tenantSettings'
-import { generateWorkOrderPdf } from '@/utils/workOrderPdf'
-import type { WorkOrder } from '@/hooks/useWorkOrders'
+import type { ProofTenantContext } from '@/hooks/useTenantSettings'
+import type { OperationLog, WorkOrder } from '@/hooks/useWorkOrders'
 
 interface WorkOrderPdfButtonProps {
     workOrder: WorkOrder
+    logs: OperationLog[]
     isRTL: boolean
+    proofTenant: ProofTenantContext
 }
 
-export default function WorkOrderPdfButton({ workOrder, isRTL }: WorkOrderPdfButtonProps) {
+export default function WorkOrderPdfButton({ workOrder, logs, isRTL, proofTenant }: WorkOrderPdfButtonProps) {
     const [loading, setLoading] = useState(false)
-    const { data: rawSettings } = useTenantSettings()
-    const settings = mergeWithDefaults(rawSettings ?? null)
+    const { t } = useTranslation()
 
     async function handleGenerate() {
         setLoading(true)
         try {
-            const { blob, fileName } = await generateWorkOrderPdf({ workOrder, settings, isRTL })
-
-            // Upload to work-order-pdfs/{tenant_id}/{work_order_id}.pdf
-            const storagePath = `${workOrder.tenant_id}/${workOrder.id}.pdf`
-            const { error: uploadError } = await supabase.storage
-                .from('work-order-pdfs')
-                .upload(storagePath, blob, { contentType: 'application/pdf', upsert: true })
-
-            if (uploadError) {
-                console.error('PDF upload failed:', uploadError)
-                // Still allow download even if upload fails
-            } else {
-                // Track generation metadata
-                await (supabase.from('work_orders') as ReturnType<typeof supabase.from>).update({
-                    pdf_generated_at: new Date().toISOString(),
-                    pdf_version: (workOrder.pdf_version ?? 0) + 1,
-                    pdf_file_url: storagePath,
-                }).eq('id', workOrder.id)
-            }
+            const { generateWorkOrderPdf } = await import('@/utils/workOrderPdf')
+            const { blob, fileName } = await generateWorkOrderPdf({
+                workOrder,
+                logs,
+                settings: proofTenant.settings,
+                tenant: proofTenant,
+                isRTL,
+            })
 
             // Trigger browser download
             const url = URL.createObjectURL(blob)
@@ -48,40 +36,44 @@ export default function WorkOrderPdfButton({ workOrder, isRTL }: WorkOrderPdfBut
             a.click()
             URL.revokeObjectURL(url)
 
-            toast.success(isRTL ? 'تم تحميل التقرير بنجاح' : 'Report downloaded successfully')
+            toast.success(t('workOrders.proof.downloaded'))
         } catch (err) {
             console.error('PDF generation failed:', err)
-            toast.error(isRTL ? 'تعذّر توليد التقرير' : 'Failed to generate report')
+            toast.error(t('workOrders.proof.generationFailed'))
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div className="bg-card border rounded-xl p-5 shadow-sm space-y-3 border-l-4 border-l-blue-600">
+        <div
+            className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-sm"
+            aria-busy={loading}
+        >
             <div className="flex items-center gap-2">
-                <FileDown className="w-4 h-4 text-blue-600" />
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <FileDown className="h-4 w-4 text-primary" aria-hidden="true" />
+                </span>
                 <h3 className="font-semibold text-sm">
-                    {isRTL ? 'تقرير أمر العمل (PDF)' : 'Work Order Report (PDF)'}
+                    {t('workOrders.proof.title')}
                 </h3>
             </div>
-            {workOrder.pdf_generated_at && (
-                <p className="text-xs text-muted-foreground">
-                    {isRTL ? 'آخر توليد: ' : 'Last generated: '}
-                    {new Date(workOrder.pdf_generated_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-GB')}
-                </p>
-            )}
+            <p className="text-xs leading-5 text-muted-foreground">
+                {t('workOrders.proof.subtitle')}
+            </p>
             <button
+                type="button"
                 onClick={handleGenerate}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                aria-label={t('workOrders.proof.downloadPdf')}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
             >
                 {loading
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <FileDown className="w-4 h-4" />}
+                    ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    : <FileDown className="h-4 w-4" aria-hidden="true" />}
                 {loading
-                    ? (isRTL ? 'جارٍ التوليد...' : 'Generating...')
-                    : (isRTL ? 'تحميل PDF' : 'Download PDF')}
+                    ? t('workOrders.proof.generating')
+                    : t('workOrders.proof.downloadPdf')}
             </button>
         </div>
     )

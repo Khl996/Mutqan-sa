@@ -129,6 +129,23 @@ function Invoke-PsqlCommand {
     return $result
 }
 
+function Get-CanonicalTextSha256 {
+    param(
+        [Parameter(Mandatory)] [string]$File
+    )
+
+    $resolved = (Resolve-Path -LiteralPath $File).Path
+    $text = [IO.File]::ReadAllText($resolved, [Text.Encoding]::UTF8)
+    $canonicalText = $text.Replace("`r`n", "`n").Replace("`r", "`n")
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($canonicalText)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $sha.Dispose()
+    }
+}
+
 function Record-ReplayArtifact {
     param(
         [Parameter(Mandatory)] [string]$Version,
@@ -138,7 +155,7 @@ function Record-ReplayArtifact {
     )
 
     $resolved = (Resolve-Path -LiteralPath $File).Path
-    $sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $resolved).Hash.ToLowerInvariant()
+    $sha256 = Get-CanonicalTextSha256 -File $resolved
     $relativePath = [IO.Path]::GetRelativePath($repoRoot, $resolved)
     $recordedPath = if (-not [IO.Path]::IsPathRooted($relativePath) -and
         $relativePath -ne '..' -and
@@ -238,7 +255,7 @@ CREATE TABLE replay_audit.applied_artifacts (
     )
 
     $localStubs = Join-Path $repoRoot 'verify\local_stubs.sql'
-    $localStubsHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $localStubs).Hash.ToLowerInvariant()
+    $localStubsHash = Get-CanonicalTextSha256 -File $localStubs
     if ($localStubsHash -ne '37c6cd8c8ca1d4395b7e8d95dda78b89c92645e6f7559426d25dfd3174bc4c15') {
         throw 'Recovered local Supabase stub checksum mismatch.'
     }
@@ -266,7 +283,7 @@ CREATE TABLE replay_audit.applied_artifacts (
     }
     foreach ($entry in $expectedRecoveredHashes.GetEnumerator()) {
         $path = Join-Path $repoRoot (Join-Path 'supabase\migrations' $entry.Key)
-        $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash.ToLowerInvariant()
+        $actual = Get-CanonicalTextSha256 -File $path
         if ($actual -ne $entry.Value) {
             throw "Recovered migration checksum mismatch: $($entry.Key)"
         }
@@ -364,6 +381,12 @@ CREATE TABLE replay_audit.applied_artifacts (
         }
         Invoke-PsqlFile -File $testPath -Quiet
     }
+
+    Apply-MigrationArtifact -File (Join-Path $migrationRoot '20260822165746_p0_anonymous_definer_allowlist.sql')
+    Invoke-PsqlFile -File (Join-Path $repoRoot 'supabase\tests\p0_anonymous_definer_allowlist.sql') -Quiet
+
+    Apply-MigrationArtifact -File (Join-Path $migrationRoot '20260824180500_p0_work_order_proof_authority.sql')
+    Invoke-PsqlFile -File (Join-Path $repoRoot 'supabase\tests\p0_work_order_proof_authority.sql') -Quiet
 
     Invoke-PsqlFile -File (Join-Path $repoRoot 'supabase\tests\p0_payment_concurrency_setup.sql') -Quiet
     $paymentCall = (Resolve-Path -LiteralPath (Join-Path $repoRoot 'supabase\tests\p0_payment_activation_call.sql')).Path
