@@ -27,6 +27,8 @@ import { Link } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
 import { hasClosureProofSnapshot } from '@/lib/proofOfWork'
 import { useProofTenantContext } from '@/hooks/useTenantSettings'
+import amiriRegularUrl from '@expo-google-fonts/amiri/400Regular/Amiri_400Regular.ttf?url'
+import amiriBoldUrl from '@expo-google-fonts/amiri/700Bold/Amiri_700Bold.ttf?url'
 
 // Simple Skeleton Loader
 const WorkOrderDetailsSkeleton = () => (
@@ -121,11 +123,16 @@ export default function WorkOrderDetailsPage() {
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
         documentTitle: `WorkOrder-${workOrder?.code || 'Draft'}`,
+        fonts: [
+            { family: 'MutqanProofArabic', source: amiriRegularUrl, weight: '400', style: 'normal' },
+            { family: 'MutqanProofArabic', source: amiriBoldUrl, weight: '700', style: 'normal' },
+        ],
+        onBeforePrint: async () => {
+            flushSync(() => setProofGeneratedAt(new Date().toISOString()))
+            await document.fonts.ready
+        },
     })
-    const handleProofPrint = () => {
-        flushSync(() => setProofGeneratedAt(new Date().toISOString()))
-        handlePrint()
-    }
+    const handleProofPrint = () => handlePrint()
 
     // Loading State
     if (wLoading || lLoading) return <WorkOrderDetailsSkeleton />
@@ -247,10 +254,7 @@ export default function WorkOrderDetailsPage() {
                     {/* PDF Report — only for completed orders */}
                     {canGenerateProof && (
                         <WorkOrderPdfButton
-                            workOrder={workOrder}
-                            logs={logs || []}
-                            isRTL={isRTL}
-                            proofTenant={proofTenant}
+                            onPrint={handleProofPrint}
                         />
                     )}
                     {workOrder.status === 'completed' && !hasProofSnapshot && (

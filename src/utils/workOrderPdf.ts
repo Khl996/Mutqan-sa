@@ -1,3 +1,8 @@
+/**
+ * @deprecated The user-facing Proof of Work path uses WorkOrderPrintView and
+ * browser-native printing. Do not reconnect this jsPDF generator: its Arabic
+ * font subsets are not portable across strict PDF readers.
+ */
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import amiriRegularUrl from '@expo-google-fonts/amiri/400Regular/Amiri_400Regular.ttf?url'

@@ -1,8 +1,9 @@
 # متقن 2.0 - سجل تنفيذ وأدلة الرحلة الذهبية الأولى
 
 التاريخ: 2026-08-24
+تحديث توافق PDF العربي: 2026-08-26
 الرحلة: أمر العمل من المهمة إلى إثبات الإنجاز
-الحالة: أول شريحة رأسية منفذة ومتحققة محليًا؛ غير مطبقة على Staging أو Production
+الحالة: أول شريحة رأسية منفذة ومتحققة محليًا، مع إغلاق عيب توافق PDF العربي؛ غير مطبقة على Staging أو Production
 
 ## حدود هذا السجل
 
@@ -34,7 +35,10 @@ deployment بعيد في هذه الدفعة.
 
 ### 2. نموذج واحد للشاشة وPDF
 
-- الشاشة وPDF يستخدمان `ProofOfWorkViewModel` واحدًا بدل منطقين متباعدين.
+- الشاشة ووثيقة الطباعة تستخدمان `WorkOrderPrintView` و
+  `ProofOfWorkViewModel` واحدين بدل قالب HTML وقالب PDF متباعدين.
+- أزيل مولد jsPDF من مسار المستخدم؛ زر الإثبات يفتح الطباعة الأصلية للمتصفح
+  التي تتيح الطباعة أو الحفظ بصيغة PDF من القالب نفسه.
 - الحقيقة النهائية تأتي من لقطة v2؛ الحقول الحية تستخدم فقط في وضع غير نهائي
   أو كحقول مرجعية معلنة.
 - السجل التشغيلي يُرتب ويُستبعد منه كل حدث يتجاوز وقت الإغلاق.
@@ -46,15 +50,17 @@ deployment بعيد في هذه الدفعة.
 
 - واجهة هادئة وواضحة بالعربية والإنجليزية تشمل ملخص العمل، الموقع والأصل،
   التنفيذ والمراجعة، الأدلة البصرية، والأثر التشغيلي.
-- ملف PDF A4 حقيقي بالعربية والإنجليزية: صفحة رئيسية وملحق أدلة مقصود، مع
-  أعمدة RTL صحيحة، تذييل واضح، وأكواد وتواريخ لا تنعكس.
-- تستخدم الشاشة وPDF هوية مُصدر فعالة واحدة بقواعد fallback موحدة، فلا يختلف
+- ملف PDF A4 حقيقي بالعربية والإنجليزية من صفحتين مقصودتين، مع أعمدة RTL
+  صحيحة، وفاصل صفحة صريح يمنع شطر بطاقات التنفيذ، وأكواد لا تُقص أو تنعكس.
+- تستخدم الشاشة ووثيقة الطباعة هوية مُصدر فعالة واحدة بقواعد fallback موحدة، فلا يختلف
   اسم الجهة بين القناتين.
-- يعرض ملحق PDF جرد الأدلة دائمًا: العدد المسجل، والعدد المضمن، وحالة صريحة
-  عند الاستبعاد بإعداد المنشأة أو تعذر التحميل؛ لا تختفي الأدلة بصمت.
-- محرك PDF يُحمّل عند الطلب فقط؛ لم يعد جزءًا ثابتًا من حزمة صفحة أمر العمل.
-- خط Amiri مضمن محليًا بإصدار ثابت وبصمات متحققة وقت التشغيل؛ لا يوجد جلب
-  من GitHub ولا fallback إلى Helvetica للنص العربي.
+- تعرض الوثيقة جردًا صريحًا لصور البلاغ وما قبل/بعد التنفيذ. تضمين الصور
+  الخاصة الفعلية داخل الوثيقة يبقى بوابة قبول مستضافة مستقلة ولا يُفترض هنا.
+- لا يُحمّل مولد jsPDF في مسار إثبات الإنجاز. التشكيل وBiDi ينفذهما المتصفح
+  على نص Unicode منطقي قابل للنسخ والبحث، لا على Arabic Presentation Forms.
+- خط Amiri regular/bold مضمن محليًا بإصدار ثابت؛ داخل الملف يحمل كل subset
+  اسمًا مستقلًا و`ToUnicode` وTTF checksum صحيحًا. لا يوجد جلب وقت الطباعة
+  من GitHub أو Google Fonts ولا fallback إلى Helvetica للنص العربي.
 - مراجع الصور تقبل مسارات Supabase Storage النسبية فقط، وترفض `http(s)` و
   `data:` والمسارات المطلقة و`..` وWindows paths. وتظل RLS صاحبة القرار عند
   إصدار الرابط الموقع.
@@ -71,10 +77,15 @@ deployment بعيد في هذه الدفعة.
 | اختبارات التطبيق | PASS | 38 من 38 اختبارًا؛ 5 ملفات اختبار |
 | Mojibake | PASS | لا فساد ترميز عربي |
 | ESLint للنطاق المتغير | PASS مع دين قائم | 0 أخطاء؛ 21 تحذيرًا قديمًا في hookين تاريخيين |
-| Production build | PASS | Vite: 3826 module؛ PDF في chunk مستقل؛ PWA: 179 entry / 5232.58 KiB |
+| Production build | PASS | Vite: 3825 module؛ PWA: 177 entry / 5221.38 KiB |
 | PWA font/license | PASS | Amiri regular/bold ونصا OFL وMIT موجودة في precache |
 | الشاشة العربية والإنجليزية | PASS | 1440x1900، لا console errors أو warnings، فحص بصري يدوي |
-| PDF الفعلي | PASS | توليد داخل متصفح حقيقي، صفحتان لكل لغة، ملحق أدلة مقصود، لا تحذير عرض جدول، ثم render PNG وفحص بصري مستقل |
+| PDF الفعلي | PASS | صفحتان لكل لغة من قالب HTML نفسه؛ لا قص للمرجع ولا شطر لبطاقات التنفيذ؛ render مستقل وفحص الصفحتين |
+| Unicode والبحث | PASS | 1128 محرفًا عربيًا أساسيًا، 0 Presentation Forms، 0 NUL؛ نجح البحث الخام عن خمس عبارات عربية مرجعية |
+| تضمين الخط | PASS | Amiri regular/bold بأسماء subset مستقلة، `ToUnicode`، وTTF checksum = `b1b0afba` لكليهما |
+| قارئ Chrome | PASS | فُتح ملف PDF النهائي نفسه في عارض Chrome عند 100%؛ العربية متصلة والصفحتان ظاهرتان |
+| قارئ Edge / Adobe | PASS | فُتح الملف النهائي نفسه في عارض Edge المعتمد على Adobe؛ العربية متصلة بلا استبدال خط ظاهر |
+| تطابق Chrome وEdge | PASS | توليد مستقل بالمحركين؛ صفحتا PDF تطابقتا pixel-for-pixel، RMS = 0 |
 | TypeScript الكامل للأساس | دين سابق مفتوح | 36 خطأ عبر 15 ملفًا في الأساس؛ سطح Proof الجديد نفسه: 0 أخطاء |
 
 تحذيرات البناء غير المانعة المسجلة: بيانات Browserslist عمرها ثمانية أشهر،
@@ -91,6 +102,8 @@ deployment بعيد في هذه الدفعة.
 - [رندر PDF العربي - ملحق الأدلة](evidence/golden-journey-01/proof-pdf-render-ar-p2.png)
 - [رندر PDF الإنجليزي - الصفحة الأولى](evidence/golden-journey-01/proof-pdf-render-en.png)
 - [رندر PDF الإنجليزي - ملحق الأدلة](evidence/golden-journey-01/proof-pdf-render-en-p2.png)
+- [PDF العربي داخل قارئ Chrome](evidence/golden-journey-01/proof-pdf-viewer-chrome-ar.png)
+- [PDF العربي داخل قارئ Edge / Adobe](evidence/golden-journey-01/proof-pdf-viewer-edge-ar.png)
 
 ## بصمات SHA-256
 
@@ -100,15 +113,22 @@ deployment بعيد في هذه الدفعة.
 | `p0_work_order_proof_authority.sql` | `ec138fcf8d6cdcf39d97128c4341c1b9b0b55b5662bfff8c1ea9d54d8e8af23e` |
 | `proofOfWork.ts` | `1c6dd1cd095967878749ddf050a354842206b3cd49ff8f0a8fac27697177459d` |
 | `proofStorage.ts` | `04a973bc803f7b6f6915c1515a8fa3c7bd65408e322528405ad26bc9c5ed5c02` |
-| `workOrderPdf.ts` | `5b92975c4dd6d52f1201c6f0ab2523eec3163704ee75be7da71ee59940ec9093` |
-| `proof-of-work-ar.pdf` | `b7a615247e9ed83639037dff53e551fc13b4f9887feea200ffd61224f3dd8618` |
-| `proof-of-work-en.pdf` | `e1776888abef9eed7c4acb12aae16a13d35072d8097ac186071ea36e7507b0b4` |
-| `proof-screen-ar.png` | `b4133094d10f7b66c41b811cf7d5610438eb11967b3933ff42e17d4827817941` |
-| `proof-screen-en.png` | `e642392061a3bf77c6ff5d186137d19c79f81325e38bc3df28a22a9dec8b2e4c` |
-| `proof-pdf-render-ar.png` | `b4b21c942c4ffbaf1a28e5feec851e004889d552429ffd565e2bfb41a6541d80` |
-| `proof-pdf-render-ar-p2.png` | `d88395505f76fdc77c66f01dfa21e12b3ca9682b7652bae512b32367b2186aa6` |
-| `proof-pdf-render-en.png` | `8630679b65b97bbb257d5531b0b125d080db789770d1941a18bac8321eef6764` |
-| `proof-pdf-render-en-p2.png` | `c4fa96b13c858dc314f1b3562df44c1cdc5786784f72113f7a75824ca1a4cdef` |
+| `WorkOrderPdfButton.tsx` | `405af2386f9797cba199fc1992468046d3cf9eed1ec5ccbc75b7b652c0a108c1` |
+| `WorkOrderPrintView.tsx` | `db16b19bc5cc90467317d9977291fd0200fb9f70b086944af82fb1d875818443` |
+| `WorkOrderDetailsPage.tsx` | `e7e31d524c21229ddbfd8c00af3298a6d94b3a67ca0279b27d1d92af728e56df` |
+| `ProofOfWorkPreview.tsx` | `ccde24e6d63eda493cea54a1cc3743dfc8a71208e6c69b2bd6207fc3349898f9` |
+| `workOrderPdf.ts` (deprecated path) | `3faeff2c1ce697b93fd9eaa239337186da2d5cc7769c1088de0ac0b6fdd127c6` |
+| `ar.json` | `06b735fd31e8937943b991032c9cbc22d79cbc77226c2d7860ab0e4d4bbe469e` |
+| `proof-of-work-ar.pdf` | `2183851c7a413d4b0feb7b0d63b074f05614717142aa39dba0743729088ac147` |
+| `proof-of-work-en.pdf` | `c37e956c30428f8397510d4fe88eeb4f9be9d7e4178b55ecf752aac418fb1f97` |
+| `proof-screen-ar.png` | `c9c0d59c3bdf17667cdefbe5212330e1534c5a05871de28d5fdb77a32be21629` |
+| `proof-screen-en.png` | `741552b75b337cb4de3e62e6b14b575268ef1cb835af82f047965df6543bec55` |
+| `proof-pdf-render-ar.png` | `856d02b2f681e5321e8c8efd66d36b0317c34b6d3ecf8c189081f1fcc50d6e99` |
+| `proof-pdf-render-ar-p2.png` | `c6fb48816a33e81d6b69a5205b49fb09c22786c265bc076a16437ec7b4018f60` |
+| `proof-pdf-render-en.png` | `46cf2459a35231ccf41a96eacd2989e0a9c27917f3ca138a94e291868ceed2ae` |
+| `proof-pdf-render-en-p2.png` | `5034e3ef48fe8cdb6b64c49925d53b136b50bcdff81a9e84c70c3fccf9fb12b2` |
+| `proof-pdf-viewer-chrome-ar.png` | `f3c38a1c4207e09fcd24e4a4ac2f0532e43cd659de11df4cd3b6d9c39de419ed` |
+| `proof-pdf-viewer-edge-ar.png` | `c373b6b351528e745dab98b51bd324c6236c88c37d4045098e1638b3a8fd0358` |
 | Amiri Regular TTF | `d26cd95609ed51b6419e3c7d4a066cb9fac7b73117868622f5b7f03998c68568` |
 | Amiri Bold TTF | `0cf3c9c5b967adb281a46f17293fe03b1fc05e0538ab4db4a4c2252f45098692` |
 | OFL license | `f0fcc7d0a78a4a7df1a69d9a6fe20723f2eb424e560b40715c61e2654220c3f1` |
@@ -125,8 +145,8 @@ Integrity:
 1. تطبيق الهجرة الجديدة على Staging فقط ضمن نافذة مستقلة ومصرح بها.
 2. إغلاق أمر عمل مستضاف عبر `close_work_order` وإثبات أن snapshot v2 تكوّنت
    في الخدمة الفعلية.
-3. توليد PDF مستضاف بهوية مستأجر حقيقية وصور خاصة فعلية، مع اختبار مستخدم
-   عادي وtenant admin وplatform admin ومحاولة عابرة للمستأجرين.
+3. توليد PDF مستضاف بهوية مستأجر حقيقية، وتضمين صور خاصة فعلية بعد تحميلها
+   المصرح، مع اختبار مستخدم عادي وtenant admin وplatform admin ومحاولة عابرة للمستأجرين.
 4. اختبار محتوى طويل ومتعدد الصفحات وصور كبيرة وحالات البيانات الناقصة.
 5. قياس الرحلة مع مستخدمين فعليين: زمن الإتمام، نسبة الأخطاء، اكتمال الأدلة،
    الثقة في المستند، والحاجة إلى شرح أو تدريب.
@@ -139,6 +159,6 @@ Integrity:
 ## القرار التنفيذي
 
 أول رحلة ذهبية انتقلت من وثيقة إلى شريحة رأسية قابلة للمراجعة: سلطة قاعدة
-البيانات، نموذج حقيقة واحد، تجربة عربية/إنجليزية، PDF فعلي، وأدلة قابلة لإعادة
-التحقق. الخطوة التالية ليست تعميم إعادة البناء، بل قبول مستضاف مضبوط ثم قياس
+البيانات، نموذج حقيقة واحد، تجربة عربية/إنجليزية، وPDF محمول بين القارئات،
+وأدلة قابلة لإعادة التحقق. الخطوة التالية ليست تعميم إعادة البناء، بل قبول مستضاف مضبوط ثم قياس
 الرحلة مع المستخدم قبل فتح الرحلة الذهبية الثانية.

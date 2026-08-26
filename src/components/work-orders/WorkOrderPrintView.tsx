@@ -13,6 +13,8 @@ import {
     type EffectiveProofIdentity,
     type ProofLanguage,
 } from '@/lib/proofOfWork'
+import amiriRegularUrl from '@expo-google-fonts/amiri/400Regular/Amiri_400Regular.ttf?url'
+import amiriBoldUrl from '@expo-google-fonts/amiri/700Bold/Amiri_700Bold.ttf?url'
 
 interface WorkOrderPrintViewProps {
     workOrder: WorkOrder
@@ -129,7 +131,7 @@ const WorkOrderPrintView = forwardRef<HTMLDivElement, WorkOrderPrintViewProps>((
     return (
         <div
             ref={ref}
-            className="min-h-screen bg-white p-8 font-cairo text-[var(--mutqan-text)]"
+            className="mutqan-proof-print min-h-screen bg-white p-8 text-[var(--mutqan-text)]"
             dir={isRTL ? 'rtl' : 'ltr'}
             lang={language}
             style={{
@@ -138,11 +140,34 @@ const WorkOrderPrintView = forwardRef<HTMLDivElement, WorkOrderPrintViewProps>((
                 '--mutqan-accent': '#00b2a9',
                 '--mutqan-border': '#e6e9ed',
                 '--mutqan-surface-soft': '#eef3f5',
+                fontFamily: "'MutqanProofArabic', 'Tahoma', sans-serif",
             } as CSSProperties}
         >
             <style>{`
+                @font-face {
+                    font-family: 'MutqanProofArabic';
+                    src: url('${amiriRegularUrl}') format('truetype');
+                    font-weight: 400;
+                    font-style: normal;
+                    font-display: block;
+                }
+                @font-face {
+                    font-family: 'MutqanProofArabic';
+                    src: url('${amiriBoldUrl}') format('truetype');
+                    font-weight: 700;
+                    font-style: normal;
+                    font-display: block;
+                }
                 @page { size: A4; margin: 14mm; }
                 @media print {
+                    .mutqan-proof-print {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .proof-execution-section {
+                        break-before: page;
+                        page-break-before: always;
+                    }
                     .proof-avoid-break { break-inside: avoid; page-break-inside: avoid; }
                     .proof-table-row { break-inside: avoid; page-break-inside: avoid; }
                 }
@@ -151,7 +176,7 @@ const WorkOrderPrintView = forwardRef<HTMLDivElement, WorkOrderPrintViewProps>((
             <PrintHeader identity={printIdentity} language={language} />
 
             <header className="proof-avoid-break mb-8">
-                <div className="flex flex-wrap items-start justify-between gap-5">
+                <div className="flex flex-wrap items-start gap-5">
                     <div className="max-w-2xl">
                         <p className="mb-2 text-sm font-bold tracking-wide text-[var(--mutqan-accent)]">
                             {t('workOrders.proof.title')}
@@ -162,14 +187,14 @@ const WorkOrderPrintView = forwardRef<HTMLDivElement, WorkOrderPrintViewProps>((
                         <p className="mt-3 text-sm leading-6 text-[var(--mutqan-muted)]">
                             {t('workOrders.proof.subtitle')}
                         </p>
-                    </div>
-                    <div className="min-w-52 rounded-xl border border-[var(--mutqan-border)] bg-[var(--mutqan-surface-soft)] p-4 text-sm">
-                        <p className="font-mono text-lg font-bold text-[var(--mutqan-text)]">
-                            <bdi dir="ltr">#{proof.workOrder.code}</bdi>
-                        </p>
-                        <p className="mt-2 font-bold text-[var(--mutqan-accent)]">
-                            {t(`workOrders.${status.label}`)}
-                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                            <span className="rounded-lg bg-[var(--mutqan-surface-soft)] px-3 py-2 font-bold text-[var(--mutqan-text)]">
+                                {proof.workOrder.code}
+                            </span>
+                            <span className="rounded-lg border border-[var(--mutqan-accent)] px-3 py-2 font-bold text-[var(--mutqan-accent)]">
+                                {t(`workOrders.${status.label}`)}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <dl className="mt-5 grid gap-3 rounded-xl border border-[var(--mutqan-border)] bg-[var(--mutqan-surface-soft)] p-4 text-xs sm:grid-cols-2">
@@ -222,7 +247,8 @@ const WorkOrderPrintView = forwardRef<HTMLDivElement, WorkOrderPrintViewProps>((
                     </p>
                 </section>
 
-                <section>
+                <section className="proof-avoid-break proof-execution-section">
+                    <div className="hidden print:block" style={{ height: '8mm' }} aria-hidden="true" />
                     <SectionTitle>{t('workOrders.proof.sections.execution')}</SectionTitle>
                     <div className="grid gap-5 md:grid-cols-2">
                         {([
@@ -319,9 +345,8 @@ const WorkOrderPrintView = forwardRef<HTMLDivElement, WorkOrderPrintViewProps>((
                 </section>
             </main>
 
-            <footer className="mt-10 flex items-center justify-between gap-4 border-t border-[var(--mutqan-border)] pt-4 text-xs text-[var(--mutqan-muted)]">
+            <footer className="mt-10 border-t border-[var(--mutqan-border)] pt-4 text-xs text-[var(--mutqan-muted)]">
                 <span>{t('workOrders.proof.generatedFrom')}</span>
-                <span className="font-mono"><bdi dir="ltr">{proof.workOrder.code}</bdi></span>
             </footer>
         </div>
     )

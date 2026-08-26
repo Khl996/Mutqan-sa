@@ -133,22 +133,13 @@ const logs: OperationLog[] = [
 
 document.documentElement.lang = language
 document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+document.title = language === 'ar'
+    ? `إثبات الإنجاز — ${workOrder.code}`
+    : `Proof of Work — ${workOrder.code}`
 
-async function downloadFixturePdf() {
-    const { generateWorkOrderPdf } = await import('@/utils/workOrderPdf')
-    const { blob, fileName } = await generateWorkOrderPdf({
-        workOrder,
-        logs,
-        settings,
-        tenant: proofTenant,
-        isRTL: language === 'ar',
-    })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = fileName.replace('.pdf', `-${language}.pdf`)
-    anchor.click()
-    URL.revokeObjectURL(url)
+async function printFixture() {
+    await document.fonts.ready
+    window.print()
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -157,10 +148,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <div className="fixed start-5 top-5 z-10 print:hidden">
                 <button
                     type="button"
-                    onClick={() => void downloadFixturePdf()}
+                    onClick={() => void printFixture()}
                     className="rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                 >
-                    {language === 'ar' ? 'تنزيل عينة PDF' : 'Download PDF fixture'}
+                    {language === 'ar' ? 'طباعة أو حفظ PDF' : 'Print or save PDF'}
                 </button>
             </div>
             <div className="mx-auto my-8 w-[210mm] overflow-hidden bg-white shadow-2xl print:m-0 print:shadow-none">
