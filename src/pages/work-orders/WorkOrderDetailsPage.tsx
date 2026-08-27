@@ -20,13 +20,19 @@ import WorkOrderAssetLocation from '@/components/work-orders/WorkOrderAssetLocat
 import WorkOrderActions from '@/components/work-orders/WorkOrderActions'
 import WorkOrderPrintView from '@/components/work-orders/WorkOrderPrintView'
 import WorkOrderPdfButton from '@/components/work-orders/WorkOrderPdfButton'
+import LegacyWorkOrderPrintButton from '@/components/work-orders/LegacyWorkOrderPrintButton'
+import LegacyWorkOrderPrintView from '@/components/work-orders/LegacyWorkOrderPrintView'
 import ExecutionDialog from '@/components/maintenance/ExecutionDialog'
 import { en as pmEn, ar as pmAr } from '@/components/maintenance/foundationPmUtils'
 import { AlertTriangle, ClipboardCheck, Inbox } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
 import { hasClosureProofSnapshot } from '@/lib/proofOfWork'
+import { isTenantReleaseEnabledForRecord } from '@/lib/tenantReleaseFlag'
 import { useProofTenantContext } from '@/hooks/useTenantSettings'
+import { useTenantReleaseFlag } from '@/hooks/useTenantReleaseFlag'
+import { useTenant } from '@/contexts/TenantContext'
+import { TENANT_RELEASE_FLAGS } from '@/config/releaseFlags'
 import amiriRegularUrl from '@expo-google-fonts/amiri/400Regular/Amiri_400Regular.ttf?url'
 import amiriBoldUrl from '@expo-google-fonts/amiri/700Bold/Amiri_700Bold.ttf?url'
 
@@ -55,17 +61,24 @@ export default function WorkOrderDetailsPage() {
     const isRTL = (i18n.resolvedLanguage ?? i18n.language).toLowerCase().startsWith('ar')
     const locale = isRTL ? 'ar-SA' : 'en-US'
     const pmCopy = isRTL ? pmAr : pmEn
+    const { currentTenant } = useTenant()
+    const proofRelease = useTenantReleaseFlag(TENANT_RELEASE_FLAGS.OPERATIONS_GOLDEN_PATH_V1)
     // PM execution dialog state
     const [pmExecutionWorkOrder, setPmExecutionWorkOrder] = useState<PMWorkOrder | null>(null)
     const [proofGeneratedAt, setProofGeneratedAt] = useState(() => new Date().toISOString())
 
     // 1. Fetch Work Order Data
     const { data: workOrder, isLoading: wLoading, error: wError, refetch: refetchWO } = useWorkOrder(id!)
+    const proofExperienceEnabled = isTenantReleaseEnabledForRecord(
+        proofRelease.status,
+        currentTenant?.id,
+        workOrder?.tenant_id
+    )
     const {
         data: proofTenant,
         isLoading: proofTenantLoading,
         error: proofTenantError,
-    } = useProofTenantContext(workOrder?.tenant_id)
+    } = useProofTenantContext(workOrder?.tenant_id, proofExperienceEnabled)
 
     // 2. Fetch Logs
     const { data: logs, isLoading: lLoading, refetch: refetchLogs } = useWorkOrderLogs(id!)
@@ -132,10 +145,10 @@ export default function WorkOrderDetailsPage() {
             await document.fonts.ready
         },
     })
-    const handleProofPrint = () => handlePrint()
+    const handleDocumentPrint = () => handlePrint()
 
     // Loading State
-    if (wLoading || lLoading) return <WorkOrderDetailsSkeleton />
+    if (wLoading || lLoading || proofRelease.isChecking) return <WorkOrderDetailsSkeleton />
 
     // Error State
     if (wError || !workOrder) {
@@ -157,7 +170,8 @@ export default function WorkOrderDetailsPage() {
     }
 
     const hasProofSnapshot = hasClosureProofSnapshot(workOrder)
-    const canGenerateProof = workOrder.status === 'completed'
+    const canGenerateProof = proofExperienceEnabled
+        && workOrder.status === 'completed'
         && hasProofSnapshot
         && proofTenant?.id === workOrder.tenant_id
 
@@ -166,7 +180,10 @@ export default function WorkOrderDetailsPage() {
             <WorkOrderHeader
                 workOrder={workOrder}
                 isRTL={isRTL}
-                onPrint={canGenerateProof ? handleProofPrint : undefined}
+                onPrint={proofExperienceEnabled
+                    ? (canGenerateProof ? handleDocumentPrint : undefined)
+                    : handleDocumentPrint}
+                proofOfWorkEnabled={proofExperienceEnabled}
             />
 
             {/* Intake source banner (وارد واتساب) */}
@@ -251,13 +268,13 @@ export default function WorkOrderDetailsPage() {
                         }}
                     />
 
-                    {/* PDF Report — only for completed orders */}
-                    {canGenerateProof && (
+                    {/* Canary Proof of Work — only for an explicitly enabled tenant. */}
+                    {proofExperienceEnabled && canGenerateProof && (
                         <WorkOrderPdfButton
-                            onPrint={handleProofPrint}
+                            onPrint={handleDocumentPrint}
                         />
                     )}
-                    {workOrder.status === 'completed' && !hasProofSnapshot && (
+                    {proofExperienceEnabled && workOrder.status === 'completed' && !hasProofSnapshot && (
                         <div
                             className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-foreground"
                             role="status"
@@ -269,21 +286,28 @@ export default function WorkOrderDetailsPage() {
                             </div>
                         </div>
                     )}
-                    {workOrder.status === 'completed' && hasProofSnapshot && proofTenantLoading && (
+                    {proofExperienceEnabled && workOrder.status === 'completed' && hasProofSnapshot && proofTenantLoading && (
                         <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground" role="status">
                             {i18n.t('workOrders.proof.verifyingTenantIdentity')}
                         </div>
                     )}
-                    {workOrder.status === 'completed' && hasProofSnapshot && proofTenantError && (
+                    {proofExperienceEnabled && workOrder.status === 'completed' && hasProofSnapshot && proofTenantError && (
                         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-foreground" role="alert">
                             {i18n.t('workOrders.proof.unavailableTenantIdentity')}
                         </div>
+                    )}
+                    {!proofExperienceEnabled && workOrder.status === 'completed' && (
+                        <LegacyWorkOrderPrintButton
+                            workOrder={workOrder}
+                            isRTL={isRTL}
+                            onPrint={handleDocumentPrint}
+                        />
                     )}
                 </div>
             </div>
 
             {/* A final proof is available only after the work order is completed. */}
-            {canGenerateProof && (
+            {proofExperienceEnabled && canGenerateProof && proofTenant && (
                 <div style={{ display: 'none' }}>
                     <WorkOrderPrintView
                         ref={componentRef}
@@ -292,6 +316,15 @@ export default function WorkOrderDetailsPage() {
                         language={isRTL ? 'ar' : 'en'}
                         generatedAt={proofGeneratedAt}
                         proofTenant={proofTenant}
+                    />
+                </div>
+            )}
+            {!proofExperienceEnabled && (
+                <div style={{ display: 'none' }}>
+                    <LegacyWorkOrderPrintView
+                        ref={componentRef}
+                        workOrder={workOrder}
+                        logs={logs || []}
                     />
                 </div>
             )}

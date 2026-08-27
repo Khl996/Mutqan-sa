@@ -28,7 +28,10 @@ interface ProofTenantRow {
 
 // Proof documents must derive identity from the work order's tenant, never
 // from whichever tenant happens to be selected in ambient application state.
-export function useProofTenantContext(tenantId: string | null | undefined) {
+export function useProofTenantContext(
+    tenantId: string | null | undefined,
+    enabled = true
+) {
     return useQuery({
         queryKey: [TENANT_SETTINGS_KEY, 'proof-context', tenantId],
         queryFn: async (): Promise<ProofTenantContext> => {
@@ -59,7 +62,7 @@ export function useProofTenantContext(tenantId: string | null | undefined) {
                 settings: mergeWithDefaults(data.settings as Partial<TenantSettings> | null),
             }
         },
-        enabled: !!tenantId,
+        enabled: enabled && !!tenantId,
     })
 }
 

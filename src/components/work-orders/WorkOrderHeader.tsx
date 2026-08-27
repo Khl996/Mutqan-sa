@@ -9,6 +9,7 @@ interface WorkOrderHeaderProps {
     workOrder: WorkOrder
     isRTL: boolean
     onPrint?: () => void
+    proofOfWorkEnabled?: boolean
 }
 
 const getPriorityConfig = (priority: string) => {
@@ -21,12 +22,20 @@ const getPriorityConfig = (priority: string) => {
     }
 }
 
-export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrderHeaderProps) {
+export default function WorkOrderHeader({
+    workOrder,
+    isRTL,
+    onPrint,
+    proofOfWorkEnabled = false,
+}: WorkOrderHeaderProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const statusConfig = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
     const priorityConfig = getPriorityConfig(workOrder.priority)
     const preventive = isPreventiveWorkOrder(workOrder)
+    const printLabel = proofOfWorkEnabled
+        ? t('workOrders.proof.print')
+        : (isRTL ? 'طباعة' : 'Print')
 
     return (
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card p-6 rounded-xl border shadow-sm">
@@ -67,16 +76,16 @@ export default function WorkOrderHeader({ workOrder, isRTL, onPrint }: WorkOrder
                 </div>
             </div>
 
-            {workOrder.status === 'completed' && onPrint && (
+            {onPrint && (!proofOfWorkEnabled || workOrder.status === 'completed') && (
                 <div className="flex items-center gap-2 self-end md:self-center">
                     <button
                         type="button"
                         onClick={onPrint}
-                        aria-label={t('workOrders.proof.print')}
+                        aria-label={printLabel}
                         className="flex min-h-11 items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary font-cairo"
                     >
                         <Printer className="h-4 w-4 text-primary" aria-hidden="true" />
-                        <span>{t('workOrders.proof.print')}</span>
+                        <span>{printLabel}</span>
                     </button>
                 </div>
             )}
