@@ -391,6 +391,9 @@ CREATE TABLE replay_audit.applied_artifacts (
     Apply-MigrationArtifact -File (Join-Path $migrationRoot '20260826230345_tenant_release_control.sql')
     Invoke-PsqlFile -File (Join-Path $repoRoot 'supabase\tests\p0_tenant_release_control.sql') -Quiet
 
+    Apply-MigrationArtifact -File (Join-Path $migrationRoot '20260828084500_tenant_governance_authority_bootstrap.sql')
+    Invoke-PsqlFile -File (Join-Path $repoRoot 'supabase\tests\p0_tenant_governance_authority_bootstrap.sql') -Quiet
+
     Invoke-PsqlFile -File (Join-Path $repoRoot 'supabase\tests\p0_payment_concurrency_setup.sql') -Quiet
     $paymentCall = (Resolve-Path -LiteralPath (Join-Path $repoRoot 'supabase\tests\p0_payment_activation_call.sql')).Path
     $paymentOut1 = Join-Path $generatedPath 'payment-call-1.out'
