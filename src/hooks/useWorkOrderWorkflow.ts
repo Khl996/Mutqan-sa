@@ -2,18 +2,31 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { workOrdersKeys } from './useWorkOrders'
 
+export interface WorkflowQueryInvalidator {
+    invalidateQueries: (filters: { queryKey: readonly unknown[] }) => Promise<unknown>
+}
+
+export async function invalidateWorkOrderWorkflowQueries(
+    queryClient: WorkflowQueryInvalidator,
+    workOrderId?: string,
+) {
+    const invalidations = [
+        queryClient.invalidateQueries({ queryKey: workOrdersKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['maintenance-plans'] }),
+        queryClient.invalidateQueries({ queryKey: ['plan-tasks'] }),
+    ]
+    if (workOrderId) {
+        invalidations.push(queryClient.invalidateQueries({ queryKey: workOrdersKeys.workOrder(workOrderId) }))
+    }
+    await Promise.all(invalidations)
+}
+
 export const useWorkOrderWorkflow = () => {
     const queryClient = useQueryClient()
 
-    const invalidateAll = (workOrderId?: string) => {
-        queryClient.invalidateQueries({ queryKey: workOrdersKeys.all })
-        queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] })
-        queryClient.invalidateQueries({ queryKey: ['maintenance-plans'] })
-        queryClient.invalidateQueries({ queryKey: ['plan-tasks'] })
-        if (workOrderId) {
-            queryClient.invalidateQueries({ queryKey: workOrdersKeys.workOrder(workOrderId) })
-        }
-    }
+    const invalidateAll = (workOrderId?: string) =>
+        invalidateWorkOrderWorkflowQueries(queryClient, workOrderId)
 
     const startWork = useMutation({
         mutationFn: async ({ workOrderId }: { workOrderId: string }) => {
@@ -23,8 +36,8 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 
@@ -46,9 +59,11 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
-            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+        onSuccess: async (_, variables) => {
+            await Promise.all([
+                invalidateAll(variables.workOrderId),
+                queryClient.invalidateQueries({ queryKey: ['inventory'] }),
+            ])
         },
     })
 
@@ -61,8 +76,8 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 
@@ -75,8 +90,8 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 
@@ -89,8 +104,8 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 
@@ -103,8 +118,8 @@ export const useWorkOrderWorkflow = () => {
             })
             if (error) throw error
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 
@@ -136,8 +151,8 @@ export const useWorkOrderWorkflow = () => {
                 status: string
             }
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 
@@ -156,8 +171,8 @@ export const useWorkOrderWorkflow = () => {
                 reason: string
             }
         },
-        onSuccess: (_, variables) => {
-            invalidateAll(variables.workOrderId)
+        onSuccess: async (_, variables) => {
+            await invalidateAll(variables.workOrderId)
         },
     })
 

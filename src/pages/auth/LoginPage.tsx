@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MutqanLogo } from '@/components/ui/MutqanLogo'
+import { isInactiveAccountError } from '@/lib/authAccess'
 
 export default function LoginPage() {
     const { t, i18n } = useTranslation()
@@ -69,7 +70,7 @@ export default function LoginPage() {
             const { error } = await signIn(email, password)
 
             if (error) {
-                toast.error(t('auth.invalidCredentials'))
+                toast.error(t(isInactiveAccountError(error) ? 'auth.accountInactive' : 'auth.invalidCredentials'))
                 setIsLoading(false)
             } else {
                 toast.success(t('common.success'))

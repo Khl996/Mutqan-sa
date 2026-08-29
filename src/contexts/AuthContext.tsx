@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { InactiveAccountError, isExplicitlyActiveProfile } from '@/lib/authAccess'
 
 interface Profile {
     id: string
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializingRef = useRef(false)
 
     // جلب الـ profile مباشرة باستخدام fetch لتجنب مشاكل AbortError
-    const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    const fetchProfile = useCallback(async (userId: string, accessToken?: string): Promise<Profile | null> => {
         try {
             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
             const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -46,9 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Get token manually from storage since we might not have session in context yet
             const storageKey = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`
             const storedSession = localStorage.getItem(storageKey)
-            let token = null
+            let token = accessToken ?? null
 
-            if (storedSession) {
+            if (!token && storedSession) {
                 try {
                     token = JSON.parse(storedSession).access_token
                 } catch { /* ignore */ }
@@ -155,12 +156,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signIn = async (email: string, password: string) => {
         setIsLoading(true)
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) {
             console.error('Sign in error:', error.message)
             setIsLoading(false)
             return { error }
         }
+
+        const signedInProfile = data.user
+            ? await fetchProfile(data.user.id, data.session?.access_token)
+            : null
+
+        if (!isExplicitlyActiveProfile(signedInProfile)) {
+            await supabase.auth.signOut({ scope: 'local' })
+            if (isMountedRef.current) {
+                setUser(null)
+                setSession(null)
+                setProfile(null)
+            }
+            setIsLoading(false)
+            return { error: new InactiveAccountError() }
+        }
+
         setIsLoading(false)
         return { error: null }
     }

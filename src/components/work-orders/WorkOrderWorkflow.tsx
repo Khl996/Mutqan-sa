@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { WorkOrder } from '@/hooks/useWorkOrders'
 import { CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { STATUS_DISPLAY } from '@/config/workOrderStatus'
 
 interface WorkOrderWorkflowProps {
     workOrder: WorkOrder
@@ -38,6 +39,7 @@ const getStepIndex = (status: string) => {
 export default function WorkOrderWorkflow({ workOrder, isRTL }: WorkOrderWorkflowProps) {
     const { t } = useTranslation()
     const currentStepIndex = getStepIndex(workOrder.status)
+    const statusTranslationKey = STATUS_DISPLAY[workOrder.status].label
 
     const stepLabels = [
         isRTL ? 'انتظار' : 'Pending',
@@ -99,7 +101,7 @@ export default function WorkOrderWorkflow({ workOrder, isRTL }: WorkOrderWorkflo
             {/* Current Status Message */}
             <div className="mt-6 p-3 bg-secondary/5 border border-secondary/10 rounded-lg text-center text-sm text-secondary font-cairo">
                 {isRTL ? 'الحالة الحالية: ' : 'Current Status: '}
-                <span className="font-bold">{t(`workOrders.${workOrder.status}`)}</span>
+                <span className="font-bold">{t(`workOrders.${statusTranslationKey}`)}</span>
             </div>
         </div>
     )

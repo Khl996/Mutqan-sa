@@ -38,6 +38,10 @@ export function formatRelativeTime(date: string | Date, locale = 'ar-SA') {
     return rtf.format(0, 'second')
 }
 
+export function getWorkOrderDateLocale(isRTL: boolean) {
+    return isRTL ? 'ar-SA-u-ca-gregory' : 'en-GB'
+}
+
 export function formatCurrency(amount: number, currency = 'SAR', locale = 'ar-SA') {
     return new Intl.NumberFormat(locale, {
         style: 'currency',

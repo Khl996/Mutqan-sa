@@ -1,7 +1,6 @@
-import { useTranslation } from 'react-i18next'
 import { WorkOrder } from '@/hooks/useWorkOrders'
 import { FileText, Calendar, Wallet, User, MessageSquare } from 'lucide-react'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, getWorkOrderDateLocale } from '@/lib/utils'
 
 interface WorkOrderInfoProps {
     workOrder: WorkOrder
@@ -9,7 +8,7 @@ interface WorkOrderInfoProps {
 }
 
 export default function WorkOrderInfo({ workOrder, isRTL }: WorkOrderInfoProps) {
-    const { t } = useTranslation()
+    const dateLocale = getWorkOrderDateLocale(isRTL)
 
     return (
         <div className="bg-card border rounded-xl p-6 shadow-sm space-y-6">
@@ -89,18 +88,18 @@ export default function WorkOrderInfo({ workOrder, isRTL }: WorkOrderInfoProps) 
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between p-2 rounded bg-muted/5">
                             <span className="text-muted-foreground font-cairo">{isRTL ? 'تاريخ البلاغ' : 'Reported At'}</span>
-                            <span className="font-medium">{formatRelativeTime(workOrder.reported_at)}</span>
+                            <span className="font-medium">{formatRelativeTime(workOrder.reported_at, dateLocale)}</span>
                         </div>
                         {workOrder.due_date && (
                             <div className="flex justify-between p-2 rounded bg-muted/5">
                                 <span className="text-muted-foreground font-cairo">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}</span>
-                                <span className="font-medium text-red-500">{new Date(workOrder.due_date).toLocaleDateString()}</span>
+                                <span className="font-medium text-red-500">{new Date(workOrder.due_date).toLocaleDateString(dateLocale)}</span>
                             </div>
                         )}
                         {workOrder.completed_at && (
                             <div className="flex justify-between p-2 rounded bg-muted/5">
                                 <span className="text-muted-foreground font-cairo">{isRTL ? 'تاريخ الإنجاز' : 'Completed At'}</span>
-                                <span className="font-medium text-green-600">{new Date(workOrder.completed_at).toLocaleDateString()}</span>
+                                <span className="font-medium text-green-600">{new Date(workOrder.completed_at).toLocaleDateString(dateLocale)}</span>
                             </div>
                         )}
                     </div>

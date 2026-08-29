@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { WorkOrder, useIssueTypes } from '@/hooks/useWorkOrders'
+import { isPreventiveWorkOrder, WorkOrder, useIssueTypes } from '@/hooks/useWorkOrders'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 import { useFeatureEnabled } from '@/hooks/useFeatureEnabled'
@@ -12,6 +12,14 @@ import InventorySelector, { SelectedPart } from './InventorySelector'
 import { buildWhatsAppMessage } from '@/lib/whatsapp'
 import { useWorkTeams } from '@/hooks/useWorkTeams'
 import { useTeamMembers } from '@/hooks/useTeams'
+import {
+    resolveStandardGovernanceGate,
+    useWorkOrderGovernance,
+} from '@/hooks/useWorkOrderGovernance'
+import {
+    canShowStartWorkOrderAction,
+    isAssignableWorkOrderMember,
+} from './workOrderActionsPolicy'
 
 interface WorkOrderActionsProps {
     workOrder: WorkOrder
@@ -25,11 +33,22 @@ const SUPERVISOR_APPROVER_ROLES = new Set(['tenant_admin', 'maintenance_manager'
 const ENGINEER_APPROVER_ROLES = new Set(['tenant_admin', 'maintenance_manager', 'engineer'])
 const CLOSURE_ROLES = new Set(['tenant_admin', 'maintenance_manager'])
 
+const GOVERNANCE_ROLE_LABELS: Record<string, { ar: string; en: string }> = {
+    supervisor: { ar: 'المشرف', en: 'Supervisor' },
+    engineer: { ar: 'المهندس', en: 'Engineer' },
+    facility_manager: { ar: 'مدير المرافق', en: 'Facility Manager' },
+    maintenance_manager: { ar: 'مدير الصيانة', en: 'Maintenance Manager' },
+    tenant_admin: { ar: 'مدير المستأجر', en: 'Tenant Admin' },
+}
+
 export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }: WorkOrderActionsProps) {
     useTranslation()
     const { user } = useAuth()
     const { role, can } = usePermission()
     const workflow = useWorkOrderWorkflow()
+    const requiresStandardGovernance = (workOrder.status === 'pending' || workOrder.status === 'assigned')
+        && !isPreventiveWorkOrder(workOrder)
+    const governance = useWorkOrderGovernance(workOrder.id, requiresStandardGovernance)
 
     const { data: tenantSettings } = useTenantSettings()
     const requireSupervisorApproval = tenantSettings?.work_orders?.require_supervisor_approval ?? true
@@ -59,18 +78,23 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
     const canTakeSupervisorAction = SUPERVISOR_APPROVER_ROLES.has(actorRole) || isPlatformWorkflowRole
     const canTakeEngineerAction = ENGINEER_APPROVER_ROLES.has(actorRole) || isPlatformWorkflowRole
     const canTakeReporterAction = CLOSURE_ROLES.has(actorRole) || isPlatformWorkflowRole || isReporter
+    const governanceGate = resolveStandardGovernanceGate({
+        requiresStandardGovernance,
+        routeType: governance.state?.route_type ?? null,
+        governanceState: governance.state?.governance_state ?? null,
+        isLoading: governance.isLoading,
+        hasError: governance.hasError,
+        canEvaluate: can('work_orders.approve'),
+        canDecide: governance.canCurrentActorDecide,
+    })
 
-    const canStartWork = useMemo(() => {
-        if (!can('work_orders.update') || !canStartOrCompleteByRole) {
-            return false
-        }
-
-        if (isPlatformWorkflowRole || actorRole === 'tenant_admin' || actorRole === 'maintenance_manager') {
-            return true
-        }
-
-        return workOrder.status === 'pending' || isAssignedTechnician
-    }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole, workOrder.status])
+    const canStartWork = useMemo(() => canShowStartWorkOrderAction({
+        actorRole,
+        actorId: myUserId,
+        assignedTo: workOrder.assigned_to,
+        status: workOrder.status,
+        hasUpdatePermission: can('work_orders.update'),
+    }), [actorRole, can, myUserId, workOrder.assigned_to, workOrder.status])
 
     const canCompleteWork = useMemo(() => {
         if (!can('work_orders.update') || !canStartOrCompleteByRole) {
@@ -85,7 +109,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
     }, [actorRole, can, canStartOrCompleteByRole, isAssignedTechnician, isPlatformWorkflowRole])
 
     const assignableMembers = useMemo(
-        () => teamMembers.filter(m => m.is_active && ['technician', 'engineer', 'maintenance_manager'].includes(m.role)),
+        () => teamMembers.filter(isAssignableWorkOrderMember),
         [teamMembers]
     )
 
@@ -178,7 +202,121 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
 
     const canAssignByRole = CLOSURE_ROLES.has(actorRole) || isPlatformWorkflowRole
 
-    const canStart = (workOrder.status === 'assigned' || workOrder.status === 'pending') && canStartWork
+    const requiredGovernanceRole = governance.state?.required_approver_role
+    const requiredGovernanceRoleLabel = requiredGovernanceRole
+        ? (GOVERNANCE_ROLE_LABELS[requiredGovernanceRole]?.[isRTL ? 'ar' : 'en'] ?? requiredGovernanceRole)
+        : (isRTL ? 'المعتمد المخوّل' : 'an authorized approver')
+
+    const governanceCopy = (() => {
+        switch (governanceGate) {
+            case 'loading':
+                return {
+                    title: isRTL ? 'التحقق من حوكمة التنفيذ' : 'Checking execution governance',
+                    description: isRTL ? 'يتم الآن التحقق من قرار ما قبل التنفيذ.' : 'The pre-execution decision is being checked.',
+                }
+            case 'unavailable':
+                return {
+                    title: isRTL ? 'تعذر التحقق من الحوكمة' : 'Governance check unavailable',
+                    description: isRTL ? 'تم إيقاف البدء احترازيًا. أعد المحاولة بعد استعادة التحقق.' : 'Start is fail-closed. Retry after governance verification is restored.',
+                }
+            case 'evaluation_available':
+                return {
+                    title: isRTL ? 'تقييم ما قبل التنفيذ' : 'Pre-execution evaluation',
+                    description: isRTL ? 'قيّم أولوية الأصل والتكلفة والمخاطر قبل إتاحة بدء العمل.' : 'Evaluate asset criticality, cost, and risk before Start becomes available.',
+                }
+            case 'waiting_for_evaluation':
+                return {
+                    title: isRTL ? 'بانتظار تقييم ما قبل التنفيذ' : 'Awaiting pre-execution evaluation',
+                    description: isRTL ? 'يجب على مستخدم مخوّل تقييم أمر العمل قبل أن يبدأ المنفذ.' : 'An authorized user must evaluate this work order before the assignee can start.',
+                }
+            case 'approval_available':
+                return {
+                    title: isRTL ? 'قرار الحوكمة مطلوب' : 'Governance decision required',
+                    description: isRTL ? `أنت مخوّل بالاعتماد بصفة ${requiredGovernanceRoleLabel}.` : `You are authorized to decide as ${requiredGovernanceRoleLabel}.`,
+                }
+            case 'waiting_for_approval':
+                return {
+                    title: isRTL ? 'بانتظار قرار الحوكمة' : 'Awaiting governance decision',
+                    description: isRTL ? `الاعتماد مطلوب من ${requiredGovernanceRoleLabel} قبل بدء العمل.` : `Approval from ${requiredGovernanceRoleLabel} is required before work starts.`,
+                }
+            case 'approved':
+                return {
+                    title: isRTL ? 'تم اعتماد التنفيذ' : 'Execution approved',
+                    description: isRTL ? 'اكتمل قرار الحوكمة. ينتظر الأمر منفذًا مخولًا للبدء.' : 'Governance is complete. The work order is waiting for an authorized assignee to start.',
+                }
+            case 'rejected':
+                return {
+                    title: isRTL ? 'تم رفض اعتماد التنفيذ' : 'Execution approval rejected',
+                    description: isRTL ? 'راجع بيانات المخاطر ثم أعد التقييم من خلال المسار المعتمد.' : 'Review the risk inputs, then re-evaluate through the governed path.',
+                }
+            default:
+                return {
+                    title: isRTL ? 'مسار الحوكمة غير جاهز' : 'Governance path not ready',
+                    description: isRTL ? 'لا يمكن بدء العمل من حالة الحوكمة الحالية.' : 'Work cannot start from the current governance state.',
+                }
+        }
+    })()
+
+    const shouldShowGovernanceGate = requiresStandardGovernance
+        && (governanceGate !== 'approved' || !canStartWork)
+
+    if (shouldShowGovernanceGate) {
+        const isApproved = governanceGate === 'approved'
+        const isRejected = governanceGate === 'rejected'
+
+        return (
+            <div className={`bg-card border rounded-xl p-5 shadow-sm space-y-4 border-l-4 ${isApproved ? 'border-l-green-600' : isRejected ? 'border-l-destructive' : 'border-l-amber-500'}`}>
+                <div className="flex items-center gap-2">
+                    {isRejected ? (
+                        <AlertOctagon className="w-5 h-5 text-destructive" />
+                    ) : (
+                        <ShieldCheck className={`w-5 h-5 ${isApproved ? 'text-green-600' : 'text-amber-600'}`} />
+                    )}
+                    <h3 className="font-bold text-lg font-cairo">{governanceCopy.title}</h3>
+                </div>
+
+                <p className="text-sm text-muted-foreground font-cairo">{governanceCopy.description}</p>
+
+                {governanceGate === 'approval_available' && (
+                    <textarea
+                        className="w-full p-3 border rounded-lg bg-background text-sm font-cairo outline-none"
+                        rows={2}
+                        placeholder={isRTL ? 'ملاحظات الاعتماد (اختياري)...' : 'Approval notes (optional)...'}
+                        value={notes}
+                        onChange={event => setNotes(event.target.value)}
+                    />
+                )}
+
+                {(governanceGate === 'evaluation_available' || governanceGate === 'rejected')
+                    && can('work_orders.approve') && (
+                        <button
+                            onClick={() => handleAction(() => governance.evaluate.mutateAsync())}
+                            disabled={isSubmitting || governance.evaluate.isPending}
+                            className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow hover:shadow-lg transition-all font-cairo flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <ShieldCheck className="w-5 h-5" />
+                            {isRTL
+                                ? (governanceGate === 'rejected' ? 'إعادة تقييم الحوكمة' : 'تقييم الحوكمة')
+                                : (governanceGate === 'rejected' ? 'Re-evaluate Governance' : 'Evaluate Governance')}
+                        </button>
+                    )}
+
+                {governanceGate === 'approval_available' && (
+                    <button
+                        onClick={() => handleAction(() => governance.approve.mutateAsync(notes))}
+                        disabled={isSubmitting || governance.approve.isPending}
+                        className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow transition-all font-cairo flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        <ShieldCheck className="w-5 h-5" />
+                        {isRTL ? 'اعتماد بدء التنفيذ' : 'Approve Execution'}
+                    </button>
+                )}
+            </div>
+        )
+    }
+
+    const canStart = canStartWork
+        && (governanceGate === 'approved' || governanceGate === 'not_required')
     if (canStart) {
         return (
             <div className="space-y-4">
@@ -462,7 +600,7 @@ export default function WorkOrderActions({ workOrder, isRTL, onActionCompleted }
                     {isRTL ? 'تمت الموافقة على العمل. هل تود إغلاق البلاغ نهائيًا؟' : 'Work approved. Close ticket?'}
                 </p>
                 <button
-                    onClick={() => handleAction(() => workflow.closeWorkOrder.mutateAsync({ workOrderId: workOrder.id, notes: 'Closed via workflow action' }))}
+                    onClick={() => handleAction(() => workflow.closeWorkOrder.mutateAsync({ workOrderId: workOrder.id, notes: '' }))}
                     disabled={isSubmitting}
                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow transition-all font-cairo flex items-center justify-center gap-2"
                 >

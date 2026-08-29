@@ -577,6 +577,7 @@
         "welcomeBack": "Welcome Back",
         "enterCredentials": "Enter your credentials to continue",
         "invalidCredentials": "Invalid email or password",
+        "accountInactive": "This account is inactive or not fully provisioned. Contact your organization administrator.",
         "sessionExpired": "Session expired, please login again"
     },
     "sidebar": {
@@ -680,6 +681,7 @@
         "rejected": "Rejected",
         "cancelled": "Cancelled",
         "onHold": "On Hold",
+        "archived": "Archived",
         "low": "Low",
         "medium": "Medium",
         "high": "High",

@@ -33,6 +33,9 @@ dev-server*.log
 # Local agent/worktree state
 .claude/
 
+# Supabase CLI runtime/link state (never commit project refs or local tool state)
+supabase/.temp/
+
 # Local tool runtimes and browser profiles
 .tools/
 screenshots/chrome-profile*/

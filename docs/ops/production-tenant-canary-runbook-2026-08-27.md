@@ -104,7 +104,7 @@
    - العلم ما زال مطفأ؛
    - خمسة حدود حوكمة افتراضية: `supervisor` و`engineer` و`facility_manager` و`maintenance_manager` و`tenant_admin`.
 5. أعد `complete_pending_registration` وتحقق أنه يعيد المستأجر نفسه، ثم أثبت أن محاولة `provision_tenant` ثانية مباشرة مرفوضة.
-6. أنشئ عبر `/api/admin-manage-user` المحمي بقية حسابات `maintenance_manager` و`supervisor` و`technician` و`reporter` بعناوين بريد اختبار تملكها متقن وكلمات مرور مؤقتة قوية. لا تُخزن بيانات الدخول في Git أو التقرير.
+6. أنشئ عبر `/api/admin-manage-user` المحمي بقية حسابات `maintenance_manager` و`supervisor` و`engineer` و`technician` و`reporter` بعناوين بريد اختبار تملكها متقن وكلمات مرور مؤقتة قوية. لا تُخزن بيانات الدخول في Git أو التقرير.
 7. إذا فشل إنشاء مستخدم، علّق المستأجر والحسابات التي أُنشئت وسجّل الحالة للاستعادة؛ لا تحذف المستأجر تلقائيًا.
 
 ## 7. التفعيل للمستأجر وحده

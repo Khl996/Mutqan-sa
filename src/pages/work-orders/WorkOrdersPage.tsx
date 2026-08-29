@@ -487,7 +487,7 @@ function WorkOrdersTable({
                                     </div>
                                 </TableCell>
                                 <TableCell className="font-cairo text-sm text-muted-foreground">
-                                    {formatRelativeTime(workOrder.updated_at)}
+                                    {formatRelativeTime(workOrder.updated_at, locale)}
                                 </TableCell>
                             </TableRow>
                         )
@@ -532,6 +532,7 @@ function StatCard({ title, value, icon: Icon, color }: {
 function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: boolean }) {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const locale = isRTL ? 'ar-SA' : 'en-US'
     const status = STATUS_DISPLAY[workOrder.status] || STATUS_DISPLAY.pending
     const priority = priorityConfig[workOrder.priority] || priorityConfig.medium
     const StatusIcon = statusIcons[workOrder.status] || Clock
@@ -595,7 +596,7 @@ function WorkOrderCard({ workOrder, isRTL }: { workOrder: WorkOrder; isRTL: bool
                                 <div className="flex items-center gap-1">
                                     <Calendar className="w-4 h-4" />
                                     <span className="font-inter text-xs">
-                                        {formatRelativeTime(workOrder.reported_at)}
+                                        {formatRelativeTime(workOrder.reported_at, locale)}
                                     </span>
                                 </div>
                             </div>

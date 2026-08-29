@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { cn, formatRelativeTime } from '@/lib/utils'
+import { cn, formatRelativeTime, getWorkOrderDateLocale } from '@/lib/utils'
 import { CheckCircle2, Circle, Clock, User } from 'lucide-react'
 
 // Define interface locally or import shared type
@@ -21,6 +21,7 @@ interface WorkOrderOperationsLogProps {
 
 export default function WorkOrderOperationsLog({ logs, isRTL }: WorkOrderOperationsLogProps) {
     const { t } = useTranslation()
+    const dateLocale = getWorkOrderDateLocale(isRTL)
 
     if (!logs || logs.length === 0) {
         return (
@@ -67,7 +68,7 @@ export default function WorkOrderOperationsLog({ logs, isRTL }: WorkOrderOperati
                                         })}
                                     </span>
                                     <span className="text-xs text-muted font-mono whitespace-nowrap">
-                                        {formatRelativeTime(log.timestamp)}
+                                        {formatRelativeTime(log.timestamp, dateLocale)}
                                     </span>
                                 </div>
 
