@@ -10,7 +10,9 @@ param(
     [string]$SourceDatabase = 'postgres',
     [ValidateSet('require', 'verify-full', 'disable')]
     [string]$SourceSslMode = 'require',
-    [int]$RestorePort = 55440
+    [int]$RestorePort = 55440,
+    [switch]$GenerateProtectedPassphrase,
+    [string]$RecoveryKeyRoot = (Join-Path $env:LOCALAPPDATA 'Mutqan\RecoveryKeys')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,6 +30,10 @@ $backupRootPath = [IO.Path]::GetFullPath($BackupRoot).TrimEnd(
     [IO.Path]::DirectorySeparatorChar,
     [IO.Path]::AltDirectorySeparatorChar
 )
+$recoveryKeyRootPath = [IO.Path]::GetFullPath($RecoveryKeyRoot).TrimEnd(
+    [IO.Path]::DirectorySeparatorChar,
+    [IO.Path]::AltDirectorySeparatorChar
+)
 $repoPrefix = $repoRoot.TrimEnd(
     [IO.Path]::DirectorySeparatorChar,
     [IO.Path]::AltDirectorySeparatorChar
@@ -37,6 +43,18 @@ $backupPrefix = $backupRootPath + [IO.Path]::DirectorySeparatorChar
 if ($backupRootPath.Equals($repoRoot, [StringComparison]::OrdinalIgnoreCase) -or
     $backupPrefix.StartsWith($repoPrefix, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'BackupRoot must be outside the Git repository.'
+}
+if ($GenerateProtectedPassphrase) {
+    $recoveryKeyPrefix = $recoveryKeyRootPath + [IO.Path]::DirectorySeparatorChar
+    if ($recoveryKeyRootPath.Equals($repoRoot, [StringComparison]::OrdinalIgnoreCase) -or
+        $recoveryKeyPrefix.StartsWith($repoPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'RecoveryKeyRoot must be outside the Git repository.'
+    }
+    if ($recoveryKeyRootPath.Equals($backupRootPath, [StringComparison]::OrdinalIgnoreCase) -or
+        $recoveryKeyPrefix.StartsWith($backupPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+        $backupPrefix.StartsWith($recoveryKeyPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'RecoveryKeyRoot must be separate from BackupRoot.'
+    }
 }
 
 $tools = [ordered]@{
@@ -76,6 +94,8 @@ function Assert-PathInside {
     if (-not $candidatePath.StartsWith($parentPathPrefix, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing path outside the expected parent: $candidatePath"
     }
+    Assert-NoReparsePoint -Path $parentPath
+    Assert-NoReparsePoint -Path $candidatePath
     return $candidatePath
 }
 
@@ -97,9 +117,156 @@ function Remove-ScopedItem {
     }
 }
 
+function Assert-NoReparsePoint {
+    param([Parameter(Mandatory)] [string]$Path)
+
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    $pathRoot = [IO.Path]::GetPathRoot($fullPath)
+    $currentPath = $pathRoot
+    $relativePath = $fullPath.Substring($pathRoot.Length)
+    foreach ($segment in $relativePath.Split(
+        @([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar),
+        [StringSplitOptions]::RemoveEmptyEntries
+    )) {
+        $currentPath = Join-Path $currentPath $segment
+        if (Test-Path -LiteralPath $currentPath) {
+            $item = Get-Item -LiteralPath $currentPath -Force
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "Reparse points are not allowed in protected artifact paths: $currentPath"
+            }
+        }
+    }
+}
+
 function Convert-SecureStringToPlainText {
     param([Parameter(Mandatory)] [Security.SecureString]$SecureValue)
     return ([Net.NetworkCredential]::new('', $SecureValue)).Password
+}
+
+function Write-DpapiRecoveryKey {
+    param(
+        [Parameter(Mandatory)] [byte[]]$PassphraseBytes,
+        [Parameter(Mandatory)] [string]$Path,
+        [Parameter(Mandatory)] [string]$ProjectRefValue,
+        [Parameter(Mandatory)] [string]$CreatedUtc,
+        [Parameter(Mandatory)] [string]$Identity
+    )
+
+    $entropyContext = "Mutqan:ProductionLogicalBackupGate:$ProjectRefValue:v2"
+    $partPath = "$Path.part"
+    [byte[]]$entropyBytes = $null
+    [byte[]]$protectedBytes = $null
+    [byte[]]$roundTripProtectedBytes = $null
+    [byte[]]$roundTripPlainBytes = $null
+    [byte[]]$recordBytes = $null
+    try {
+        Assert-NoReparsePoint -Path (Split-Path -Parent $Path)
+        Assert-NoReparsePoint -Path $partPath
+        $entropyBytes = [Text.Encoding]::UTF8.GetBytes($entropyContext)
+        $protectedBytes = [Security.Cryptography.ProtectedData]::Protect(
+            $PassphraseBytes,
+            $entropyBytes,
+            [Security.Cryptography.DataProtectionScope]::CurrentUser
+        )
+        $record = [ordered]@{
+            format = 'mutqan-backup-recovery-key-v2'
+            project_ref = $ProjectRefValue
+            created_utc = $CreatedUtc
+            protection = 'Windows DPAPI CurrentUser'
+            entropy_context = $entropyContext
+            protected_random_bytes_base64 = [Convert]::ToBase64String($protectedBytes)
+        }
+        $recordBytes = [Text.UTF8Encoding]::new($false).GetBytes(
+            ($record | ConvertTo-Json -Depth 4) + [Environment]::NewLine
+        )
+        $keyStream = [IO.File]::Open(
+            $partPath,
+            [IO.FileMode]::CreateNew,
+            [IO.FileAccess]::Write,
+            [IO.FileShare]::None
+        )
+        try {
+            $keyStream.Write($recordBytes, 0, $recordBytes.Length)
+            $keyStream.Flush($true)
+        } finally {
+            $keyStream.Dispose()
+        }
+
+        $aclResult = & icacls.exe $partPath /inheritance:r /grant:r "${Identity}:F" 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to restrict recovery-key ACL: $partPath`n$($aclResult -join [Environment]::NewLine)"
+        }
+
+        $storedRecord = Get-Content -LiteralPath $partPath -Raw | ConvertFrom-Json
+        $roundTripProtectedBytes = [Convert]::FromBase64String($storedRecord.protected_random_bytes_base64)
+        $roundTripPlainBytes = [Security.Cryptography.ProtectedData]::Unprotect(
+            $roundTripProtectedBytes,
+            $entropyBytes,
+            [Security.Cryptography.DataProtectionScope]::CurrentUser
+        )
+        if (-not [Security.Cryptography.CryptographicOperations]::FixedTimeEquals(
+            $PassphraseBytes,
+            $roundTripPlainBytes
+        )) {
+            throw 'The DPAPI recovery-key round-trip check failed.'
+        }
+        Assert-NoReparsePoint -Path $partPath
+        Move-Item -LiteralPath $partPath -Destination $Path
+    } finally {
+        if (Test-Path -LiteralPath $partPath) {
+            Remove-Item -LiteralPath $partPath -Force
+        }
+        foreach ($buffer in @($entropyBytes, $protectedBytes, $roundTripProtectedBytes, $roundTripPlainBytes, $recordBytes)) {
+            if ($null -ne $buffer) {
+                [Array]::Clear($buffer, 0, $buffer.Length)
+            }
+        }
+    }
+}
+
+function Read-DpapiRecoveryPassphrase {
+    param(
+        [Parameter(Mandatory)] [string]$Path,
+        [Parameter(Mandatory)] [string]$ExpectedProjectRef
+    )
+
+    $record = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($record.project_ref -cne $ExpectedProjectRef -or
+        $record.protection -cne 'Windows DPAPI CurrentUser') {
+        throw 'The DPAPI recovery-key envelope does not match this backup.'
+    }
+    [byte[]]$entropyBytes = $null
+    [byte[]]$protectedBytes = $null
+    [byte[]]$plainBytes = $null
+    try {
+        $entropyBytes = [Text.Encoding]::UTF8.GetBytes($record.entropy_context)
+        switch ($record.format) {
+            'mutqan-backup-recovery-key-v1' {
+                $protectedBytes = [Convert]::FromBase64String($record.protected_passphrase_base64)
+            }
+            'mutqan-backup-recovery-key-v2' {
+                $protectedBytes = [Convert]::FromBase64String($record.protected_random_bytes_base64)
+            }
+            default {
+                throw "Unsupported DPAPI recovery-key format: $($record.format)"
+            }
+        }
+        $plainBytes = [Security.Cryptography.ProtectedData]::Unprotect(
+            $protectedBytes,
+            $entropyBytes,
+            [Security.Cryptography.DataProtectionScope]::CurrentUser
+        )
+        if ($record.format -ceq 'mutqan-backup-recovery-key-v1') {
+            return [Text.Encoding]::UTF8.GetString($plainBytes)
+        }
+        return [Convert]::ToBase64String($plainBytes)
+    } finally {
+        foreach ($buffer in @($entropyBytes, $protectedBytes, $plainBytes)) {
+            if ($null -ne $buffer) {
+                [Array]::Clear($buffer, 0, $buffer.Length)
+            }
+        }
+    }
 }
 
 function Invoke-PsqlScalar {
@@ -271,10 +438,47 @@ function Compare-Inventory {
     }
 }
 
+function Invoke-OpenSslWithPassphrase {
+    param(
+        [Parameter(Mandatory)] [string[]]$Arguments,
+        [Parameter(Mandatory)] [string]$Passphrase
+    )
+
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $openSslPath
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardInput = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) {
+        [void]$startInfo.ArgumentList.Add($argument)
+    }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+        [void]$process.Start()
+        $standardOutputTask = $process.StandardOutput.ReadToEndAsync()
+        $standardErrorTask = $process.StandardError.ReadToEndAsync()
+        $process.StandardInput.NewLine = "`n"
+        $process.StandardInput.WriteLine($Passphrase)
+        $process.StandardInput.Close()
+        $process.WaitForExit()
+        [void]$standardOutputTask.GetAwaiter().GetResult()
+        [void]$standardErrorTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0) {
+            throw 'OpenSSL artifact protection failed.'
+        }
+    } finally {
+        $process.Dispose()
+    }
+}
+
 function Protect-Artifact {
     param(
         [Parameter(Mandatory)] [string]$PlainPath,
-        [Parameter(Mandatory)] [string]$EncryptedPath
+        [Parameter(Mandatory)] [string]$EncryptedPath,
+        [Parameter(Mandatory)] [string]$Passphrase
     )
 
     $encryptArguments = @(
@@ -285,13 +489,12 @@ function Protect-Artifact {
         '-pbkdf2',
         '-iter', '600000',
         '-md', 'sha256',
-        '-pass', 'env:MUTQAN_BACKUP_PASSPHRASE',
+        '-pass', 'stdin',
         '-in', $PlainPath,
         '-out', $EncryptedPath
     )
-    & $openSslPath @encryptArguments
-    if ($LASTEXITCODE -ne 0 -or
-        -not (Test-Path -LiteralPath $EncryptedPath -PathType Leaf) -or
+    Invoke-OpenSslWithPassphrase -Arguments $encryptArguments -Passphrase $Passphrase
+    if (-not (Test-Path -LiteralPath $EncryptedPath -PathType Leaf) -or
         (Get-Item -LiteralPath $EncryptedPath).Length -eq 0) {
         throw "Encryption failed: $EncryptedPath"
     }
@@ -300,7 +503,8 @@ function Protect-Artifact {
 function Unprotect-Artifact {
     param(
         [Parameter(Mandatory)] [string]$EncryptedPath,
-        [Parameter(Mandatory)] [string]$PlainPath
+        [Parameter(Mandatory)] [string]$PlainPath,
+        [Parameter(Mandatory)] [string]$Passphrase
     )
 
     $decryptArguments = @(
@@ -311,13 +515,12 @@ function Unprotect-Artifact {
         '-pbkdf2',
         '-iter', '600000',
         '-md', 'sha256',
-        '-pass', 'env:MUTQAN_BACKUP_PASSPHRASE',
+        '-pass', 'stdin',
         '-in', $EncryptedPath,
         '-out', $PlainPath
     )
-    & $openSslPath @decryptArguments
-    if ($LASTEXITCODE -ne 0 -or
-        -not (Test-Path -LiteralPath $PlainPath -PathType Leaf) -or
+    Invoke-OpenSslWithPassphrase -Arguments $decryptArguments -Passphrase $Passphrase
+    if (-not (Test-Path -LiteralPath $PlainPath -PathType Leaf) -or
         (Get-Item -LiteralPath $PlainPath).Length -eq 0) {
         throw "Decryption failed: $EncryptedPath"
     }
@@ -328,9 +531,44 @@ function Get-Sha256 {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
+function Write-Utf8FileCreateNew {
+    param(
+        [Parameter(Mandatory)] [string]$Path,
+        [Parameter(Mandatory)] [string]$Content
+    )
+
+    [byte[]]$contentBytes = $null
+    try {
+        Assert-NoReparsePoint -Path (Split-Path -Parent $Path)
+        Assert-NoReparsePoint -Path $Path
+        $contentBytes = [Text.UTF8Encoding]::new($false).GetBytes($Content)
+        $stream = [IO.File]::Open(
+            $Path,
+            [IO.FileMode]::CreateNew,
+            [IO.FileAccess]::Write,
+            [IO.FileShare]::None
+        )
+        try {
+            $stream.Write($contentBytes, 0, $contentBytes.Length)
+            $stream.Flush($true)
+        } finally {
+            $stream.Dispose()
+        }
+    } finally {
+        if ($null -ne $contentBytes) {
+            [Array]::Clear($contentBytes, 0, $contentBytes.Length)
+        }
+    }
+}
+
+Assert-NoReparsePoint -Path $backupRootPath
+if ($GenerateProtectedPassphrase) {
+    Assert-NoReparsePoint -Path $recoveryKeyRootPath
+}
 $invariantCulture = [Globalization.CultureInfo]::InvariantCulture
 $stamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ', $invariantCulture)
 New-Item -ItemType Directory -Path $backupRootPath -Force | Out-Null
+Assert-NoReparsePoint -Path $backupRootPath
 $backupDir = Join-Path $backupRootPath $stamp
 New-Item -ItemType Directory -Path $backupDir | Out-Null
 
@@ -338,6 +576,14 @@ $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
 $aclResult = & icacls.exe $backupDir /inheritance:r /grant:r "${currentIdentity}:(OI)(CI)F" 2>&1
 if ($LASTEXITCODE -ne 0) {
     throw "Unable to restrict backup directory ACL: $backupDir`n$($aclResult -join [Environment]::NewLine)"
+}
+if ($GenerateProtectedPassphrase) {
+    New-Item -ItemType Directory -Path $recoveryKeyRootPath -Force | Out-Null
+    Assert-NoReparsePoint -Path $recoveryKeyRootPath
+    $aclResult = & icacls.exe $recoveryKeyRootPath /inheritance:r /grant:r "${currentIdentity}:(OI)(CI)F" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to restrict recovery-key directory ACL: $recoveryKeyRootPath`n$($aclResult -join [Environment]::NewLine)"
+    }
 }
 
 $databasePlain = Join-Path $backupDir "mutqan-production-$stamp.dump.part"
@@ -348,6 +594,8 @@ $sourceInventoryPath = Join-Path $backupDir "source-inventory-$stamp.json"
 $targetInventoryPath = Join-Path $backupDir "restore-inventory-$stamp.json"
 $manifestPath = Join-Path $backupDir "manifest-$stamp.json"
 $manifestHashPath = Join-Path $backupDir "manifest-$stamp.sha256"
+$manifestPartPath = "$manifestPath.part"
+$manifestHashPartPath = "$manifestHashPath.part"
 $restoreRoot = Join-Path $backupDir 'restore-cluster'
 $restoreData = Join-Path $restoreRoot 'data'
 $restoreDump = Join-Path $restoreRoot 'restore.dump'
@@ -355,15 +603,23 @@ $restoreRoles = Join-Path $restoreRoot 'roles.sql'
 $restoreLog = Join-Path $backupDir "restore-postgres-$stamp.log"
 $localPasswordFile = Join-Path $restoreRoot 'initdb-password.txt'
 $restoreDatabase = 'mutqan_production_backup_restore'
+$safeProjectRef = [regex]::Replace($ProjectRef, '[^A-Za-z0-9._-]', '_')
+$recoveryKeyPath = if ($GenerateProtectedPassphrase) {
+    Join-Path $recoveryKeyRootPath "mutqan-backup-$safeProjectRef-$stamp.dpapi.json"
+} else {
+    $null
+}
+$recoveryKeyPartPath = if ($GenerateProtectedPassphrase) { "$recoveryKeyPath.part" } else { $null }
 
 $previousPgPassword = $env:PGPASSWORD
 $previousPgSslMode = $env:PGSSLMODE
-$previousBackupPassphrase = $env:MUTQAN_BACKUP_PASSPHRASE
 $previousPgOptions = $env:PGOPTIONS
 $serverStarted = $false
+$backupWorkComplete = $false
 $localPassword = $null
 $productionPasswordPlain = $null
 $backupPassphrasePlain = $null
+$backupPassphraseConfirmationPlain = $null
 $backupStartedUtc = [DateTime]::UtcNow
 
 try {
@@ -373,25 +629,43 @@ try {
     }
 
     $productionPassword = Read-Host 'Enter the CURRENT Production database password (input is hidden)' -AsSecureString
-    $backupPassphrase = Read-Host 'Create a backup-encryption passphrase of at least 16 characters (input is hidden)' -AsSecureString
-    $backupPassphraseConfirmation = Read-Host 'Repeat the backup-encryption passphrase (input is hidden)' -AsSecureString
     $productionPasswordPlain = Convert-SecureStringToPlainText -SecureValue $productionPassword
-    $backupPassphrasePlain = Convert-SecureStringToPlainText -SecureValue $backupPassphrase
-    $backupPassphraseConfirmationPlain = Convert-SecureStringToPlainText -SecureValue $backupPassphraseConfirmation
     if ([string]::IsNullOrWhiteSpace($productionPasswordPlain)) {
         throw 'The Production database password cannot be empty.'
     }
-    if ($backupPassphrasePlain.Length -lt 16) {
-        throw 'The backup-encryption passphrase must contain at least 16 characters.'
+
+    if ($GenerateProtectedPassphrase) {
+        $passphraseBytes = [byte[]]::new(48)
+        $passphraseGenerator = [Security.Cryptography.RandomNumberGenerator]::Create()
+        try {
+            $passphraseGenerator.GetBytes($passphraseBytes)
+            $backupPassphrasePlain = [Convert]::ToBase64String($passphraseBytes)
+            Write-DpapiRecoveryKey `
+                -PassphraseBytes $passphraseBytes `
+                -Path $recoveryKeyPath `
+                -ProjectRefValue $ProjectRef `
+                -CreatedUtc $backupStartedUtc.ToString('o', $invariantCulture) `
+                -Identity $currentIdentity
+        } finally {
+            $passphraseGenerator.Dispose()
+            [Array]::Clear($passphraseBytes, 0, $passphraseBytes.Length)
+        }
+    } else {
+        $backupPassphrase = Read-Host 'Create a backup-encryption passphrase of at least 16 characters (input is hidden)' -AsSecureString
+        $backupPassphraseConfirmation = Read-Host 'Repeat the backup-encryption passphrase (input is hidden)' -AsSecureString
+        $backupPassphrasePlain = Convert-SecureStringToPlainText -SecureValue $backupPassphrase
+        $backupPassphraseConfirmationPlain = Convert-SecureStringToPlainText -SecureValue $backupPassphraseConfirmation
+        if ($backupPassphrasePlain.Length -lt 16) {
+            throw 'The backup-encryption passphrase must contain at least 16 characters.'
+        }
+        if ($backupPassphrasePlain -cne $backupPassphraseConfirmationPlain) {
+            throw 'The backup-encryption passphrases do not match.'
+        }
+        $backupPassphraseConfirmationPlain = $null
     }
-    if ($backupPassphrasePlain -cne $backupPassphraseConfirmationPlain) {
-        throw 'The backup-encryption passphrases do not match.'
-    }
-    $backupPassphraseConfirmationPlain = $null
 
     $env:PGPASSWORD = $productionPasswordPlain
     $env:PGSSLMODE = $SourceSslMode
-    $env:MUTQAN_BACKUP_PASSPHRASE = $backupPassphrasePlain
 
     $inventorySql = Get-InventorySql
     $sourceBeforeJson = Invoke-PsqlScalar -Sql $inventorySql -HostName $PoolerHost -Port $PoolerPort -UserName $sourceUserName -Database $SourceDatabase
@@ -459,16 +733,30 @@ try {
         ($sourceAfter | ConvertTo-Json -Depth 8) + [Environment]::NewLine,
         [Text.UTF8Encoding]::new($false)
     )
+    if ($null -eq $previousPgPassword) {
+        Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue
+    } else {
+        $env:PGPASSWORD = $previousPgPassword
+    }
+    if ($null -eq $previousPgSslMode) {
+        Remove-Item Env:PGSSLMODE -ErrorAction SilentlyContinue
+    } else {
+        $env:PGSSLMODE = $previousPgSslMode
+    }
+    $productionPasswordPlain = $null
 
     $databasePlainHash = Get-Sha256 -Path $databasePlain
     $rolesPlainHash = Get-Sha256 -Path $rolesPlain
-    Protect-Artifact -PlainPath $databasePlain -EncryptedPath $databaseEncrypted
-    Protect-Artifact -PlainPath $rolesPlain -EncryptedPath $rolesEncrypted
+    Protect-Artifact -PlainPath $databasePlain -EncryptedPath $databaseEncrypted -Passphrase $backupPassphrasePlain
+    Protect-Artifact -PlainPath $rolesPlain -EncryptedPath $rolesEncrypted -Passphrase $backupPassphrasePlain
     $databaseEncryptedHash = Get-Sha256 -Path $databaseEncrypted
     $rolesEncryptedHash = Get-Sha256 -Path $rolesEncrypted
 
     Remove-ScopedItem -Path $databasePlain -Parent $backupDir
     Remove-ScopedItem -Path $rolesPlain -Parent $backupDir
+    if ($GenerateProtectedPassphrase) {
+        $backupPassphrasePlain = $null
+    }
 
     New-Item -ItemType Directory -Path $restoreRoot | Out-Null
     $randomBytes = [byte[]]::new(48)
@@ -565,14 +853,26 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
 '@
     [void](Invoke-PsqlScalar -Sql $extensionBootstrapSql -HostName '127.0.0.1' -Port $RestorePort -UserName 'postgres' -Database $restoreDatabase)
 
-    Unprotect-Artifact -EncryptedPath $databaseEncrypted -PlainPath $restoreDump
+    if ($GenerateProtectedPassphrase) {
+        $backupPassphrasePlain = Read-DpapiRecoveryPassphrase `
+            -Path $recoveryKeyPath `
+            -ExpectedProjectRef $ProjectRef
+    }
+    Unprotect-Artifact `
+        -EncryptedPath $databaseEncrypted `
+        -PlainPath $restoreDump `
+        -Passphrase $backupPassphrasePlain
     if ((Get-Sha256 -Path $restoreDump) -cne $databasePlainHash) {
         throw 'Decrypted database dump SHA-256 mismatch.'
     }
-    Unprotect-Artifact -EncryptedPath $rolesEncrypted -PlainPath $restoreRoles
+    Unprotect-Artifact `
+        -EncryptedPath $rolesEncrypted `
+        -PlainPath $restoreRoles `
+        -Passphrase $backupPassphrasePlain
     if ((Get-Sha256 -Path $restoreRoles) -cne $rolesPlainHash) {
         throw 'Decrypted role dump SHA-256 mismatch.'
     }
+    $backupPassphrasePlain = $null
 
     $env:PGOPTIONS = '-c check_function_bodies=off'
     $restoreArguments = @(
@@ -603,7 +903,60 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
         [Text.UTF8Encoding]::new($false)
     )
 
+    if ($serverStarted) {
+        & $tools.pg_ctl --pgdata=$restoreData --mode=fast --wait stop | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Unable to stop the isolated PostgreSQL 17 restore cluster.'
+        }
+        $serverStarted = $false
+    }
+    Remove-ScopedItem -Path $restoreRoot -Parent $backupDir -Recurse
+    if (Test-Path -LiteralPath $restoreRoot) {
+        throw 'The isolated restore cluster was not removed before manifest finalization.'
+    }
+    if ($null -eq $previousPgPassword) {
+        Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue
+    } else {
+        $env:PGPASSWORD = $previousPgPassword
+    }
+    if ($null -eq $previousPgSslMode) {
+        Remove-Item Env:PGSSLMODE -ErrorAction SilentlyContinue
+    } else {
+        $env:PGSSLMODE = $previousPgSslMode
+    }
+    if ($null -eq $previousPgOptions) {
+        Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
+    } else {
+        $env:PGOPTIONS = $previousPgOptions
+    }
+    $productionPasswordPlain = $null
+    $backupPassphrasePlain = $null
+    $backupPassphraseConfirmationPlain = $null
+    $localPassword = $null
+
     $backupFinishedUtc = [DateTime]::UtcNow
+    $passphraseCustody = if ($GenerateProtectedPassphrase) {
+        [ordered]@{
+            mode = 'windows_dpapi_current_user'
+            format_version = 2
+            scope = 'CurrentUser'
+            recovery_key_path = $recoveryKeyPath
+            recovery_key_file_name = [IO.Path]::GetFileName($recoveryKeyPath)
+            recovery_key_bytes = (Get-Item -LiteralPath $recoveryKeyPath).Length
+            recovery_key_sha256 = Get-Sha256 -Path $recoveryKeyPath
+            recovery_key_file_sha256 = Get-Sha256 -Path $recoveryKeyPath
+            round_trip_verified = $true
+            plaintext_logged = $false
+            independent_off_machine_custody_required = $true
+        }
+    } else {
+        [ordered]@{
+            mode = 'operator_supplied'
+            recovery_key_path = $null
+            plaintext_logged = $false
+            independent_off_machine_custody_required = $true
+        }
+    }
     $manifest = [ordered]@{
         gate_status = 'PASS'
         source_project_ref = $ProjectRef
@@ -611,10 +964,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
         source_database_port = $PoolerPort
         source_database_name = $SourceDatabase
         source_database_user = $sourceUserName
+        operator_windows_identity = $currentIdentity
+        source_operation = 'read-only logical dump and catalog inventory'
         backup_started_utc = $backupStartedUtc.ToString('o', $invariantCulture)
         backup_finished_utc = $backupFinishedUtc.ToString('o', $invariantCulture)
         pg_tools_version = $postgresVersion
         encryption = 'OpenSSL AES-256-CBC; PBKDF2-HMAC-SHA256; 600000 iterations; 16-byte salt'
+        passphrase_custody = $passphraseCustody
         selected_schemas = @('auth','storage','internal','pm_legacy_archive','public','supabase_migrations')
         excluded_managed_schemas = @('extensions','graphql','graphql_public','net','realtime','vault')
         excluded_extension = @('pg_net')
@@ -661,28 +1017,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
             'Database role password hashes'
         )
     }
-    [IO.File]::WriteAllText(
-        $manifestPath,
-        ($manifest | ConvertTo-Json -Depth 12) + [Environment]::NewLine,
-        [Text.UTF8Encoding]::new($false)
-    )
-    [IO.File]::WriteAllText(
-        $manifestHashPath,
-        "$(Get-Sha256 -Path $manifestPath)  $([IO.Path]::GetFileName($manifestPath))$([Environment]::NewLine)",
-        [Text.UTF8Encoding]::new($false)
-    )
-
-    Write-Host 'PRODUCTION LOGICAL BACKUP GATE: PASS'
-    Write-Host "Backup directory: $backupDir"
-    Write-Host "Manifest: $manifestPath"
+    $backupWorkComplete = $true
 } finally {
-    if ($serverStarted) {
-        & $tools.pg_ctl --pgdata=$restoreData --mode=fast --wait stop | Out-Null
-    }
-    Remove-ScopedItem -Path $databasePlain -Parent $backupDir
-    Remove-ScopedItem -Path $rolesPlain -Parent $backupDir
-    Remove-ScopedItem -Path $restoreRoot -Parent $backupDir -Recurse
-
     if ($null -eq $previousPgPassword) {
         Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue
     } else {
@@ -693,11 +1029,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
     } else {
         $env:PGSSLMODE = $previousPgSslMode
     }
-    if ($null -eq $previousBackupPassphrase) {
-        Remove-Item Env:MUTQAN_BACKUP_PASSPHRASE -ErrorAction SilentlyContinue
-    } else {
-        $env:MUTQAN_BACKUP_PASSPHRASE = $previousBackupPassphrase
-    }
     if ($null -eq $previousPgOptions) {
         Remove-Item Env:PGOPTIONS -ErrorAction SilentlyContinue
     } else {
@@ -706,5 +1037,126 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
 
     $productionPasswordPlain = $null
     $backupPassphrasePlain = $null
+    $backupPassphraseConfirmationPlain = $null
     $localPassword = $null
+
+    $cleanupFailures = [Collections.Generic.List[string]]::new()
+    if (-not $backupWorkComplete) {
+        if ($GenerateProtectedPassphrase -and $null -ne $recoveryKeyPath) {
+            foreach ($keyArtifactPath in @($recoveryKeyPartPath, $recoveryKeyPath)) {
+                try {
+                    Remove-ScopedItem -Path $keyArtifactPath -Parent $recoveryKeyRootPath
+                } catch {
+                    [void]$cleanupFailures.Add("recovery key: $keyArtifactPath")
+                }
+            }
+        }
+        foreach ($manifestArtifactPath in @(
+            $manifestPartPath,
+            $manifestHashPartPath,
+            $manifestHashPath,
+            $manifestPath
+        )) {
+            try {
+                Remove-ScopedItem -Path $manifestArtifactPath -Parent $backupDir
+            } catch {
+                [void]$cleanupFailures.Add("manifest artifact: $manifestArtifactPath")
+            }
+        }
+    }
+    if ($serverStarted) {
+        try {
+            & $tools.pg_ctl --pgdata=$restoreData --mode=fast --wait stop | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                throw 'pg_ctl stop failed.'
+            }
+            $serverStarted = $false
+        } catch {
+            [void]$cleanupFailures.Add("restore server: $restoreData")
+        }
+    }
+    foreach ($cleanupItem in @(
+        [pscustomobject]@{ Path = $databasePlain; Recurse = $false },
+        [pscustomobject]@{ Path = $rolesPlain; Recurse = $false },
+        [pscustomobject]@{ Path = $restoreRoot; Recurse = $true }
+    )) {
+        try {
+            Remove-ScopedItem `
+                -Path $cleanupItem.Path `
+                -Parent $backupDir `
+                -Recurse:$cleanupItem.Recurse
+        } catch {
+            [void]$cleanupFailures.Add("temporary artifact: $($cleanupItem.Path)")
+        }
+    }
+    if ($cleanupFailures.Count -gt 0) {
+        if ($GenerateProtectedPassphrase -and $null -ne $recoveryKeyPath) {
+            foreach ($keyArtifactPath in @($recoveryKeyPartPath, $recoveryKeyPath)) {
+                try {
+                    Remove-ScopedItem -Path $keyArtifactPath -Parent $recoveryKeyRootPath
+                } catch {
+                    [void]$cleanupFailures.Add("recovery-key revocation: $keyArtifactPath")
+                }
+            }
+        }
+        foreach ($manifestArtifactPath in @(
+            $manifestPartPath,
+            $manifestHashPartPath,
+            $manifestHashPath,
+            $manifestPath
+        )) {
+            try {
+                Remove-ScopedItem -Path $manifestArtifactPath -Parent $backupDir
+            } catch {
+                [void]$cleanupFailures.Add("manifest revocation: $manifestArtifactPath")
+            }
+        }
+        throw "Backup-gate cleanup failed for: $($cleanupFailures -join '; ')"
+    }
+}
+
+try {
+    Write-Utf8FileCreateNew `
+        -Path $manifestPartPath `
+        -Content (($manifest | ConvertTo-Json -Depth 12) + [Environment]::NewLine)
+    Write-Utf8FileCreateNew `
+        -Path $manifestHashPartPath `
+        -Content "$(Get-Sha256 -Path $manifestPartPath)  $([IO.Path]::GetFileName($manifestPath))$([Environment]::NewLine)"
+    Move-Item -LiteralPath $manifestHashPartPath -Destination $manifestHashPath
+    Move-Item -LiteralPath $manifestPartPath -Destination $manifestPath
+} catch {
+    $publicationCleanupFailures = [Collections.Generic.List[string]]::new()
+    foreach ($manifestArtifactPath in @(
+        $manifestPartPath,
+        $manifestHashPartPath,
+        $manifestHashPath,
+        $manifestPath
+    )) {
+        try {
+            Remove-ScopedItem -Path $manifestArtifactPath -Parent $backupDir
+        } catch {
+            [void]$publicationCleanupFailures.Add("manifest artifact: $manifestArtifactPath")
+        }
+    }
+    if ($GenerateProtectedPassphrase -and $null -ne $recoveryKeyPath) {
+        foreach ($keyArtifactPath in @($recoveryKeyPartPath, $recoveryKeyPath)) {
+            try {
+                Remove-ScopedItem -Path $keyArtifactPath -Parent $recoveryKeyRootPath
+            } catch {
+                [void]$publicationCleanupFailures.Add("recovery key: $keyArtifactPath")
+            }
+        }
+    }
+    if ($publicationCleanupFailures.Count -gt 0) {
+        throw "Manifest publication failed and cleanup also failed for: $($publicationCleanupFailures -join '; ')"
+    }
+    throw
+}
+
+Write-Host 'PRODUCTION LOGICAL BACKUP GATE: PASS'
+Write-Host "Backup directory: $backupDir"
+Write-Host "Manifest: $manifestPath"
+if ($GenerateProtectedPassphrase) {
+    Write-Host "DPAPI recovery-key file: $recoveryKeyPath"
+    Write-Host 'Independent off-machine recovery-key custody is still required before Production DDL.'
 }
