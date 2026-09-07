@@ -40,7 +40,11 @@ param(
     [ValidatePattern('^[a-zA-Z0-9-]+$')]
     [string]$Scope = 'khalids-projects-ce6e36f2',
     [ValidateSet('Enabled', 'Disabled')]
-    [string]$ExpectedCronState = 'Enabled'
+    [string]$ExpectedCronState = 'Enabled',
+    # Verify an immutable staged deployment without asserting it owns Production.
+    [switch]$DeploymentOnly,
+    [ValidatePattern('^https://[a-z0-9-]+\.vercel\.app$')]
+    [string]$ExpectedDeploymentUrl
 )
 
 $ErrorActionPreference = 'Stop'
@@ -145,10 +149,12 @@ if ($PSCmdlet.ParameterSetName -eq 'Offline') {
     $nodeVersion = (Invoke-CapturedNode -Arguments @('--version')).Trim()
     Assert-Binding ($nodeVersion -match '^v24\.[0-9]+\.[0-9]+$') 'NODE_24_REQUIRED'
     $deployment = Get-VercelJson "/v13/deployments/$ExpectedDeploymentId`?withGitRepoInfo=true"
-    $project = Get-VercelJson "/v9/projects/$ProjectId"
-    $aliases = @(foreach ($aliasName in $requiredAliases) {
-        Get-VercelJson "/v4/aliases/$aliasName`?projectId=$ProjectId"
-    })
+    if (-not $DeploymentOnly) {
+        $project = Get-VercelJson "/v9/projects/$ProjectId"
+        $aliases = @(foreach ($aliasName in $requiredAliases) {
+            Get-VercelJson "/v4/aliases/$aliasName`?projectId=$ProjectId"
+        })
+    }
 }
 
 Assert-Binding ((Get-Field $deployment 'id') -ceq $ExpectedDeploymentId) 'DEPLOYMENT_ID_MISMATCH'
@@ -158,6 +164,24 @@ Assert-Binding ((Get-Field $deployment 'target') -ceq 'production') 'DEPLOYMENT_
 Assert-RealGitSha $deployment 'DEPLOYMENT'
 $deploymentHost = Get-Field $deployment 'url'
 Assert-Binding ($deploymentHost -is [string] -and $deploymentHost -match '^[a-z0-9-]+\.vercel\.app$') 'DEPLOYMENT_HOST_INVALID'
+if ($ExpectedDeploymentUrl) {
+    Assert-Binding ("https://$deploymentHost" -ceq $ExpectedDeploymentUrl) 'DEPLOYMENT_URL_MISMATCH'
+}
+if ($DeploymentOnly) {
+    Assert-Binding (-not [string]::IsNullOrWhiteSpace($ExpectedDeploymentUrl)) 'DEPLOYMENT_URL_REQUIRED'
+    # Separate scope prevents this receipt being mistaken for alias/Cron approval.
+    [pscustomobject]@{
+        status = 'PASS'
+        mode = $PSCmdlet.ParameterSetName
+        verificationScope = 'ImmutableDeploymentOnly'
+        observedAtUtc = [DateTimeOffset]::UtcNow.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
+        projectId = $ProjectId
+        deploymentId = $ExpectedDeploymentId
+        gitSha = $ExpectedGitSha.ToLowerInvariant()
+        deploymentHost = $deploymentHost
+    }
+    return
+}
 Assert-Binding ((Get-Field $project 'id') -ceq $ProjectId) 'PROJECT_ID_MISMATCH'
 $productionTarget = Get-Field (Get-Field $project 'targets') 'production'
 Assert-Binding ((Get-Field $productionTarget 'id') -ceq $ExpectedDeploymentId) 'PRODUCTION_TARGET_MISMATCH'

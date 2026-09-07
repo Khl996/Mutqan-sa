@@ -33,19 +33,30 @@ function New-Fixture {
 
 $testCount = 0
 function Invoke-Case {
-    param([string]$Name, [scriptblock]$Mutate = {}, [string]$ExpectedFailure = '', [string]$CronState = 'Enabled')
+    param([string]$Name, [scriptblock]$Mutate = {}, [string]$ExpectedFailure = '', [string]$CronState = 'Enabled',
+        [switch]$DeploymentOnly, [string]$ExpectedUrl)
     $fixture = New-Fixture
     & $Mutate $fixture
     $failure = $null
     $result = $null
     try {
-        $result = & $guardPath -FixtureJson ($fixture | ConvertTo-Json -Depth 20 -Compress) -ExpectedDeploymentId $expectedId -ExpectedGitSha $expectedSha -ExpectedCronState $CronState
+        $arguments = @{
+            FixtureJson = ($fixture | ConvertTo-Json -Depth 20 -Compress)
+            ExpectedDeploymentId = $expectedId; ExpectedGitSha = $expectedSha
+            ExpectedCronState = $CronState; DeploymentOnly = [bool]$DeploymentOnly
+        }
+        if ($ExpectedUrl) { $arguments.ExpectedDeploymentUrl = $ExpectedUrl }
+        $result = & $guardPath @arguments
     } catch { $failure = $_.Exception.Message }
     if ($ExpectedFailure) {
         if ($failure -cne "VERCEL_BINDING_GUARD: $ExpectedFailure") { throw "FAIL $Name (unexpected outcome)" }
     } else {
         if ($failure -or $null -eq $result -or $result.status -cne 'PASS') { throw "FAIL $Name (expected PASS)" }
         if (($result | ConvertTo-Json -Depth 10 -Compress) -match 'SYNTHETIC_SECRET_SENTINEL|protectionBypass|DO_NOT_PRINT') { throw "FAIL $Name (secret output)" }
+        if ($DeploymentOnly -and ($result.verificationScope -cne 'ImmutableDeploymentOnly' -or
+            $null -ne $result.PSObject.Properties['aliasesVerified'] -or $null -ne $result.PSObject.Properties['cronState'])) {
+            throw "FAIL $Name (deployment receipt claims alias/Cron verification)"
+        }
     }
     $script:testCount++
     Write-Output "PASS $Name"
@@ -78,4 +89,8 @@ Invoke-Case 'missing cron' { param($f) $f.project.crons.definitions = @($f.proje
 Invoke-Case 'duplicate cron' { param($f) $f.project.crons.definitions[1] = $f.project.crons.definitions[0] } 'CRON_PATH_MISSING_OR_DUPLICATE'
 Invoke-Case 'cron schedule changed' { param($f) $f.project.crons.definitions[0].schedule = '* * * * *' } 'CRON_SCHEDULE_MISMATCH'
 Invoke-Case 'cron host drift' { param($f) $f.project.crons.definitions[1].host = 'synthetic-staged.vercel.app' } 'CRON_HOST_MISMATCH'
+Invoke-Case 'staged identity without production promotion' { param($f) $f.project = $null; $f.aliases = @() } -DeploymentOnly -ExpectedUrl 'https://synthetic-accepted.vercel.app'
+Invoke-Case 'staged identity still rejects wrong SHA' { param($f) $f.deployment.meta.githubCommitSha = ('2' * 40) } 'DEPLOYMENT_GIT_SHA_MISMATCH' -DeploymentOnly -ExpectedUrl 'https://synthetic-accepted.vercel.app'
+Invoke-Case 'staged identity requires pinned URL' {} 'DEPLOYMENT_URL_REQUIRED' -DeploymentOnly
+Invoke-Case 'staged identity rejects substituted URL' {} 'DEPLOYMENT_URL_MISMATCH' -DeploymentOnly -ExpectedUrl 'https://different.vercel.app'
 Write-Output "PASS: $testCount offline cases; no Vercel requests made."
