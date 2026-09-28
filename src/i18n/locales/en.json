@@ -1,4 +1,26 @@
 {
+    "seo": {
+        "home": {
+            "title": "Mutqan | Arabic-first Maintenance & Facilities Management (CMMS)",
+            "description": "Arabic-first maintenance and facilities management: work orders, assets, preventive maintenance, requests and reports in one system. Book a Mutqan demo."
+        },
+        "about": {
+            "title": "About Mutqan | Maintenance & Facilities Management",
+            "description": "Meet Mutqan: an Arabic-first maintenance and facilities management system built from real operations needs, linking every request to an asset, an owner and a report."
+        },
+        "contact": {
+            "title": "Book a Demo | Mutqan",
+            "description": "Request a Mutqan demo and see how it organizes work orders, assets, preventive maintenance and reporting for maintenance and facilities teams."
+        },
+        "privacy": {
+            "title": "Privacy Policy | Mutqan",
+            "description": "Mutqan privacy policy: how we collect, use and protect data on our maintenance and facilities management platform."
+        },
+        "terms": {
+            "title": "Terms of Use | Mutqan",
+            "description": "Terms of use for the Mutqan maintenance and facilities management platform."
+        }
+    },
     "app": {
         "name": "Mutqan",
         "description": "Facility & Maintenance Management System"

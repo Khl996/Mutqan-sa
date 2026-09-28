@@ -9,6 +9,34 @@
             "destination": "/index.html"
         }
     ],
+    "headers": [
+        {
+            "source": "/((?!$|about$|contact$|privacy$|terms$|login$|register$|robots\\.txt$|sitemap\\.xml$|images/|icons/|assets/).*)",
+            "headers": [
+                {
+                    "key": "X-Robots-Tag",
+                    "value": "noindex"
+                }
+            ]
+        },
+        {
+            "source": "/(.*)",
+            "has": [
+                {
+                    "type": "host",
+                    "value": {
+                        "suf": ".vercel.app"
+                    }
+                }
+            ],
+            "headers": [
+                {
+                    "key": "X-Robots-Tag",
+                    "value": "noindex"
+                }
+            ]
+        }
+    ],
     "crons": [
         {
             "path": "/api/check-subscriptions",

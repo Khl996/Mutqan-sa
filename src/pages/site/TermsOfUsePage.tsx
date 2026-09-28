@@ -1,8 +1,10 @@
 
 import { Link } from 'react-router-dom'
 import { MutqanLogo } from '@/components/ui/MutqanLogo'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 export default function TermsOfUsePage() {
+    usePageMeta('terms')
     return (
         <div className="min-h-screen bg-slate-50 font-cairo text-slate-900" dir="rtl">
             <nav className="fixed top-0 w-full z-50 border-b border-white/20 bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">

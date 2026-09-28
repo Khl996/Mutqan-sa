@@ -9,6 +9,7 @@ import {
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SiteNav } from '@/components/site/SiteNav'
 import { cn } from '@/lib/utils'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 const CONTACT_EMAIL = 'info@mutqan-sa.com'
 
@@ -52,6 +53,7 @@ const emptyForm: DemoRequestForm = {
 }
 
 export default function ContactPage() {
+    usePageMeta('contact')
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const CtaArrow = isRTL ? ArrowLeft : ArrowRight

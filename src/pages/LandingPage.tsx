@@ -25,6 +25,7 @@ import {
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SiteNav } from '@/components/site/SiteNav'
 import { cn } from '@/lib/utils'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 const stagger: Variants = {
     hidden: {},
@@ -71,6 +72,7 @@ const audienceIcons: LucideIcon[] = [Building2, Wrench, MapPin, Layers3, Databas
 const benefitIcons: LucideIcon[] = [CheckCircle2, History, Users, Wrench, FileText]
 
 export default function LandingPage() {
+    usePageMeta('home')
     const { i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
 

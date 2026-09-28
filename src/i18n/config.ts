@@ -19,7 +19,10 @@ i18n
             escapeValue: false,
         },
         detection: {
-            order: ['localStorage', 'navigator'],
+            // Arabic-first: a first visit (and Googlebot, which has no saved choice and an
+            // en-US browser) gets the Arabic site from <html lang="ar">. A visitor's own
+            // language toggle is still saved to localStorage and wins on later visits.
+            order: ['localStorage', 'htmlTag'],
             caches: ['localStorage'],
         },
     })

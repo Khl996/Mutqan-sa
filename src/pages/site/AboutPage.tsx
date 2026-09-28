@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SiteNav } from '@/components/site/SiteNav'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 type TextItem = {
     title: string
@@ -24,6 +25,7 @@ const principleIcons: LucideIcon[] = [Wrench, ClipboardList, ShieldCheck]
 const sectorIcons: LucideIcon[] = [Building2, Stethoscope, Factory]
 
 export default function AboutPage() {
+    usePageMeta('about')
     const { t, i18n } = useTranslation()
     const isRTL = i18n.language === 'ar'
     const CtaArrow = isRTL ? ArrowLeft : ArrowRight
